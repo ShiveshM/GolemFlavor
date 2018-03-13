@@ -78,7 +78,8 @@ def plot(infile, angles, outfile, measured_ratio, sigma_ratio, fix_sfr,
                 labels=[r'\tilde{s}_{12}^2', r'\tilde{c}_{13}^4',
                         r'\tilde{s}_{23}^2', r'\tilde{\delta_{CP}}',
                         r'{\rm log}_{10}\Lambda', r'sin^4(\phi)', r'cos(2\psi)']
-    print labels
+    labels = [r'convNorm', r'promptNorm', 'muonNorm', 'astroNorm', 'astroDeltaGamma'] + labels
+    print 'labels', labels
 
     if not fix_scale:
         s2 = np.log10(scale_bounds)
@@ -111,6 +112,8 @@ def plot(infile, angles, outfile, measured_ratio, sigma_ratio, fix_sfr,
                 ranges = [(0, 1), (0, 1), (0, 1), (0, 2*np.pi), (0, 1), (-1, 1)]
             else:
                 ranges = [(0, 1), (0, 1), (0, 1), (0, 2*np.pi), s2, (0, 1), (-1, 1)]
+    ranges = [(0, 5), (0, 5), (0, 5), (0, 5), (0, 5)] + ranges
+    print 'ranges', ranges
 
     def flat_angles_to_u(x):
         return abs(mcmc_scan.angles_to_u(x)).astype(np.float32).flatten().tolist()
@@ -118,6 +121,7 @@ def plot(infile, angles, outfile, measured_ratio, sigma_ratio, fix_sfr,
     raw = np.load(infile)
     print 'raw.shape', raw.shape
     if not angles:
+        nuisance, raw = raw[:,5:], raw[:,-5:]
         if fix_mixing:
             fr_elements = np.array(map(mcmc_scan.angles_to_fr, raw[:,-2:]))
             sc_elements = raw[:,:-2]
@@ -139,8 +143,10 @@ def plot(infile, angles, outfile, measured_ratio, sigma_ratio, fix_sfr,
                 sc_elements = raw[:,-3:-2]
                 m_elements = np.array(map(flat_angles_to_u, raw[:,:-3]))
                 Tchain = np.column_stack([m_elements, sc_elements, fr_elements])
+        Tchain = np.column_stack([nuisance, Tchain])
     else:
         Tchain = raw
+    print 'Tchain.shape', Tchain.shape
 
     if fix_sfr:
         if fix_scale:

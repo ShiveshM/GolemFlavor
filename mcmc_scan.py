@@ -10,19 +10,21 @@ import errno
 
 import argparse
 import multiprocessing
+from copy import deepcopy
 
 import numpy as np
-from scipy.stats import multivariate_normal
 from scipy import linalg
 
 import emcee
 import tqdm
 
+import GolemFitPy as gf
 import chainer_plot
 
 
 RUN_SCAN = True
 
+GOLEMFIT = None
 FIX_MIXING = False
 FIX_SFR = True
 SOURCE_FR = [1, 2, 0]
@@ -43,6 +45,52 @@ if CHANGE_MASS:
 else:
     SCALE = np.power(10, np.round(np.log10(MASS_EIGENVALUES[1]/ENERGY)) - np.log10(ENERGY**(DIMENSION-3)))
 SCALE2_BOUNDS = (SCALE*1E-10, SCALE*1E10)
+
+
+def set_up_gf():
+    steering_params = gf.SteeringParams()
+    datapaths = gf.DataPaths()
+    npp = gf.NewPhysicsParams()
+
+    steering_params.logEbinWidth=(7.0-4.78)/20.
+    steering_params.cosThbinWidth=0.2
+    steering_params.correct_prompt_knee=True
+    steering_params.fastmode=True
+    # TODO(shivesh): figure out right number for missid
+    steering_params.track_to_shower_missid = 0.3
+    golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
+    datapaths.compact_file_path = golemfitsourcepath + '/compact_data/'  # only used for FastMode; not currently working
+    datapaths.data_path = golemfitsourcepath + '/data/'
+    datapaths.mc_path = golemfitsourcepath + '/monte_carlo/'
+
+    golemfit = gf.GolemFit(datapaths, steering_params, npp)
+    return golemfit
+
+
+def set_up_as(golemfit, parms):
+    asimov_parameters = gf.FitParameters()
+    asimov_parameters.convNorm = parms['convNorm']
+    asimov_parameters.promptNorm = parms['promptNorm']
+    asimov_parameters.muonNorm = parms['muonNorm']
+    asimov_parameters.astroNorm = parms['astroNorm']
+    asimov_parameters.astroDeltaGamma = parms['astroDeltaGamma']
+    asimov_parameters.astroENorm = parms['astroENorm']
+    asimov_parameters.astroMuNorm = parms['astroMuNorm']
+    asimov_parameters.astroTauNorm = parms['astroTauNorm']
+    golemfit.SetupAsimov(asimov_parameters)
+
+
+def get_best_fit(golemfit, parms):
+    fitparams = gf.FitParameters()
+    fitparams.convNorm = parms['convNorm']
+    fitparams.promptNorm = parms['promptNorm']
+    fitparams.muonNorm = parms['muonNorm']
+    fitparams.astroNorm = parms['astroNorm']
+    fitparams.astroDeltaGamma = parms['astroDeltaGamma']
+    fitparams.astroENorm = parms['astroENorm']
+    fitparams.astroMuNorm = parms['astroMuNorm']
+    fitparams.astroTauNorm = parms['astroTauNorm']
+    return golemfit.EvalLLH(fitparams)
 
 
 def test_uni(x):
@@ -182,6 +230,9 @@ def u_to_fr(initial_fr, matrix):
 
 def triangle_llh(theta):
     """-Log likelihood function for a given theta."""
+    convNorm, promptNorm, muonNorm, astroNorm, astroDeltaGamma = theta[:5]
+    theta = deepcopy(theta[5:])
+
     if FIX_SFR:
         fr1, fr2, fr3 = SOURCE_FR
         u = params_to_BSMu(theta)
@@ -190,16 +241,34 @@ def triangle_llh(theta):
         u = params_to_BSMu(theta[:-2])
 
     fr = u_to_fr((fr1, fr2, fr3), u)
-    fr_bf = MEASURED_FR
-    cov_fr = np.identity(3) * SIGMA
+
+    fit_values = {
+        'convNorm': convNorm,
+        'promptNorm': promptNorm,
+        'muonNorm': muonNorm,
+        'astroNorm': astroNorm,
+        'astroDeltaGamma': astroDeltaGamma,
+        'astroENorm': fr[0],
+        'astroMuNorm': fr[1],
+        'astroTauNorm': fr[2]
+    }
     if FLAT:
         return 10.
     else:
-        return np.log(multivariate_normal.pdf(fr, mean=fr_bf, cov=cov_fr))
+        return get_best_fit(GOLEMFIT, fit_values)
 
 
 def lnprior(theta):
     """Priors on theta."""
+    convNorm, promptNorm, muonNorm, astroNorm, astroDeltaGamma = theta[:5]
+    theta = deepcopy(theta[5:])
+
+    # Nuisance parameter bounds
+    if 0. < convNorm < 5. and 0. < promptNorm < 5. and 0. < muonNorm < 5. and \
+       0. < astroNorm < 5. and 0. < astroDeltaGamma < 5.:
+        pass
+    else: return -np.inf
+
     if FIX_SFR:
         if FIX_MIXING:
             s12_2, sc2 = theta
@@ -398,20 +467,39 @@ def main():
     if FIX_SCALE:
         print 'SCALE = {0}'.format(SCALE)
 
+    global GOLEMFIT
+    if RUN_SCAN:
+        GOLEMFIT = set_up_gf()
+
+        # TODO(shivesh): make all these into args
+        inject = {
+            'convNorm': 1.,
+            'promptNorm': 0.,
+            'muonNorm': 1.,
+            'astroNorm': 1.,
+            'astroDeltaGamma': 2.,
+            'astroENorm': MEASURED_FR[0],
+            'astroMuNorm': MEASURED_FR[1],
+            'astroTauNorm': MEASURED_FR[2],
+        }
+
+        print "Injecting this model: ", inject
+        set_up_as(GOLEMFIT, inject)
+
     if FIX_SFR:
         if FIX_MIXING:
-            ndim = 2
+            ndim = 7
         elif FIX_SCALE:
-            ndim = 4
+            ndim = 9
         else:
-            ndim = 5
+            ndim = 10
     else:
         if FIX_MIXING:
-            ndim = 3
+            ndim = 8
         elif FIX_SCALE:
-            ndim = 6
+            ndim = 11
         else:
-            ndim = 7
+            ndim = 12
     nwalkers = args.nwalkers
     ntemps = 1
     burnin = args.burnin
@@ -419,24 +507,24 @@ def main():
     s2 = np.average(np.log10(SCALE2_BOUNDS))
     if FIX_SFR:
         if FIX_MIXING:
-            p0_base = [0.5, s2]
-            p0_std = [0.2, 3]
+            p0_base = [1., 0., 1., 1., 2., 0.5, s2]
+            p0_std = [0.3, 0.05, 0.1, 0.1, 0.1, 0.2, 3]
         elif FIX_SCALE:
-            p0_base = [0.5, 0.5, 0.5, np.pi]
-            p0_std = [0.2, 0.2, 0.2, 0.2]
+            p0_base = [1., 0., 1., 1., 2., 0.5, 0.5, 0.5, np.pi]
+            p0_std = [0.3, 0.05, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.2]
         else:
-            p0_base = [0.5, 0.5, 0.5, np.pi, s2]
-            p0_std = [0.2, 0.2, 0.2, 0.2, 3]
+            p0_base = [1., 0., 1., 1., 2., 0.5, 0.5, 0.5, np.pi, s2]
+            p0_std = [0.3, 0.05, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 3]
     else:
         if FIX_MIXING:
-            p0_base = [s2, 0.5, 0.0]
-            p0_std = [3, 0.2, 0.2]
+            p0_base = [1., 0., 1., 1., 2., s2, 0.5, 0.0]
+            p0_std = [0.3, 0.05, 0.1, 0.1, 0.1, 3, 0.2, 0.2]
         elif FIX_SCALE:
-            p0_base = [0.5, 0.5, 0.5, np.pi, 0.5, 0.0]
-            p0_std = [0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
+            p0_base = [1., 0., 1., 1., 2., 0.5, 0.5, 0.5, np.pi, 0.5, 0.0]
+            p0_std = [0.3, 0.05, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 0.2, 0.2]
         else:
-            p0_base = [0.5, 0.5, 0.5, np.pi, s2, 0.5, 0.0]
-            p0_std = [0.2, 0.2, 0.2, 0.2, 3, 0.2, 0.2]
+            p0_base = [1., 0., 1., 1., 2., 0.5, 0.5, 0.5, np.pi, s2, 0.5, 0.0]
+            p0_std = [0.3, 0.05, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.2, 3, 0.2, 0.2]
 
     print 'p0_base', p0_base
     print 'p0_std', p0_std
@@ -444,8 +532,8 @@ def main():
     print map(lnprior, p0[0])
 
     if RUN_SCAN:
-        # threads = multiprocessing.cpu_count()
-        threads = 1
+        threads = multiprocessing.cpu_count()
+        # threads = 1
         sampler = emcee.PTSampler(
             ntemps, nwalkers, ndim, triangle_llh, lnprior, threads=threads
         )
@@ -521,22 +609,22 @@ def main():
                 raise
         np.save(outfile+'.npy', samples)
 
-    # print "Making triangle plots"
-    # chainer_plot.plot(
-    #     infile=outfile+'.npy',
-    #     angles=True,
-    #     outfile=outfile[:5]+outfile[5:].replace('data', 'plots')+'_angles.pdf',
-    #     measured_ratio=MEASURED_FR,
-    #     sigma_ratio=SIGMA,
-    #     fix_sfr=FIX_SFR,
-    #     fix_mixing=FIX_MIXING,
-    #     fix_scale=FIX_SCALE,
-    #     source_ratio=SOURCE_FR,
-    #     scale=SCALE,
-	# dimension=DIMENSION,
-	# energy=ENERGY,
-	# scale_bounds=SCALE2_BOUNDS,
-    # )
+    print "Making triangle plots"
+    chainer_plot.plot(
+        infile=outfile+'.npy',
+        angles=True,
+        outfile=outfile[:5]+outfile[5:].replace('data', 'plots')+'_angles.pdf',
+        measured_ratio=MEASURED_FR,
+        sigma_ratio=SIGMA,
+        fix_sfr=FIX_SFR,
+        fix_mixing=FIX_MIXING,
+        fix_scale=FIX_SCALE,
+        source_ratio=SOURCE_FR,
+        scale=SCALE,
+	dimension=DIMENSION,
+	energy=ENERGY,
+	scale_bounds=SCALE2_BOUNDS,
+    )
     # chainer_plot.plot(
     #     infile=outfile+'.npy',
     #     angles=False,

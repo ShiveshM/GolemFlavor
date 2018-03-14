@@ -19,7 +19,7 @@ from getdist import mcsamples
 
 import mcmc_scan
 
-rc('text', usetex=True)
+rc('text', usetex=False)
 rc('font', **{'family':'serif', 'serif':['Computer Modern'], 'size':18})
 cols = ['#29A2C6','#FF6D31','#FFCB18','#73B66B','#EF597B', '#333333']
 

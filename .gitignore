@@ -4,3 +4,4 @@ nohup.out
 *.nfs*
 plots/
 *.pdf
+dagman_FR.submit*

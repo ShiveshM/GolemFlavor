@@ -552,8 +552,8 @@ def main():
     print map(lnprior, p0[0])
 
     if RUN_SCAN:
-        threads = multiprocessing.cpu_count()
-        # threads = 1
+        # threads = multiprocessing.cpu_count()
+        threads = 1
         sampler = emcee.PTSampler(
             ntemps, nwalkers, ndim, triangle_llh, lnprior, threads=threads
         )
@@ -633,7 +633,7 @@ def main():
     chainer_plot.plot(
         infile=outfile+'.npy',
         angles=True,
-        outfile=outfile[:5]+outfile[5:].replace('data', 'plots')+'_angles.pdf',
+        outfile=outfile[:5]+outfile[5:].replace('data', 'plots')+'_angles.pgf',
         measured_ratio=MEASURED_FR,
         sigma_ratio=SIGMA,
         fix_sfr=FIX_SFR,

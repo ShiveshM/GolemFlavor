@@ -29,6 +29,7 @@ FIX_MIXING = False
 FIX_SFR = True
 SOURCE_FR = [1, 2, 0]
 FIX_SCALE = True
+NO_BSM = False
 
 DIMENSION = 3
 ENERGY = 1000000 # GeV
@@ -80,7 +81,7 @@ def set_up_as(golemfit, parms):
     golemfit.SetupAsimov(asimov_parameters)
 
 
-def get_best_fit(golemfit, parms):
+def get_llh(golemfit, parms):
     fitparams = gf.FitParameters()
     fitparams.convNorm = parms['convNorm']
     fitparams.promptNorm = parms['promptNorm']
@@ -202,6 +203,12 @@ def params_to_BSMu(theta):
         [[0, 0, 0], [0, MASS_EIGENVALUES[0], 0], [0, 0, MASS_EIGENVALUES[1]]]
     )
     sm_ham = (1./(2*ENERGY))*np.dot(NUFIT_U, np.dot(mass_matrix, NUFIT_U.conj().T))
+    if NO_BSM:
+        eg_vector = cardano_eqn(sm_ham)
+        tu = test_uni(eg_vector)
+        if not abs(np.trace(tu) - 3.) < 1e-5 or not abs(np.sum(tu) - 3.) < 1e-5:
+            raise AssertionError('Matrix is not unitary!\neg_vector\n{0}\ntest u\n{1}'.format(eg_vector, tu))
+        return eg_vector
 
     new_physics_u = angles_to_u((s12_2, c13_4, s23_2, dcp))
     scale_matrix = np.array(
@@ -255,7 +262,7 @@ def triangle_llh(theta):
     if FLAT:
         return 10.
     else:
-        return get_best_fit(GOLEMFIT, fit_values)
+        return get_llh(GOLEMFIT, fit_values)
 
 
 def lnprior(theta):
@@ -336,6 +343,10 @@ def parse_args():
         help='Set the source flavour ratio for the case when you want to fix it'
     )
     parser.add_argument(
+        '--no-bsm', type=str, default='False',
+        help='Turn off BSM terms'
+    )
+    parser.add_argument(
         '--fix-mixing', type=str, default='False',
         help='Fix all mixing parameters except one'
     )
@@ -399,6 +410,7 @@ def main():
     global FIX_SCALE
     global SCALE
     global SCALE2_BOUNDS
+    global NO_BSM
 
     DIMENSION = args.dimension
     ENERGY = args.energy
@@ -434,6 +446,13 @@ def main():
     else:
         raise ValueError
 
+    if args.no_bsm.lower() == 'true':
+        NO_BSM = True
+    elif args.no_bsm.lower() == 'false':
+        NO_BSM = False
+    else:
+        raise ValueError
+
     if FIX_SFR:
         SOURCE_FR = np.array(args.source_ratio) / float(np.sum(args.source_ratio))
 
@@ -456,6 +475,7 @@ def main():
     print 'MEASURED_FR = {0}'.format(MEASURED_FR)
     print 'SIGMA = {0}'.format(SIGMA)
     print 'FLAT = {0}'.format(FLAT)
+    print 'NO_BSM = {0}'.format(NO_BSM)
     print 'ENERGY = {0}'.format(ENERGY)
     print 'DIMENSION = {0}'.format(DIMENSION)
     print 'SCALE2_BOUNDS = {0}'.format(SCALE2_BOUNDS)

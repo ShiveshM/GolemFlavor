@@ -36,6 +36,7 @@ burnin = 1000
 nwalkers = 200
 nsteps = 10000
 scales = "1E-20 1E-30"
+no_bsm = False
 
 outfile = 'dagman_FR.submit'
 condor_script = '/home/smandalia/Documents/flavour_ratio/submitter/submit.sub'
@@ -73,6 +74,7 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\tnsteps="{1}"\n'.format(job_number, nsteps))
                     f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outchains))
                     f.write('VARS\tjob{0}\tfix_mixing="{1}"\n'.format(job_number, 'False'))
+                    f.write('VARS\tjob{0}\tno_bsm="{1}"\n'.format(job_number, no_bsm))
                     job_number += 1
 
                 for frs in full_scan_mfr:
@@ -97,4 +99,5 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\tnsteps="{1}"\n'.format(job_number, nsteps))
                     f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outchains))
                     f.write('VARS\tjob{0}\tfix_mixing="{1}"\n'.format(job_number, 'False'))
+                    f.write('VARS\tjob{0}\tno_bsm="{1}"\n'.format(job_number, no_bsm))
                     job_number += 1

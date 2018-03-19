@@ -17,7 +17,7 @@ import getdist
 from getdist import plots
 from getdist import mcsamples
 
-import mcmc_scan
+from utils.fr import angles_to_u, angles_to_fr
 
 rc('text', usetex=False)
 rc('font', **{'family':'serif', 'serif':['Computer Modern'], 'size':18})
@@ -116,14 +116,14 @@ def plot(infile, angles, outfile, measured_ratio, sigma_ratio, fix_sfr,
     print 'ranges', ranges
 
     def flat_angles_to_u(x):
-        return abs(mcmc_scan.angles_to_u(x)).astype(np.float32).flatten().tolist()
+        return abs(angles_to_u(x)).astype(np.float32).flatten().tolist()
 
     raw = np.load(infile)
     print 'raw.shape', raw.shape
     if not angles:
         nuisance, raw = raw[:,5:], raw[:,-5:]
         if fix_mixing:
-            fr_elements = np.array(map(mcmc_scan.angles_to_fr, raw[:,-2:]))
+            fr_elements = np.array(map(angles_to_fr, raw[:,-2:]))
             sc_elements = raw[:,:-2]
             Tchain = np.column_stack([sc_elements, fr_elements])
         elif fix_sfr:
@@ -135,11 +135,11 @@ def plot(infile, angles, outfile, measured_ratio, sigma_ratio, fix_sfr,
                 Tchain = np.column_stack([m_elements, sc_elements])
         else:
             if fix_scale:
-                fr_elements = np.array(map(mcmc_scan.angles_to_fr, raw[:,-2:]))
+                fr_elements = np.array(map(angles_to_fr, raw[:,-2:]))
                 m_elements = np.array(map(flat_angles_to_u, raw[:,:-2]))
                 Tchain = np.column_stack([m_elements, fr_elements])
             else:
-                fr_elements = np.array(map(mcmc_scan.angles_to_fr, raw[:,-2:]))
+                fr_elements = np.array(map(angles_to_fr, raw[:,-2:]))
                 sc_elements = raw[:,-3:-2]
                 m_elements = np.array(map(flat_angles_to_u, raw[:,:-3]))
                 Tchain = np.column_stack([m_elements, sc_elements, fr_elements])

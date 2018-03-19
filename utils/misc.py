@@ -11,8 +11,11 @@ from __future__ import absolute_import, division
 
 import os
 import errno
-from collections import Sequence
 import multiprocessing
+
+import argparse
+from collections import Sequence
+from operator import attrgetter
 
 import numpy as np
 
@@ -152,6 +155,13 @@ class ParamSet(Sequence):
                       if obj.tag is tag])
 
 
+class SortingHelpFormatter(argparse.HelpFormatter):
+    """Sort argparse help options alphabetically."""
+    def add_arguments(self, actions):
+        actions = sorted(actions, key=attrgetter('option_strings'))
+        super(SortingHelpFormatter, self).add_arguments(actions)
+
+
 def gen_outfile_name(args):
     """Generate a name for the output file based on the input args.
 
@@ -238,7 +248,7 @@ def print_args(args):
 
     """
     arg_vars = vars(args)
-    for key in arg_vars.iterkeys():
+    for key in sorted(arg_vars):
         print '== {0:<25} = {1}'.format(key, arg_vars[key])
 
 

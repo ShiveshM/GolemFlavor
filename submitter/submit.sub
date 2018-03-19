@@ -1,5 +1,5 @@
 Executable = /home/smandalia/Documents/flavour_ratio/mcmc_scan.py
-Arguments = --measured-ratio $(mr0) $(mr1) $(mr2) --sigma-ratio $(sigma) --fix-source-ratio $(fix_source_ratio) --source-ratio $(sr0) $(sr1) $(sr2) --fix-scale $(fix_scale) --scale $(scale) --dimension $(dimension) --energy $(energy) --flat-llh $(flat_llh) --burnin $(burnin) --nwalkers $(nwalkers) --nsteps $(nsteps) --seed 24 --outfile $(outfile) --fix-mixing $(fix_mixing) --no-bsm $(no_bsm)
+Arguments = "--aft $(aft) --ast $(ast) --astroDeltaGamma $(astroDeltaGamma) --astroNorm $(astroNorm) --axs $(axs) --burnin $(burnin) --convNorm $(convNorm) --data $(data) --dimension $(dimension) --energy $(energy) --fix-mixing $(fix_mixing) --fix-scale $(fix_scale) --fix-source-ratio $(fix_source_ratio) --likelihood $(likelihood) --measured-ratio $(mr0) $(mr1) $(mr2) --muonNorm $(muonNorm) --no-bsm $(no_bsm) --nsteps $(nsteps) --nwalkers $(nwalkers) --outfile $(outfile) --plot-angles $(plot_angles) --plot-elements $(plot_elements) --priors $(priors) --promptNorm $(promptNorm) --run-mcmc $(run_mcmc) --scale $(scale) --scale-region $(scale_region) --seed $(seed) --sigma-ratio $(sigma_ratio) --source-ratio $(sr0) $(sr1) $(sr2) --threads $(threads)"
 
 # All logs will go to a single file 
 log    = /home/smandalia/Documents/flavour_ratio/submitter/logs/job_$(Cluster).log

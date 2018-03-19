@@ -109,7 +109,10 @@ def process_args(args):
 
 def parse_args():
     """Parse command line arguments"""
-    parser = argparse.ArgumentParser(description="BSM flavour ratio analysis")
+    parser = argparse.ArgumentParser(
+        description="BSM flavour ratio analysis",
+        formatter_class=misc_utils.SortingHelpFormatter,
+    )
     parser.add_argument(
         '--measured-ratio', type=int, nargs=3, default=[1, 1, 1],
         help='Set the central value for the measured flavour ratio at IceCube'

@@ -17,23 +17,24 @@ import numpy as np
 
 from utils import mcmc as mcmc_utils
 from utils import misc as misc_utils
+from utils.enums import ParamTag
 from utils.fr import MASS_EIGENVALUES, normalise_fr
 from utils.gf import gf_argparse
 from utils.misc import Param, ParamSet
-
-import chainer_plot
+from utils.plot import plot_argparse, chainer_plot
 
 
 def define_nuisance():
     """Define the nuisance parameters to scan over with default values,
     ranges and sigma.
     """
+    tag = ParamTag.NUISANCE
     nuisance = ParamSet(
-        Param(name='convNorm'       , value=1. , ranges=[0., 5.], std=0.3),
-        Param(name='promptNorm'     , value=0. , ranges=[0., 5.], std=0.05),
-        Param(name='muonNorm'       , value=1. , ranges=[0., 5.], std=0.1),
-        Param(name='astroNorm'      , value=1. , ranges=[0., 5.], std=0.1),
-        Param(name='astroDeltaGamma', value=2. , ranges=[0., 5.], std=0.1)
+        Param(name='convNorm'       , value=1. , ranges=[0., 5.], std=0.3 , tag=tag),
+        Param(name='promptNorm'     , value=0. , ranges=[0., 5.], std=0.05, tag=tag),
+        Param(name='muonNorm'       , value=1. , ranges=[0., 5.], std=0.1 , tag=tag),
+        Param(name='astroNorm'      , value=1. , ranges=[0., 5.], std=0.1 , tag=tag),
+        Param(name='astroDeltaGamma', value=2. , ranges=[0., 5.], std=0.1 , tag=tag)
     )
     return nuisance
 
@@ -63,22 +64,25 @@ def get_paramsets(args):
 
     mcmc_paramset = []
     if not args.fix_mixing:
+        tag = ParamTag.MMANGLES
         mcmc_paramset.extend([
-            Param(name='s_12^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{12}^2'),
-            Param(name='c_13^4', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{c}_{13}^4'),
-            Param(name='s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^4'),
-            Param(name='dcp', value=np.pi, ranges=[0., 2*np.pi], std=0.2, tex=r'\tilde{\delta_{CP}}')
+            Param(name='s_12^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{12}^2', tag=tag),
+            Param(name='c_13^4', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{c}_{13}^4', tag=tag),
+            Param(name='s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^4', tag=tag),
+            Param(name='dcp', value=np.pi, ranges=[0., 2*np.pi], std=0.2, tex=r'\tilde{\delta_{CP}}', tag=tag)
         ])
     if not args.fix_scale:
         logLam, scale_region = np.log10(args.scale), np.log10(args.scale_region)
         lL_range = (logLam-scale_region, logLam+scale_region)
+        tag = ParamTag.SCALE
         mcmc_paramset.append(
-            Param(name='logLam', value=logLam, ranges=lL_range, std=3, tex=r'{\rm log}_{10}\Lambda')
+            Param(name='logLam', value=logLam, ranges=lL_range, std=3, tex=r'{\rm log}_{10}\Lambda', tag=tag)
         )
     if not args.fix_source_ratio:
+        tag = ParamTag.SRCANGLES
         mcmc_paramset.extend([
-            Param(name='s_phi4', value=0.5, ranges=[0., 1.], std=0.2, tex=r'sin^4(\phi)'),
-            Param(name='c_2psi', value=0.5, ranges=[0., 1.], std=0.2, tex=r'cos(2\psi)')
+            Param(name='s_phi4', value=0.5, ranges=[0., 1.], std=0.2, tex=r'sin^4(\phi)', tag=tag),
+            Param(name='c_2psi', value=0.5, ranges=[0., 1.], std=0.2, tex=r'cos(2\psi)', tag=tag)
         ])
     mcmc_paramset = ParamSet(nuisance_paramset.params + mcmc_paramset)
     return nuisance_paramset, mcmc_paramset
@@ -162,9 +166,10 @@ def parse_args():
         '--outfile', type=str, default='./untitled',
         help='Path to output chains'
     )
+    mcmc_utils.mcmc_argparse(parser)
     nuisance_argparse(parser)
     gf_argparse(parser)
-    mcmc_utils.mcmc_argparse(parser)
+    plot_argparse(parser)
     return parser.parse_args()
 
 
@@ -206,38 +211,14 @@ def main():
         )
         mcmc_utils.save_chains(samples, outfile)
 
-    scale_bounds = (args.scale/args.scale_region, args.scale*args.scale_region)
     print "Making triangle plots"
-    chainer_plot.plot(
-        infile         = outfile+'.npy',
-        angles         = True,
-        outfile        = outfile[:5]+outfile[5:].replace('data', 'plots')+'_angles.pdf',
-        measured_ratio = args.measured_ratio,
-        sigma_ratio    = args.sigma_ratio,
-        fix_sfr        = args.fix_source_ratio,
-        fix_mixing     = args.fix_mixing,
-        fix_scale      = args.fix_scale,
-        source_ratio   = args.source_ratio,
-        scale          = args.scale,
-	dimension      = args.dimension,
-	energy         = args.energy,
-	scale_bounds   = scale_bounds,
+    chainer_plot(
+        infile        = outfile+'.npy',
+        outfile       = outfile[:5]+outfile[5:].replace('data', 'plots'),
+        outformat     = ['pdf'],
+        args          = args,
+        mcmc_paramset = mcmc_paramset
     )
-    # chainer_plot.plot(
-    #     infile=outfile+'.npy',
-    #     angles=False,
-    #     outfile=outfile[:5]+outfile[5:].replace('data', 'plots')+'.pdf',
-    #     measured_ratio=args.measured_ratio,
-    #     sigma_ratio=args.sigma_ratio,
-    #     fix_sfr=args.fix_source_ratio,
-    #     fix_mixing=args.fix_mixing,
-    #     fix_scale=FIX_SCALE,
-    #     source_ratio=args.source_ratio,
-    #     scale=args.scale,
-    #     dimension=args.dimension,
-    #     energy=args.energy,
-    #     scale_bounds=scale_bounds,
-    # )
     print "DONE!"
 
 

@@ -40,6 +40,14 @@ class Likelihood(Enum):
     GOLEMFIT = 3
 
 
+class ParamTag(Enum):
+    NUISANCE  = 1
+    MMANGLES  = 2
+    SCALE     = 3
+    SRCANGLES = 4
+    NONE      = 5
+
+
 class Priors(Enum):
     UNIFORM    = 1
     LOGUNIFORM = 2

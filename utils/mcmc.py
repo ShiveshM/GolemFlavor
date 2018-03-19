@@ -9,9 +9,6 @@ Useful functions to use an MCMC for the BSM flavour ratio analysis
 
 from __future__ import absolute_import, division
 
-import os
-import errno
-
 import argparse
 from functools import partial
 
@@ -23,7 +20,7 @@ from scipy.stats import multivariate_normal
 
 from utils import fr as fr_utils
 from utils.enums import Likelihood
-from utils.misc import enum_keys, enum_parse, parse_bool
+from utils.misc import enum_keys, enum_parse, make_dir, parse_bool
 
 
 def lnprior(theta, paramset):
@@ -115,13 +112,7 @@ def save_chains(chains, outfile):
         Output file location of chains
 
     """
-    try:
-        os.makedirs(outfile[:-len(os.path.basename(outfile))])
-    except OSError as exc:  # Python >2.5
-        if exc.errno == errno.EEXIST and os.path.isdir(outfile[:-len(os.path.basename(outfile))]):
-            pass
-        else:
-            raise
+    make_dir(outfile)
     print 'Saving chains to location {0}'.format(outfile+'.npy')
     np.save(outfile+'.npy', chains)
 

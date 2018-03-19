@@ -17,7 +17,7 @@ import numpy as np
 
 from utils import mcmc as mcmc_utils
 from utils import misc as misc_utils
-from utils.enums import ParamTag
+from utils.enums import Likelihood, ParamTag
 from utils.fr import MASS_EIGENVALUES, normalise_fr
 from utils.gf import gf_argparse
 from utils.misc import Param, ParamSet
@@ -52,17 +52,21 @@ def get_paramsets(args):
     """Make the paramsets for generating the Asmimov MC sample and also running
     the MCMC.
     """
-    nuisance_paramset = define_nuisance()
-    for parm in nuisance_paramset:
-        parm.value = args.__getattribute__(parm.name)
-    asimov_paramset = ParamSet(
-        nuisance_paramset.params +
-        [Param(name='astroENorm'     , value=args.measured_ratio[0], ranges=[0., 1.], std=0.2),
-         Param(name='astroMuNorm'    , value=args.measured_ratio[1], ranges=[0., 1.], std=0.2),
-         Param(name='astroTauNorm'   , value=args.measured_ratio[2], ranges=[0., 1.], std=0.2)]
-    )
-
+    asimov_paramset = []
     mcmc_paramset = []
+    if args.likelihood == Likelihood.GOLEMFIT:
+        nuisance_paramset = define_nuisance()
+        asimov_paramset.extend([nuisance_paramset.params])
+        mcmc_paramset.extend([nuisance_paramset.params])
+        for parm in nuisance_paramset:
+            parm.value = args.__getattribute__(parm.name)
+    asimov_paramset.extend([
+        Param(name='astroENorm'  , value=args.measured_ratio[0], ranges=[0., 1.], std=0.2),
+        Param(name='astroMuNorm' , value=args.measured_ratio[1], ranges=[0., 1.], std=0.2),
+        Param(name='astroTauNorm', value=args.measured_ratio[2], ranges=[0., 1.], std=0.2)
+    ])
+    asimov_paramset = ParamSet(asimov_paramset)
+
     if not args.fix_mixing:
         tag = ParamTag.MMANGLES
         mcmc_paramset.extend([
@@ -84,8 +88,8 @@ def get_paramsets(args):
             Param(name='s_phi4', value=0.5, ranges=[0., 1.], std=0.2, tex=r'sin^4(\phi)', tag=tag),
             Param(name='c_2psi', value=0.5, ranges=[0., 1.], std=0.2, tex=r'cos(2\psi)', tag=tag)
         ])
-    mcmc_paramset = ParamSet(nuisance_paramset.params + mcmc_paramset)
-    return nuisance_paramset, mcmc_paramset
+    mcmc_paramset = ParamSet(mcmc_paramset)
+    return asimov_paramset, mcmc_paramset
 
 
 def process_args(args):

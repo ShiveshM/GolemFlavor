@@ -252,10 +252,6 @@ def print_args(args):
         print '== {0:<25} = {1}'.format(key, arg_vars[key])
 
 
-def enum_keys(e):
-    return e.__members__.keys()
-
-
 def enum_parse(s, c):
     return c[s.upper()]
 

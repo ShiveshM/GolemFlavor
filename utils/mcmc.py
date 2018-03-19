@@ -18,9 +18,11 @@ import tqdm
 import numpy as np
 from scipy.stats import multivariate_normal
 
+import GolemFitPy as gf
+
 from utils import fr as fr_utils
 from utils.enums import Likelihood
-from utils.misc import enum_keys, enum_parse, make_dir, parse_bool
+from utils.misc import enum_parse, make_dir, parse_bool
 
 
 def lnprior(theta, paramset):
@@ -65,7 +67,7 @@ def mcmc(p0, triangle_llh, lnprior, ndim, nwalkers, burnin, nsteps, ntemps=1, th
 def mcmc_argparse(parser):
     parser.add_argument(
         '--likelihood', default='gaussian', type=partial(enum_parse, c=Likelihood),
-        choices=enum_keys(Likelihood), help='likelihood contour'
+        choices=Likelihood, help='likelihood contour'
     )
     parser.add_argument(
         '--run-mcmc', type=parse_bool, default='True',
@@ -137,14 +139,13 @@ def triangle_llh(theta, args):
     )
 
     fr = fr_utils.u_to_fr((fr1, fr2, fr3), u)
-    fr_bf = args.measured_ratio
     if args.likelihood is Likelihood.FLAT:
         return 1.
     elif args.likelihood is Likelihood.GAUSSIAN:
+        fr_bf = args.measured_ratio
         return gaussian_llh(fr, fr_bf, args.sigma_ratio)
     elif args.likelihood is Likelihood.GOLEMFIT:
         raise NotImplementedError('TODO')
-        import GolemFitPy as gf
         from collections import namedtuple
         datapaths = gf.DataPaths()
         IceModels = namedtuple('IceModels', 'std_half2')

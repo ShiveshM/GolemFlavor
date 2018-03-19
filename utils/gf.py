@@ -15,7 +15,7 @@ from functools import partial
 import GolemFitPy as gf
 
 from utils.enums import *
-from utils.misc import enum_keys, enum_parse
+from utils.misc import enum_parse
 
 
 def data_distributions(fitter):
@@ -81,25 +81,25 @@ def gen_steering_params(steering_categ, quiet=False):
 def gf_argparse(parser):
     parser.add_argument(
         '--data', default='real', type=partial(enum_parse, c=DataType),
-        choices=enum_keys(DataType), help='select datatype'
+        choices=DataType, help='select datatype'
     )
     parser.add_argument(
         '--ast', default='baseline', type=partial(enum_parse, c=SteeringCateg),
-        choices=enum_keys(SteeringCateg),
+        choices=SteeringCateg,
         help='use asimov/fake dataset with specific steering'
     )
     parser.add_argument(
         '--aft', default='hesespl', type=partial(enum_parse, c=FitCateg),
-        choices=enum_keys(FitCateg),
+        choices=FitCateg,
         help='use asimov/fake dataset with specific Fit'
     )
     parser.add_argument(
         '--axs', default='nom', type=partial(enum_parse, c=XSCateg),
-        choices=enum_keys(XSCateg),
+        choices=XSCateg,
         help='use asimov/fake dataset with xs scaling'
     )
     parser.add_argument(
         '--priors', default='uniform', type=partial(enum_parse, c=Priors),
-        choices=enum_keys(Priors), help='Bayesian priors'
+        choices=Priors, help='Bayesian priors'
     )
 

@@ -75,7 +75,7 @@ with open(outfile, 'w') as f:
         for en in energy:
             print 'energy {0:.0E}'.format(en)
 
-            outchain_head = '/data/user/smandalia/flavour_ratio/data/DIM{0}/{1:.0E}'.format(dim, en)
+            outchain_head = '/data/user/smandalia/flavour_ratio/data/{0}/DIM{1}/{2:.0E}'.format(likelihood, dim, en)
 
             for sig in sigma_ratio:
                 print 'sigma', sig
@@ -109,11 +109,15 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\tconvNorm="{1}"\n'.format(job_number, convNorm))
                     f.write('VARS\tjob{0}\tmuonNorm="{1}"\n'.format(job_number, muonNorm))
                     f.write('VARS\tjob{0}\tpromptNorm="{1}"\n'.format(job_number, promptNorm))
+                    f.write('VARS\tjob{0}\tdata="{1}"\n'.format(job_number, data))
+                    f.write('VARS\tjob{0}\tpriors="{1}"\n'.format(job_number, priors))
                     f.write('VARS\tjob{0}\taft="{1}"\n'.format(job_number, aft))
                     f.write('VARS\tjob{0}\tast="{1}"\n'.format(job_number, ast))
                     f.write('VARS\tjob{0}\taxs="{1}"\n'.format(job_number, axs))
                     f.write('VARS\tjob{0}\tplot_angles="{1}"\n'.format(job_number, plot_angles))
                     f.write('VARS\tjob{0}\tplot_elements="{1}"\n'.format(job_number, plot_elements))
+                    f.write('VARS\tjob{0}\tseed="{1}"\n'.format(job_number, seed))
+                    f.write('VARS\tjob{0}\tthreads="{1}"\n'.format(job_number, threads))
                     job_number += 1
 
                 for frs in full_scan_mfr:
@@ -146,9 +150,13 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\tconvNorm="{1}"\n'.format(job_number, convNorm))
                     f.write('VARS\tjob{0}\tmuonNorm="{1}"\n'.format(job_number, muonNorm))
                     f.write('VARS\tjob{0}\tpromptNorm="{1}"\n'.format(job_number, promptNorm))
+                    f.write('VARS\tjob{0}\tdata="{1}"\n'.format(job_number, data))
+                    f.write('VARS\tjob{0}\tpriors="{1}"\n'.format(job_number, priors))
                     f.write('VARS\tjob{0}\taft="{1}"\n'.format(job_number, aft))
                     f.write('VARS\tjob{0}\tast="{1}"\n'.format(job_number, ast))
                     f.write('VARS\tjob{0}\taxs="{1}"\n'.format(job_number, axs))
                     f.write('VARS\tjob{0}\tplot_angles="{1}"\n'.format(job_number, plot_angles))
                     f.write('VARS\tjob{0}\tplot_elements="{1}"\n'.format(job_number, plot_elements))
+                    f.write('VARS\tjob{0}\tseed="{1}"\n'.format(job_number, seed))
+                    f.write('VARS\tjob{0}\tthreads="{1}"\n'.format(job_number, threads))
                     job_number += 1

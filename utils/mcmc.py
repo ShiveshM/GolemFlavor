@@ -10,29 +10,13 @@ Useful functions to use an MCMC for the BSM flavour ratio analysis
 from __future__ import absolute_import, division
 
 import argparse
-from functools import partial
 
 import emcee
 import tqdm
 
 import numpy as np
-from scipy.stats import multivariate_normal
 
-import GolemFitPy as gf
-
-from utils import fr as fr_utils
-from utils.enums import Likelihood
-from utils.misc import enum_parse, make_dir, parse_bool
-
-
-def lnprior(theta, paramset):
-    """Priors on theta."""
-    ranges = paramset.ranges
-    for value, range in zip(theta, ranges):
-        if range[0] <= value <= range[1]:
-            pass
-        else: return -np.inf
-    return 0.
+from utils.misc import make_dir, parse_bool
 
 
 def mcmc(p0, triangle_llh, lnprior, ndim, nwalkers, burnin, nsteps, ntemps=1, threads=1):
@@ -66,10 +50,6 @@ def mcmc(p0, triangle_llh, lnprior, ndim, nwalkers, burnin, nsteps, ntemps=1, th
 
 def mcmc_argparse(parser):
     parser.add_argument(
-        '--likelihood', default='gaussian', type=partial(enum_parse, c=Likelihood),
-        choices=Likelihood, help='likelihood contour'
-    )
-    parser.add_argument(
         '--run-mcmc', type=parse_bool, default='True',
         help='Run the MCMC'
     )
@@ -87,10 +67,15 @@ def mcmc_argparse(parser):
     )
 
 
-def gaussian_llh(fr, fr_bf, sigma):
-    """Multivariate gaussian likelihood."""
-    cov_fr = np.identity(3) * sigma
-    return np.log(multivariate_normal.pdf(fr, mean=fr_bf, cov=cov_fr))
+def flat_seed(paramset, ntemps, nwalkers):
+    """Get gaussian seed values for the MCMC."""
+    ndim = len(paramset)
+    low = np.array(paramset.ranges).T[0]
+    high = np.array(paramset.ranges).T[1]
+    p0 = np.random.uniform(
+        low=low, high=high, size=[ntemps, nwalkers, ndim]
+    )
+    return p0
 
 
 def gaussian_seed(paramset, ntemps, nwalkers):
@@ -117,43 +102,4 @@ def save_chains(chains, outfile):
     make_dir(outfile)
     print 'Saving chains to location {0}'.format(outfile+'.npy')
     np.save(outfile+'.npy', chains)
-
-
-def triangle_llh(theta, args):
-    """-Log likelihood function for a given theta."""
-    if args.fix_source_ratio:
-        fr1, fr2, fr3 = args.source_ratio
-        bsm_angles = theta[-5:]
-    else:
-        fr1, fr2, fr3 = fr_utils.angles_to_fr(theta[-2:])
-        bsm_angles = theta[-7:-2]
-
-    u = fr_utils.params_to_BSMu(
-        theta      = bsm_angles,
-        dim        = args.dimension,
-        energy     = args.energy,
-        no_bsm     = args.no_bsm,
-        fix_mixing = args.fix_mixing,
-        fix_scale  = args.fix_scale,
-        scale      = args.scale
-    )
-
-    fr = fr_utils.u_to_fr((fr1, fr2, fr3), u)
-    if args.likelihood is Likelihood.FLAT:
-        return 1.
-    elif args.likelihood is Likelihood.GAUSSIAN:
-        fr_bf = args.measured_ratio
-        return gaussian_llh(fr, fr_bf, args.sigma_ratio)
-    elif args.likelihood is Likelihood.GOLEMFIT:
-        raise NotImplementedError('TODO')
-        from collections import namedtuple
-        datapaths = gf.DataPaths()
-        IceModels = namedtuple('IceModels', 'std_half2')
-        fitters = IceModels(*[
-            gf.GolemFit(datapaths,
-                        gf.gen_steering_params(SteeringCateg.__members__[ice]),
-                        xs_params(XSCateg.nom)) for ice in IceModels._fields])
-        for fitter in fitters:
-            fitter.SetFitParametersFlag(fit_flags(FitFlagCateg.xs))
-            fitter.SetFitPriors(fit_priors(FitPriorsCateg.xs))
 

@@ -56,17 +56,18 @@ class Priors(Enum):
 
 
 class SteeringCateg(Enum):
-    BASELINE              = 1
-    HOLEICE               = 2
-    ABSORPTION            = 3
-    SCATTERING            = 4
-    SCATTERING_ABSORPTION = 5
-    STD                   = 6
-    STD_HALF1             = 7
-    STD_HALF2             = 8
-    LONGLIFE              = 9
-    DPL                   = 10
-
+    P2_0                  = 1
+    P2_1                  = 2
+    # TODO(shivesh): fix this "P2_-1"
+    P2__1                 = 3
+    P2__3                 = 4
+    P2_0_HALF1            = 5
+    P2_0_HALF2            = 6
+    ABSORPTION            = 7
+    SCATTERING            = 8
+    SCATTERING_ABSORPTION = 9
+    LONGLIFE              = 10
+    DPL                   = 11
 
 class XSCateg(Enum):
     HALF    = 1

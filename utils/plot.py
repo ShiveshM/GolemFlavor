@@ -84,7 +84,7 @@ def gen_figtext(args):
                     'observed flavour ratio = [{3:.2f}, {4:.2f}, ' \
                     '{5:.2f}]\nSigma = {6:.3f}\nDimension = {7}\nEnergy = {8} ' \
                     'GeV'.format(
-                        sr1, sr3, sr2, mr1, mr2, mr3, args.sigma_ratio,
+                        sr1, sr2, sr3, mr1, mr2, mr3, args.sigma_ratio,
                         args.dimension, int(args.energy)
                     )
     else:

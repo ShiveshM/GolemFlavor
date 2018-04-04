@@ -9,7 +9,7 @@ Misc functions for the BSM flavour ratio analysis
 
 from __future__ import absolute_import, division
 
-import os
+import os, sys
 import errno
 import multiprocessing
 
@@ -112,6 +112,14 @@ class ParamSet(Sequence):
     def __iter__(self):
         return iter(self._params)
 
+    def __str__(self):
+        o = '\n'
+        for obj in self._params:
+            o += '== {0:<15} = {1:<15}, tag={2:<15}\n'.format(
+                obj.name, obj.value, obj.tag
+            )
+        return o
+
     @property
     def _by_name(self):
         return {obj.name: obj for obj in self._params}
@@ -147,26 +155,21 @@ class ParamSet(Sequence):
     def to_dict(self):
         return {obj.name: obj.value for obj in self._params}
 
-    def from_tag(self, tag):
-        return tuple([obj for obj in self._params if obj.tag is tag])
-
-    def remove_tag(self, tag):
-        return tuple([obj for obj in self._params if obj.tag is not tag])
-
-    def idx_from_tag(self, tag):
-        return tuple([idx for idx, obj in enumerate(self._params)
-                      if obj.tag is tag])
-
-    def not_idx_from_tag(self, tag):
-        return tuple([idx for idx, obj in enumerate(self._params)
-                      if obj.tag is not tag])
-
-    def slice_from_tag(self, array, tags):
-        tags = [tags]
-        idxs = []
-        for tag in tags:
-            idxs.extend(self.idx_from_tag(tag))
-        return array[idxs,]
+    def from_tag(self, tag, values=False, index=False, invert=False):
+        if values and index: assert 0
+        tag = np.atleast_1d(tag)
+        if not invert:
+            ps = [(idx, obj) for idx, obj in enumerate(self._params)
+                  if obj.tag in tag]
+        else:
+            ps = [(idx, obj) for idx, obj in enumerate(self._params)
+                  if obj.tag not in tag]
+        if values:
+            return tuple([io[1].value for io in ps])
+        elif index:
+            return tuple([io[0] for io in ps])
+        else:
+            return ParamSet([io[1] for io in ps])
 
 
 class SortingHelpFormatter(argparse.HelpFormatter):
@@ -285,4 +288,10 @@ def thread_type(t):
         return multiprocessing.cpu_count()
     else:
         return int(t)
+
+
+def thread_factors(t):
+    for x in reversed(range(int(np.ceil(np.sqrt(t)))+1)):
+        if t%x == 0:
+            return (x, int(t/x))
 

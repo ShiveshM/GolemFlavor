@@ -57,7 +57,7 @@ class Param(object):
     def tag(self):
         return self._tag
 
-    @tex.setter
+    @tag.setter
     def tag(self, t):
         if t is None: self._tag = ParamTag.NONE
         else:
@@ -150,9 +150,23 @@ class ParamSet(Sequence):
     def from_tag(self, tag):
         return tuple([obj for obj in self._params if obj.tag is tag])
 
+    def remove_tag(self, tag):
+        return tuple([obj for obj in self._params if obj.tag is not tag])
+
     def idx_from_tag(self, tag):
         return tuple([idx for idx, obj in enumerate(self._params)
                       if obj.tag is tag])
+
+    def not_idx_from_tag(self, tag):
+        return tuple([idx for idx, obj in enumerate(self._params)
+                      if obj.tag is not tag])
+
+    def slice_from_tag(self, array, tags):
+        tags = [tags]
+        idxs = []
+        for tag in tags:
+            idxs.extend(self.idx_from_tag(tag))
+        return array[idxs,]
 
 
 class SortingHelpFormatter(argparse.HelpFormatter):

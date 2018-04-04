@@ -45,7 +45,8 @@ class ParamTag(Enum):
     MMANGLES  = 2
     SCALE     = 3
     SRCANGLES = 4
-    NONE      = 5
+    BESTFIT   = 5
+    NONE      = 6
 
 
 class Priors(Enum):

@@ -21,7 +21,7 @@ from utils import gf as gf_utils
 from utils import likelihood as llh_utils
 from utils import mcmc as mcmc_utils
 from utils import misc as misc_utils
-from utils.enums import Likelihood, ParamTag
+from utils.enums import Likelihood, MCMCSeedType, ParamTag
 from utils.fr import MASS_EIGENVALUES, normalise_fr
 from utils.misc import Param, ParamSet
 from utils.plot import plot_argparse, chainer_plot
@@ -219,10 +219,14 @@ def main():
 
         ndim = len(mcmc_paramset)
         ntemps = 1
-        # p0 = mcmc_utils.gaussian_seed(
-        p0 = mcmc_utils.flat_seed(
-            mcmc_paramset, ntemps=ntemps, nwalkers=args.nwalkers
-        )
+        if args.mcmc_seed_type == MCMCSeedType.UNIFORM:
+            p0 = mcmc_utils.flat_seed(
+                mcmc_paramset, ntemps=ntemps, nwalkers=args.nwalkers
+            )
+        elif args.mcmc_seed_type == MCMCSeedType.GAUSSIAN:
+            p0 = mcmc_utils.gaussian_seed(
+                mcmc_paramset, ntemps=ntemps, nwalkers=args.nwalkers
+            )
 
         samples = mcmc_utils.mcmc(
             p0           = p0,

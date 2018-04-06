@@ -16,19 +16,6 @@ class DataType(Enum):
     ASMIMOV = 3
 
 
-class FitCateg(Enum):
-    HESESPL  = 1
-    HESEDPL  = 2
-    ZPSPL    = 3
-    ZPDPL    = 4
-    NUNUBAR2 = 5
-
-
-class FitFlagCateg(Enum):
-    DEFAULT = 1
-    XS      = 2
-
-
 class FitPriorsCateg(Enum):
     DEFAULT = 1
     XS      = 2
@@ -49,10 +36,9 @@ class ParamTag(Enum):
     NONE      = 6
 
 
-class Priors(Enum):
-    UNIFORM    = 1
-    LOGUNIFORM = 2
-    JEFFREYS   = 3
+class MCMCSeedType(Enum):
+    UNIFORM  = 1
+    GAUSSIAN = 2
 
 
 class SteeringCateg(Enum):
@@ -68,11 +54,4 @@ class SteeringCateg(Enum):
     SCATTERING_ABSORPTION = 9
     LONGLIFE              = 10
     DPL                   = 11
-
-class XSCateg(Enum):
-    HALF    = 1
-    NOM     = 2
-    TWICE   = 3
-    TWICE01 = 4
-    TWICE02 = 5
 

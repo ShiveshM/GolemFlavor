@@ -1,0 +1,74 @@
+test_LV.py:11: RuntimeWarning: to-Python converter for nusquids::marray<double, 2u, std::allocator<double> > already registered; second conversion method ignored.
+  import GolemFitPy as gf
+test_LV.py:11: RuntimeWarning: to-Python converter for nusquids::marray<double, 5u, std::allocator<double> > already registered; second conversion method ignored.
+  import GolemFitPy as gf
+reset_steering: 1
+reset_data: 1
+reset_npp: 1
+GolemFit constructor: checking paths
+Constructing DiffuseWeightMaker
+Loading data
+Loading HESE data.
+Reading a file from path /data/user/smandalia/GolemTools/sources/GolemFit/data/HESEData.txt
+Loaded HESE 80 events.
+Loading MC
+Preparing to read /data/user/smandalia/GolemTools/sources/GolemFit/monte_carlo//HESE/nue_p2_0.h5 into main simulation
+Reading a file from path /data/user/smandalia/GolemTools/sources/GolemFit/monte_carlo//HESE/nue_p2_0.h5
+Finish reading /data/user/smandalia/GolemTools/sources/GolemFit/monte_carlo//HESE/nue_p2_0.h5 now main simulation size is 420660
+Preparing to read /data/user/smandalia/GolemTools/sources/GolemFit/monte_carlo//HESE/numu_p2_0.h5 into main simulation
+Reading a file from path /data/user/smandalia/GolemTools/sources/GolemFit/monte_carlo//HESE/numu_p2_0.h5
+Finish reading /data/user/smandalia/GolemTools/sources/GolemFit/monte_carlo//HESE/numu_p2_0.h5 now main simulation size is 616803
+Preparing to read /data/user/smandalia/GolemTools/sources/GolemFit/monte_carlo//HESE/nutau_p2_0.h5 into main simulation
+Reading a file from path /data/user/smandalia/GolemTools/sources/GolemFit/monte_carlo//HESE/nutau_p2_0.h5
+Finish reading /data/user/smandalia/GolemTools/sources/GolemFit/monte_carlo//HESE/nutau_p2_0.h5 now main simulation size is 740041
+Preparing to read /data/user/smandalia/GolemTools/sources/GolemFit/monte_carlo//HESE/muongun.h5 into main simulation
+Reading a file from path /data/user/smandalia/GolemTools/sources/GolemFit/monte_carlo//HESE/muongun.h5
+Finish reading /data/user/smandalia/GolemTools/sources/GolemFit/monte_carlo//HESE/muongun.h5 now main simulation size is 740161
+Loaded 740161 events in main simulation set
+Loading Flux weighter
+Loading nusquids objects
+Weighting MC
+Initializing simulation weights
+Applying selfveto correction.
+HESE reshuffle has not been performed.
+Doing HESE reshuffle
+Making data hist
+Making sim hist
+Constructing likelihood problem with default settings
+Setting up Asimov set with parameters
+Conventional normalization 1
+Prompt normalization 1
+Atmospheric muon normalization 1
+Astro component overall normalization 8
+Astro E component 0.333333
+Astro Mu component 0.333333
+Astro Tau component 0.333333
+Astroparticle balance 1
+Astro gamma 2.5
+Astro cutoff 10
+CR gamma 0
+Conv pi/k ratio 1
+Conv particle balance 1
+Conv zenith correction 0
+Dark normalization 0
+DOM efficiency 0.99
+Astro component overall normalization second 0
+Astro gamma second 2
+Holeice forward 0
+Anisotropy scale1
+
+Remaking data hist
+Reconstrucing likelihood problem
+NULL min_llh 835.848062048
+NULL expectation [11.96478761 11.90169848 10.78840154  9.20158936  7.23605538  5.59952977
+  4.39850777  3.35653018  2.58491686  1.92834114  1.46813946  1.11581282
+  0.8492433   0.65154743  0.46727371  0.36211812  0.32718588  0.69746002
+  0.29475116  0.05150809]
+
+Applying new flavor physics to MC weights.
+Entering ApplyNewPhysics
+Entering ConstructNuSQuIDSObjectsForLV.
+Rotated Unitary Transform
+In for loop
+Entering inner for loop
+Leaving inner for loop

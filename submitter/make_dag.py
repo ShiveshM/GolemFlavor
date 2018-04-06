@@ -36,6 +36,7 @@ nsteps   = 100
 nwalkers = 200
 seed     = 24
 threads  = 1
+mcmc_seed_type = 'uniform'
 
 # FR
 dimension    = [3]
@@ -46,6 +47,9 @@ sigma_ratio  = ['0.01']
 scale        = "1E-20 1E-30"
 scale_region = "1E10"
 
+# Likelihood
+likelihood = 'golemfit'
+
 # Nuisance
 astroDeltaGamma = 2.
 astroNorm       = 1.
@@ -54,11 +58,8 @@ muonNorm        = 1.
 promptNorm      = 0.
 
 # GolemFit
-aft    = 'hesespl'
-ast    = 'baseline'
-axs    = 'nom'
-data   = 'real'
-priors = 'uniform'
+ast  = 'p2_0'
+data = 'real'
 
 # Plot
 plot_angles   = 'True'
@@ -110,14 +111,13 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\tmuonNorm="{1}"\n'.format(job_number, muonNorm))
                     f.write('VARS\tjob{0}\tpromptNorm="{1}"\n'.format(job_number, promptNorm))
                     f.write('VARS\tjob{0}\tdata="{1}"\n'.format(job_number, data))
-                    f.write('VARS\tjob{0}\tpriors="{1}"\n'.format(job_number, priors))
-                    f.write('VARS\tjob{0}\taft="{1}"\n'.format(job_number, aft))
                     f.write('VARS\tjob{0}\tast="{1}"\n'.format(job_number, ast))
-                    f.write('VARS\tjob{0}\taxs="{1}"\n'.format(job_number, axs))
                     f.write('VARS\tjob{0}\tplot_angles="{1}"\n'.format(job_number, plot_angles))
                     f.write('VARS\tjob{0}\tplot_elements="{1}"\n'.format(job_number, plot_elements))
                     f.write('VARS\tjob{0}\tseed="{1}"\n'.format(job_number, seed))
                     f.write('VARS\tjob{0}\tthreads="{1}"\n'.format(job_number, threads))
+                    f.write('VARS\tjob{0}\tlikelihood="{1}"\n'.format(job_number, likelihood))
+                    f.write('VARS\tjob{0}\tmcmc_seed_type="{1}"\n'.format(job_number, mcmc_seed_type))
                     job_number += 1
 
                 for frs in full_scan_mfr:
@@ -151,12 +151,11 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\tmuonNorm="{1}"\n'.format(job_number, muonNorm))
                     f.write('VARS\tjob{0}\tpromptNorm="{1}"\n'.format(job_number, promptNorm))
                     f.write('VARS\tjob{0}\tdata="{1}"\n'.format(job_number, data))
-                    f.write('VARS\tjob{0}\tpriors="{1}"\n'.format(job_number, priors))
-                    f.write('VARS\tjob{0}\taft="{1}"\n'.format(job_number, aft))
                     f.write('VARS\tjob{0}\tast="{1}"\n'.format(job_number, ast))
-                    f.write('VARS\tjob{0}\taxs="{1}"\n'.format(job_number, axs))
                     f.write('VARS\tjob{0}\tplot_angles="{1}"\n'.format(job_number, plot_angles))
                     f.write('VARS\tjob{0}\tplot_elements="{1}"\n'.format(job_number, plot_elements))
                     f.write('VARS\tjob{0}\tseed="{1}"\n'.format(job_number, seed))
                     f.write('VARS\tjob{0}\tthreads="{1}"\n'.format(job_number, threads))
+                    f.write('VARS\tjob{0}\tlikelihood="{1}"\n'.format(job_number, likelihood))
+                    f.write('VARS\tjob{0}\tmcmc_seed_type="{1}"\n'.format(job_number, mcmc_seed_type))
                     job_number += 1

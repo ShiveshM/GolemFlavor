@@ -10,13 +10,15 @@ Useful functions to use an MCMC for the BSM flavour ratio analysis
 from __future__ import absolute_import, division
 
 import argparse
+from functools import partial
 
 import emcee
 import tqdm
 
 import numpy as np
 
-from utils.misc import make_dir, parse_bool
+from utils.enums import MCMCSeedType
+from utils.misc import enum_parse, make_dir, parse_bool
 
 
 def mcmc(p0, triangle_llh, lnprior, ndim, nwalkers, burnin, nsteps, ntemps=1, threads=1):
@@ -64,6 +66,11 @@ def mcmc_argparse(parser):
     parser.add_argument(
         '--nsteps', type=int, default=2000,
         help='Number of steps to run'
+    )
+    parser.add_argument(
+        '--mcmc-seed-type', default='uniform',
+        type=partial(enum_parse, c=MCMCSeedType), choices=MCMCSeedType,
+        help='Type of distrbution to make the initial MCMC seed'
     )
 
 

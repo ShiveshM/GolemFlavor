@@ -25,13 +25,15 @@ from utils.enums import Likelihood, ParamTag
 class Param(object):
     """Parameter class to store parameters.
     """
-    def __init__(self, name, value, ranges, std=None, tex=None, tag=None):
+    def __init__(self, name, value, ranges, seed=None, std=None, tex=None, tag=None):
+        self._seed = None
         self._ranges = None
         self._tex = None
         self._tag = None
 
         self.name = name
         self.value = value
+        self.seed = seed
         self.ranges = ranges
         self.std = std
         self.tex = tex
@@ -44,6 +46,16 @@ class Param(object):
     @ranges.setter
     def ranges(self, values):
         self._ranges = [val for val in values]
+
+    @property
+    def seed(self):
+        if self._seed is None: return self.ranges
+        return tuple(self._seed)
+
+    @seed.setter
+    def seed(self, values):
+        if values is None: return
+        self._seed = [val for val in values]
 
     @property
     def tex(self):
@@ -135,6 +147,10 @@ class ParamSet(Sequence):
     @property
     def values(self):
         return tuple([obj.value for obj in self._params])
+
+    @property
+    def seeds(self):
+        return tuple([obj.seed for obj in self._params])
 
     @property
     def ranges(self):

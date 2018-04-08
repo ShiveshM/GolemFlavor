@@ -31,11 +31,11 @@ fix_sfr_mfr = [
 
 # MCMC
 run_mcmc = 'True'
-burnin   = 20
-nsteps   = 100
+burnin   = 50
+nsteps   = 500
 nwalkers = 200
 seed     = 24
-threads  = 1
+threads  = 12
 mcmc_seed_type = 'uniform'
 
 # FR

@@ -33,11 +33,11 @@ def define_nuisance():
     """
     tag = ParamTag.NUISANCE
     nuisance = ParamSet(
-        Param(name='convNorm'       , value=1. , ranges=[0., 5.], std=0.3 , tag=tag),
-        Param(name='promptNorm'     , value=0. , ranges=[0., 5.], std=0.05, tag=tag),
-        Param(name='muonNorm'       , value=1. , ranges=[0., 5.], std=0.1 , tag=tag),
-        Param(name='astroNorm'      , value=1. , ranges=[0., 5.], std=0.1 , tag=tag),
-        Param(name='astroDeltaGamma', value=2. , ranges=[0., 5.], std=0.1 , tag=tag)
+        Param(name='convNorm',        value=1., seed=[0.5, 2. ], ranges=[0. , 50.], std=0.3,  tag=tag),
+        Param(name='promptNorm',      value=0., seed=[0. , 6. ], ranges=[0. , 50.], std=0.05, tag=tag),
+        Param(name='muonNorm',        value=1., seed=[0. , 2. ], ranges=[0. , 50.], std=0.1,  tag=tag),
+        Param(name='astroNorm',       value=1., seed=[4. , 10.], ranges=[0. , 50.], std=0.1,  tag=tag),
+        Param(name='astroDeltaGamma', value=2., seed=[2. , 3. ], ranges=[-5., 5. ], std=0.1,  tag=tag)
     )
     return nuisance
 

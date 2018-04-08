@@ -77,8 +77,8 @@ def mcmc_argparse(parser):
 def flat_seed(paramset, ntemps, nwalkers):
     """Get gaussian seed values for the MCMC."""
     ndim = len(paramset)
-    low = np.array(paramset.ranges).T[0]
-    high = np.array(paramset.ranges).T[1]
+    low = np.array(paramset.seeds).T[0]
+    high = np.array(paramset.seeds).T[1]
     p0 = np.random.uniform(
         low=low, high=high, size=[ntemps, nwalkers, ndim]
     )

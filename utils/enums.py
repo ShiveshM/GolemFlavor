@@ -44,14 +44,4 @@ class MCMCSeedType(Enum):
 class SteeringCateg(Enum):
     P2_0                  = 1
     P2_1                  = 2
-    # TODO(shivesh): fix this "P2_-1"
-    P2__1                 = 3
-    P2__3                 = 4
-    P2_0_HALF1            = 5
-    P2_0_HALF2            = 6
-    ABSORPTION            = 7
-    SCATTERING            = 8
-    SCATTERING_ABSORPTION = 9
-    LONGLIFE              = 10
-    DPL                   = 11
 

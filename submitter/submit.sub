@@ -16,7 +16,7 @@ getenv = True
 # +TransferOutput="" 
 
 request_memory = 1GB
-request_cpus = 1
+request_cpus = 12
 
 Universe        = vanilla 
 Notification    = never 
@@ -32,6 +32,7 @@ Notification    = never
 
 # Requirements = IS_GLIDEIN && HAS_CVMFS_icecube_opensciencegrid_org && (OpSysAndVer =?= "CentOS6" || OpSysAndVer =?= "RedHat6" || OpSysAndVer =?= "SL6")
 # Requirements = IS_GLIDEIN
+requirements = (OpSysMajorVer =?= 6)
 
 # GO! 
 queue

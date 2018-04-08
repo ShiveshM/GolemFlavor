@@ -32,33 +32,24 @@ def steering_params(args):
     # params.fastmode = False
     # params.readCompact = True
     params.readCompact = False
-    params.do_HESE_reshuffle = False
-    params.sampleToLoad = gf.sampleTag.HESE
     params.simToLoad= steering_categ.name.lower()
     params.evalThreads = args.threads
     # params.evalThreads = thread_factors(args.threads)[1]
-    params.baseline_astro_spectral_index = -2.
     params.spline_hole_ice = True
     params.spline_dom_efficiency = True
-    if steering_categ == SteeringCateg.LONGLIFE:
-        params.years = [999]
-        params.simToLoad= 'p2_0'
-    elif steering_categ == SteeringCateg.DPL:
-        params.diffuse_fit_type = gf.DiffuseFitType.DoublePowerLaw
-        params.simToLoad= 'p2_0'
     return params
 
 
 def set_up_as(fitter, params):
     print 'Injecting the model', params
-    asimov_params = gf.FitParameters()
+    asimov_params = gf.FitParameters(gf.sampleTag.HESE)
     for parm in params:
         asimov_params.__setattr__(parm.name, parm.value)
     fitter.SetupAsimov(asimov_params)
 
 
 def get_llh(fitter, params):
-    fitparams = gf.FitParameters()
+    fitparams = gf.FitParameters(gf.sampleTag.HESE)
     for parm in params:
         fitparams.__setattr__(parm.name, parm.value)
     return fitter.EvalLLH(fitparams)

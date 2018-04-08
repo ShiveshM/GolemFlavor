@@ -5,3 +5,4 @@ nohup.out
 plots/
 *.pdf
 dagman_FR.submit*
+submitter/logs/

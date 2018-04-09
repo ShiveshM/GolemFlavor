@@ -76,7 +76,7 @@ for i in range(len(sys.argv)-1):
         figure = LVCPT.MakeFlavorTriangle(flavor_list, divisions = 5, save_file=True, 
                        filename = filename + "_hist", icolor = "g", icolormap = colors_schemes[i],
                        triangle_collection=triangle_collection, figure = figure, alpha = 0.8,
-                       initial_flavor_ratio = [0,1,0], subdivisions = True, color_scale = "lin",
+                       initial_flavor_ratio = [0,1,0], subdivisions = True, color_scale = "log",
                        output_format = output_format, inner_line_color ="silver",add_default_text = False,
                        plot_color_bar =True)
 
@@ -84,7 +84,7 @@ for i in range(len(sys.argv)-1):
         figure = LVCPT.MakeFlavorTriangle(flavor_list, divisions = 5, save_file=True,
                        filename = filename + "_hist", icolor = "g", icolormap = colors_schemes[i],
                        triangle_collection=triangle_collection, alpha = 0.8,
-                       initial_flavor_ratio = [0,1,0], subdivisions = True, color_scale = "lin",
+                       initial_flavor_ratio = [0,1,0], subdivisions = True, color_scale = "log",
                        output_format = output_format, inner_line_color = "silver",add_default_text = False,
                        plot_color_bar =True)
 

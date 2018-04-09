@@ -21,7 +21,7 @@ from getdist import plots
 from getdist import mcsamples
 
 from utils import misc as misc_utils
-from utils.enums import Likelihood, ParamTag
+from utils.enums import EnergyDependance, Likelihood, ParamTag
 from utils.fr import angles_to_u, angles_to_fr
 
 rc('text', usetex=False)
@@ -112,38 +112,38 @@ def gen_figtext(args):
         if args.fix_scale:
             t += 'Source flavour ratio = [{0:.2f}, {1:.2f}, {2:.2f}]\nIC ' \
                     'observed flavour ratio = [{3:.2f}, {4:.2f}, ' \
-                    '{5:.2f}]\nDimension = {7}\nScale = {9}'.format(
+                    '{5:.2f}]\nDimension = {6}\nScale = {7}'.format(
                         sr1, sr2, sr3, mr1, mr2, mr3, args.dimension,
                         int(args.energy), args.scale
                     )
         else:
             t += 'Source flavour ratio = [{0:.2f}, {1:.2f}, {2:.2f}]\nIC ' \
                     'observed flavour ratio = [{3:.2f}, {4:.2f}, ' \
-                    '{5:.2f}]\nDimension = {7}'.format(
+                    '{5:.2f}]\nDimension = {6}'.format(
                         sr1, sr2, sr3, mr1, mr2, mr3, args.dimension,
                         int(args.energy)
                     )
     else:
         if args.fix_scale:
             t += 'IC observed flavour ratio = [{0:.2f}, {1:.2f}, ' \
-                    '{2:.2f}]\nDimension = {4}\nScale = {6}'.format(
+                    '{2:.2f}]\nDimension = {3}\nScale = {4}'.format(
                         mr1, mr2, mr3, args.dimension, int(args.energy),
                         args.scale
                     )
 	else:
             t += 'IC observed flavour ratio = [{0:.2f}, {1:.2f}, ' \
-                    '{2:.2f}]\nDimension = {4}'.format(
+                    '{2:.2f}]\nDimension = {3}'.format(
                         mr1, mr2, mr3, args.dimension, int(args.energy)
                     )
     if args.likelihood is Likelihood.GAUSSIAN:
         t += '\nSigma = {0:.3f}'.format(args.sigma_ratio)
     if args.energy_dependance is EnergyDependance.SPECTRAL:
-        t += '\nSpectral Index = {0}\nBinning = [{7}, {8}] GeV - {9} bins'.format(
-            int(args.spectral_index), int(10**args.binning[0]),
-            int(10**args.binning[1]), int(args.binning[2])
+        t += '\nSpectral Index = {0}\nBinning = [{1}, {2}] TeV - {3} bins'.format(
+            int(args.spectral_index), int(args.binning[0]/1e3),
+            int(args.binning[-1]/1e3), len(args.binning)-1
         )
     elif args.energy_dependance is EnergyDependance.MONO:
-        t += '\nEnergy = {0} GeV'.format(args.energy)
+        t += '\nEnergy = {0} TeV'.format(int(args.energy/1e3))
     return t
 
 

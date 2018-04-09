@@ -48,7 +48,7 @@ scale             = "1E-20 1E-30"
 scale_region      = "1E10"
 energy_dependance = 'spectral'
 spectral_index    = -2
-binning           = [4, 7, 51]
+binning           = [1e4, 1e7, 10]
 
 # Likelihood
 likelihood = 'golemfit'

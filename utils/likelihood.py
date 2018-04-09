@@ -19,7 +19,7 @@ import GolemFitPy as gf
 
 from utils import fr as fr_utils
 from utils import gf as gf_utils
-from utils.enums import Likelihood, ParamTag
+from utils.enums import EnergyDependance, Likelihood, ParamTag
 from utils.misc import enum_parse
 
 
@@ -68,7 +68,7 @@ def triangle_llh(theta, args, asimov_paramset, mcmc_paramset, fitter):
             source_flux = args.source_ratio
         elif args.energy_dependance is EnergyDependance.SPECTRAL:
 	    source_flux = np.array(
-		[fr * np.power(bin_centers, SPECTRAL_INDEX)
+		[fr * np.power(bin_centers, args.spectral_index)
 		 for fr in args.source_ratio]
 	    ).T
     else:

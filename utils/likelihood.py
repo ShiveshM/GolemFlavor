@@ -59,26 +59,64 @@ def triangle_llh(theta, args, asimov_paramset, mcmc_paramset, fitter):
     for param in mcmc_paramset.from_tag(ParamTag.NUISANCE):
         hypo_paramset[param.name].value = param.value
 
+    if args.energy_dependance is EnergyDependance.SPECTRAL:
+        bin_centers = np.sqrt(args.binning[:-1]*args.binning[1:])
+        bin_width = np.abs(np.diff(args.binning))
+
     if args.fix_source_ratio:
-        fr1, fr2, fr3 = args.source_ratio
+        if args.energy_dependance is EnergyDependance.MONO:
+            source_flux = args.source_ratio
+        elif args.energy_dependance is EnergyDependance.SPECTRAL:
+	    source_flux = np.array(
+		[fr * np.power(bin_centers, SPECTRAL_INDEX)
+		 for fr in args.source_ratio]
+	    ).T
     else:
-        fr1, fr2, fr3 = fr_utils.angles_to_fr(
-            mcmc_paramset.from_tag(ParamTag.SRCANGLES, values=True)
-        )
+        if args.energy_dependance is EnergyDependance.MONO:
+            source_flux = fr_utils.angles_to_fr(
+                mcmc_paramset.from_tag(ParamTag.SRCANGLES, values=True)
+            )
+        elif args.energy_dependance is EnergyDependance.SPECTRAL:
+            source_flux = np.array(
+                [fr * np.power(bin_centers, args.spectral_index)
+                 for fr in angles_to_fr(theta[-2:])]
+            ).T
+
     bsm_angles = mcmc_paramset.from_tag(
         [ParamTag.SCALE, ParamTag.MMANGLES], values=True
     )
 
-    u = fr_utils.params_to_BSMu(
-        theta      = bsm_angles,
-        dim        = args.dimension,
-        energy     = args.energy,
-        no_bsm     = args.no_bsm,
-        fix_mixing = args.fix_mixing,
-        fix_scale  = args.fix_scale,
-        scale      = args.scale
-    )
-    fr = fr_utils.u_to_fr((fr1, fr2, fr3), u)
+    if args.energy_dependance is EnergyDependance.MONO:
+        u = fr_utils.params_to_BSMu(
+            theta      = bsm_angles,
+            dim        = args.dimension,
+            energy     = args.energy,
+            no_bsm     = args.no_bsm,
+            fix_mixing = args.fix_mixing,
+            fix_scale  = args.fix_scale,
+            scale      = args.scale
+        )
+        fr = fr_utils.u_to_fr(source_flux, u)
+    elif args.energy_dependance is EnergyDependance.SPECTRAL:
+        mf_perbin = []
+        for i_sf, sf_perbin in enumerate(source_flux):
+            u = fr_utils.params_to_BSMu(
+                theta      = bsm_angles,
+                dim        = args.dimension,
+                energy     = args.energy,
+                no_bsm     = args.no_bsm,
+                fix_mixing = args.fix_mixing,
+                fix_scale  = args.fix_scale,
+                scale      = args.scale
+            )
+            fr = fr_utils.u_to_fr(sf_perbin, u)
+            mf_perbin.append(fr)
+        measured_flux = np.array(mf_perbin).T
+        intergrated_measured_flux = np.sum(measured_flux * bin_width, axis=1)
+        averaged_measured_flux = (1./(args.binning[-1] - args.binning[0])) * \
+            intergrated_measured_flux
+        fr = averaged_measured_flux / np.sum(averaged_measured_flux)
+
     for idx, param in enumerate(hypo_paramset.from_tag(ParamTag.BESTFIT)):
         param.value = fr[idx]
 

@@ -21,9 +21,9 @@ from utils import gf as gf_utils
 from utils import likelihood as llh_utils
 from utils import mcmc as mcmc_utils
 from utils import misc as misc_utils
-from utils.enums import Likelihood, MCMCSeedType, ParamTag
+from utils.enums import EnergyDependance, Likelihood, MCMCSeedType, ParamTag
 from utils.fr import MASS_EIGENVALUES, normalise_fr
-from utils.misc import Param, ParamSet
+from utils.misc import enum_parse, Param, ParamSet
 from utils.plot import plot_argparse, chainer_plot
 
 
@@ -108,12 +108,25 @@ def process_args(args):
     if args.fix_source_ratio:
         args.source_ratio = normalise_fr(args.source_ratio)
 
-    if not args.fix_scale:
-        args.scale = np.power(
-            10, np.round(np.log10(MASS_EIGENVALUES[1]/args.energy)) - \
-            np.log10(args.energy**(args.dimension-3))
+    if args.energy_dependance is EnergyDependance.SPECTRAL:
+        args.binning = np.logspace(
+            np.log10(args.binning[0]), np.log10(args.binning[1]), args.binning[2]+1
         )
-        """Estimate the scale of when to expect the BSM term to contribute."""
+
+    if not args.fix_scale:
+        if args.energy_dependance is EnergyDependance.MONO:
+            args.scale = np.power(
+                10, np.round(np.log10(MASS_EIGENVALUES[1]/args.energy)) - \
+                np.log10(args.energy**(args.dimension-3))
+            )
+        elif args.energy_dependance is EnergyDependance.SPECTRAL:
+            args.scale = np.power(
+                10, np.round(
+                    np.log10(MASS_EIGENVALUES[1]/np.power(10, np.average(np.log10(args.binning)))) \
+                    - np.log10(np.power(10, np.average(np.log10(args.binning)))**(args.dimension-3))
+                )
+            )
+            """Estimate the scale of when to expect the BSM term to contribute."""
 
 
 def parse_args():
@@ -133,6 +146,19 @@ def parse_args():
     parser.add_argument(
         '--fix-source-ratio', type=misc_utils.parse_bool, default='False',
         help='Fix the source flavour ratio'
+    )
+    parser.add_argument(
+        '--energy-dependance', default='spectral', type=partial(enum_parse, c=EnergyDependance),
+        choices=EnergyDependance,
+        help='Type of energy dependance to use in the BSM fit'
+    )
+    parser.add_argument(
+        '--spectral-index', default=-2, type=int,
+        help='Spectral index for spectral energy dependance'
+    )
+    parser.add_argument(
+        '--binning', default=[4, 7, 50], type=int, nargs=3,
+        help='Binning for spectral energy dependance'
     )
     parser.add_argument(
         '--source-ratio', type=int, nargs=3, default=[2, 1, 0],

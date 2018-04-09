@@ -344,7 +344,6 @@ def u_to_fr(source_fr, matrix):
         array([ 0.33740075,  0.33176584,  0.33083341])
 
     """
-    # TODO(shivesh): energy dependence
     composition = np.einsum(
         'ai, bi, a -> b', abs(matrix)**2, abs(matrix)**2, source_fr
     )

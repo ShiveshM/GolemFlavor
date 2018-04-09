@@ -21,7 +21,7 @@ from getdist import plots
 from getdist import mcsamples
 
 from utils import misc as misc_utils
-from utils.enums import ParamTag
+from utils.enums import Likelihood, ParamTag
 from utils.fr import angles_to_u, angles_to_fr
 
 rc('text', usetex=False)
@@ -68,40 +68,47 @@ def plot_Tchain(Tchain, axes_labels, ranges):
 
 def gen_figtext(args):
     """Generate the figure text."""
+    t = ''
     mr1, mr2, mr3 = args.measured_ratio
     if args.fix_source_ratio:
         sr1, sr2, sr3 = args.source_ratio
         if args.fix_scale:
-            return 'Source flavour ratio = [{0:.2f}, {1:.2f}, {2:.2f}]\nIC ' \
+            t += 'Source flavour ratio = [{0:.2f}, {1:.2f}, {2:.2f}]\nIC ' \
                     'observed flavour ratio = [{3:.2f}, {4:.2f}, ' \
-                    '{5:.2f}]\nSigma = {6:.3f}\nDimension = {7}\nEnergy = ' \
-                    '{8} GeV\nScale = {9}'.format(
-                        sr1, sr2, sr3, mr1, mr2, mr3, args.sigma_ratio,
-                        args.dimension, int(args.energy), args.scale
+                    '{5:.2f}]\nDimension = {7}\nScale = {9}'.format(
+                        sr1, sr2, sr3, mr1, mr2, mr3, args.dimension,
+                        int(args.energy), args.scale
                     )
         else:
-            return 'Source flavour ratio = [{0:.2f}, {1:.2f}, {2:.2f}]\nIC ' \
+            t += 'Source flavour ratio = [{0:.2f}, {1:.2f}, {2:.2f}]\nIC ' \
                     'observed flavour ratio = [{3:.2f}, {4:.2f}, ' \
-                    '{5:.2f}]\nSigma = {6:.3f}\nDimension = {7}\nEnergy = {8} ' \
-                    'GeV'.format(
-                        sr1, sr2, sr3, mr1, mr2, mr3, args.sigma_ratio,
-                        args.dimension, int(args.energy)
+                    '{5:.2f}]\nDimension = {7}'.format(
+                        sr1, sr2, sr3, mr1, mr2, mr3, args.dimension,
+                        int(args.energy)
                     )
     else:
         if args.fix_scale:
-            return 'IC observed flavour ratio = [{0:.2f}, {1:.2f}, ' \
-                    '{2:.2f}]\nSigma = {3:.3f}\nDimension = {4}\nEnergy = {5} ' \
-                    'GeV\nScale = {6}'.format(
-                        mr1, mr2, mr3, args.sigma_ratio, args.dimension,
-                        int(args.energy), args.scale
+            t += 'IC observed flavour ratio = [{0:.2f}, {1:.2f}, ' \
+                    '{2:.2f}]\nDimension = {4}\nScale = {6}'.format(
+                        mr1, mr2, mr3, args.dimension, int(args.energy),
+                        args.scale
                     )
 	else:
-            return 'IC observed flavour ratio = [{0:.2f}, {1:.2f}, ' \
-                    '{2:.2f}]\nSigma = {3:.3f}\nDimension = {4}\nEnergy = {5} ' \
-                    'GeV'.format(
-                        mr1, mr2, mr3, args.sigma_ratio, args.dimension,
-                        int(args.energy)
+            t += 'IC observed flavour ratio = [{0:.2f}, {1:.2f}, ' \
+                    '{2:.2f}]\nDimension = {4}'.format(
+                        mr1, mr2, mr3, args.dimension, int(args.energy)
                     )
+    if args.likelihood is Likelihood.GAUSSIAN:
+        t += '\nSigma = {0:.3f}'.format(args.sigma_ratio)
+    if args.energy_dependance is EnergyDependance.SPECTRAL:
+        t += '\nSpectral Index = {0}\nBinning = [{7}, {8}] GeV - {9} bins'.format(
+            int(args.spectral_index), int(10**args.binning[0]),
+            int(10**args.binning[1]), int(args.binning[2])
+        )
+    elif args.energy_dependance is EnergyDependance.MONO:
+        t += '\nEnergy = {0} GeV'.format(args.energy)
+    return t
+
 
 def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
     """Make the triangle plot."""

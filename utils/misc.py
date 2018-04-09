@@ -88,13 +88,14 @@ class ParamSet(Sequence):
             except TypeError:
                 param_sequence.append(arg)
 
-        # Disallow duplicated params
-        all_names = [p.name for p in param_sequence]
-        unique_names = set(all_names)
-        if len(unique_names) != len(all_names):
-            duplicates = set([x for x in all_names if all_names.count(x) > 1])
-            raise ValueError('Duplicate definitions found for param(s): ' +
-                             ', '.join(str(e) for e in duplicates))
+        if len(param_sequence) != 0:
+            # Disallow duplicated params
+            all_names = [p.name for p in param_sequence]
+            unique_names = set(all_names)
+            if len(unique_names) != len(all_names):
+                duplicates = set([x for x in all_names if all_names.count(x) > 1])
+                raise ValueError('Duplicate definitions found for param(s): ' +
+                                 ', '.join(str(e) for e in duplicates))
 
         # Elements of list must be Param type
         assert all([isinstance(x, Param) for x in param_sequence]), \

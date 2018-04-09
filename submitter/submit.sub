@@ -15,7 +15,7 @@ getenv = True
 # but do not try to copy outputs back (see: https://htcondor-wiki.cs.wisc.edu/index.cgi/tktview?tn=3081) 
 # +TransferOutput="" 
 
-request_memory = 1GB
+request_memory = 2GB
 request_cpus = 12
 
 Universe        = vanilla 

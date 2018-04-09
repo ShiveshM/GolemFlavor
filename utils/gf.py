@@ -22,21 +22,15 @@ from utils.misc import enum_parse, thread_factors
 def steering_params(args):
     steering_categ = args.ast
     params = gf.SteeringParams()
-    if 'cobalt0' in socket.gethostname().split('.')[0]:
-        params.quiet = False
-    else:
-        params.quiet = True
-    # TODO(shivesh): figure out right number for missid
-    params.track_to_shower_missid = 0.3
+    params.quiet = False
     params.fastmode = True
-    # params.fastmode = False
-    # params.readCompact = True
-    params.readCompact = False
     params.simToLoad= steering_categ.name.lower()
+    params.spline_dom_efficiency = False
+    params.spline_hole_ice = False
+    params.spline_anisotrophy = False
     params.evalThreads = args.threads
     # params.evalThreads = thread_factors(args.threads)[1]
-    params.spline_hole_ice = True
-    params.spline_dom_efficiency = True
+    params.diffuse_fit_type = gf.DiffuseFitType.SinglePowerLaw
     return params
 
 
@@ -50,9 +44,12 @@ def set_up_as(fitter, params):
 
 def get_llh(fitter, params):
     fitparams = gf.FitParameters(gf.sampleTag.HESE)
+    # print params
     for parm in params:
         fitparams.__setattr__(parm.name, parm.value)
-    return fitter.EvalLLH(fitparams)
+    llh = -fitter.EvalLLH(fitparams)
+    # print '=== llh = {0}'.format(llh)
+    return llh
 
 
 def data_distributions(fitter):

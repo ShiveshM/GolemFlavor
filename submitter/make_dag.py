@@ -16,32 +16,32 @@ full_scan_mfr = [
 ]
 
 fix_sfr_mfr = [
-    # (1, 1, 1, 1, 0, 0),
-    # (1, 1, 1, 0, 1, 0),
+    (1, 1, 1, 1, 0, 0),
+    (1, 1, 1, 0, 1, 0),
     # (1, 1, 1, 0, 0, 1),
     (1, 1, 1, 1, 2, 0),
     # (1, 1, 0, 0, 1, 0),
-    # (1, 1, 0, 1, 2, 0),
+    (1, 1, 0, 1, 2, 0),
     # (1, 1, 0, 1, 0, 0),
     # (1, 0, 0, 1, 0, 0),
-    # (0, 1, 0, 0, 1, 0),
+    (0, 1, 0, 0, 1, 0),
     # (1, 2, 0, 0, 1, 0),
     # (1, 2, 0, 1, 2, 0)
 ]
 
 # MCMC
 run_mcmc = 'True'
-burnin   = 50
-nsteps   = 500
-nwalkers = 200
+burnin   = 1000
+nsteps   = 4000
+nwalkers = 70
 seed     = 24
 threads  = 12
 mcmc_seed_type = 'uniform'
 
 # FR
-dimension    = [3]
+dimension    = [3, 6]
 energy       = [1e6]
-likelihood   = 'gaussian'
+likelihood   = 'golemfit'
 no_bsm       = 'False'
 sigma_ratio  = ['0.01']
 scale        = "1E-20 1E-30"

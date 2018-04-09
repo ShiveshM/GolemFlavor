@@ -82,6 +82,8 @@ def triangle_llh(theta, args, asimov_paramset, mcmc_paramset, fitter):
     for idx, param in enumerate(hypo_paramset.from_tag(ParamTag.BESTFIT)):
         param.value = fr[idx]
 
+    # print 'hypo_paramset', hypo_paramset
+
     if args.likelihood is Likelihood.FLAT:
         return 1.
     elif args.likelihood is Likelihood.GAUSSIAN:
@@ -89,3 +91,12 @@ def triangle_llh(theta, args, asimov_paramset, mcmc_paramset, fitter):
         return gaussian_llh(fr, fr_bf, args.sigma_ratio)
     elif args.likelihood is Likelihood.GOLEMFIT:
         return gf_utils.get_llh(fitter, hypo_paramset)
+
+def ln_prob(theta, args, fitter, asimov_paramset, mcmc_paramset):
+    lp = lnprior(theta, paramset=mcmc_paramset)
+    if not np.isfinite(lp):
+        return -np.inf
+    return lp + triangle_llh(
+        theta, args=args, asimov_paramset=asimov_paramset,
+        mcmc_paramset=mcmc_paramset, fitter=fitter
+    )

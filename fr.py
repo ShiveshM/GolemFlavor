@@ -209,35 +209,29 @@ def main():
         else:
             fitter = None
 
-        triangle_llh = partial(
-            llh_utils.triangle_llh, args=args, mcmc_paramset=mcmc_paramset,
-            asimov_paramset=asimov_paramset, fitter=fitter
-        )
-        lnprior = partial(
-            llh_utils.lnprior, paramset=mcmc_paramset
+        ln_prob = partial(
+            llh_utils.ln_prob, args=args, fitter=fitter,
+            asimov_paramset=asimov_paramset, mcmc_paramset=mcmc_paramset
         )
 
         ndim = len(mcmc_paramset)
-        ntemps = 1
         if args.mcmc_seed_type == MCMCSeedType.UNIFORM:
             p0 = mcmc_utils.flat_seed(
-                mcmc_paramset, ntemps=ntemps, nwalkers=args.nwalkers
+                mcmc_paramset, nwalkers=args.nwalkers
             )
         elif args.mcmc_seed_type == MCMCSeedType.GAUSSIAN:
             p0 = mcmc_utils.gaussian_seed(
-                mcmc_paramset, ntemps=ntemps, nwalkers=args.nwalkers
+                mcmc_paramset, nwalkers=args.nwalkers
             )
 
         samples = mcmc_utils.mcmc(
-            p0           = p0,
-            triangle_llh = triangle_llh,
-            lnprior      = lnprior,
-            ndim         = ndim,
-            nwalkers     = args.nwalkers,
-            burnin       = args.burnin,
-            nsteps       = args.nsteps,
-            ntemps       = ntemps,
-            threads      = 1
+            p0       = p0,
+            ln_prob  = ln_prob,
+            ndim     = ndim,
+            nwalkers = args.nwalkers,
+            burnin   = args.burnin,
+            nsteps   = args.nsteps,
+            threads  = 1
             # TODO(shivesh): broken because you cannot pickle a GolemFitPy object
             # threads      = misc_utils.thread_factors(args.threads)[0]
         )

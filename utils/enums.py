@@ -16,6 +16,11 @@ class DataType(Enum):
     ASMIMOV = 3
 
 
+class EnergyDependance(Enum):
+    MONO     = 1
+    SPECTRAL = 2
+
+
 class FitPriorsCateg(Enum):
     DEFAULT = 1
     XS      = 2
@@ -42,6 +47,5 @@ class MCMCSeedType(Enum):
 
 
 class SteeringCateg(Enum):
-    P2_0                  = 1
-    P2_1                  = 2
-
+    P2_0 = 1
+    P2_1 = 2

@@ -39,13 +39,16 @@ threads  = 12
 mcmc_seed_type = 'uniform'
 
 # FR
-dimension    = [3, 6]
-energy       = [1e6]
-likelihood   = 'golemfit'
-no_bsm       = 'False'
-sigma_ratio  = ['0.01']
-scale        = "1E-20 1E-30"
-scale_region = "1E10"
+dimension         = [3, 6]
+energy            = [1e6]
+likelihood        = 'golemfit'
+no_bsm            = 'False'
+sigma_ratio       = ['0.01']
+scale             = "1E-20 1E-30"
+scale_region      = "1E10"
+energy_dependance = 'spectral'
+spectral_index    = -2
+binning           = [4, 7, 51]
 
 # Likelihood
 likelihood = 'golemfit'
@@ -118,6 +121,11 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\tthreads="{1}"\n'.format(job_number, threads))
                     f.write('VARS\tjob{0}\tlikelihood="{1}"\n'.format(job_number, likelihood))
                     f.write('VARS\tjob{0}\tmcmc_seed_type="{1}"\n'.format(job_number, mcmc_seed_type))
+                    f.write('VARS\tjob{0}\tenergy_dependance="{1}"\n'.format(job_number, energy_dependance))
+                    f.write('VARS\tjob{0}\tspectral_index="{1}"\n'.format(job_number, spectral_index))
+                    f.write('VARS\tjob{0}\tbinning_0="{1}"\n'.format(job_number, binning[0]))
+                    f.write('VARS\tjob{0}\tbinning_1="{1}"\n'.format(job_number, binning[1]))
+                    f.write('VARS\tjob{0}\tbinning_2="{1}"\n'.format(job_number, binning[2]))
                     job_number += 1
 
                 for frs in full_scan_mfr:
@@ -158,4 +166,9 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\tthreads="{1}"\n'.format(job_number, threads))
                     f.write('VARS\tjob{0}\tlikelihood="{1}"\n'.format(job_number, likelihood))
                     f.write('VARS\tjob{0}\tmcmc_seed_type="{1}"\n'.format(job_number, mcmc_seed_type))
+                    f.write('VARS\tjob{0}\tenergy_dependance="{1}"\n'.format(job_number, energy_dependance))
+                    f.write('VARS\tjob{0}\tspectral_index="{1}"\n'.format(job_number, spectral_index))
+                    f.write('VARS\tjob{0}\tbinning_0="{1}"\n'.format(job_number, binning[0]))
+                    f.write('VARS\tjob{0}\tbinning_1="{1}"\n'.format(job_number, binning[1]))
+                    f.write('VARS\tjob{0}\tbinning_2="{1}"\n'.format(job_number, binning[2]))
                     job_number += 1

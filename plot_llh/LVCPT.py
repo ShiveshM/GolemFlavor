@@ -127,11 +127,11 @@ def MakeFlavorTriangle(list_of_flavor_ratios, scale = 8,
     #             horizontalalignment="center",fontsize = 50, zorder = 10, rotation = -60)
 
     ax.text((p+s0*0.5+s0*0.025)[0], (p+s0*0.5-np.array([0,0.15*scale]))[1],r"$f_{e,\oplus}$",
-                horizontalalignment="center",fontsize = 50, zorder = 10)
-    ax.text((p+s1*0.5-0.2*s0)[0], (p+s1*0.5+0.1*s0)[1]+scale*0.1,r"$f_{\tau, \oplus}$",
                 horizontalalignment="center",fontsize = 50, zorder = 10, rotation = 60.)
+    ax.text((p+s1*0.5-0.2*s0)[0], (p+s1*0.5+0.1*s0)[1]+scale*0.1,r"$f_{\tau, \oplus}$",
+                horizontalalignment="center",fontsize = 50, zorder = 10, rotation = -60.)
     ax.text((p+s1*0.5 + 0.7*s0)[0], (p+s1*0.5 + 0.6*s0)[1]+0.05*scale,r"$f_{\mu, \oplus}$",
-                horizontalalignment="center",fontsize = 50, zorder = 10, rotation = -60)
+                horizontalalignment="center",fontsize = 50, zorder = 10)
 
     # construct triangle grid
     fsl = 35
@@ -155,6 +155,11 @@ def MakeFlavorTriangle(list_of_flavor_ratios, scale = 8,
             plt.plot(*PointToList(p+s0*subsize*float(divisions-(i-0.5)), p+s1-s1*subsize*float(i-0.5)), color = inner_line_color, lw = slw, ls = "dotted", zorder = -1)
             plt.plot(*PointToList(p+s1*subsize*float(divisions-(i-0.5)), p+s1+s2*subsize*float(i-0.5)), color = inner_line_color, lw = slw, ls = "dotted", zorder = -1)
 
+    # chi2
+    if (triangle_collection != None):
+        total_points = float(sum([ triangle.number_of_points for triangle in triangle_collection]))
+        max_points = float(max([ triangle.number_of_points for triangle in triangle_collection]))
+        delta_llh = [-2*(np.log10(triangle.number_of_points) - np.log10(max_points)) for triangle in triangle_collection]
 
     # plot triangle collection
     if (triangle_collection != None):
@@ -162,14 +167,18 @@ def MakeFlavorTriangle(list_of_flavor_ratios, scale = 8,
         total_points = float(sum([ triangle.number_of_points for triangle in triangle_collection]))
         max_points = float(max([ triangle.number_of_points for triangle in triangle_collection]))
         color_map = plt.get_cmap(icolormap)
-        for triangle in triangle_collection:
+        for i_triangle, triangle in enumerate(triangle_collection):
             if triangle.number_of_points > 0:
                 xx,yy = zip(*triangle.coordinates)
                 if color_scale == "lin":
                     plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(0.75), alpha = np.sqrt(float(triangle.number_of_points)/max_points))
                     #plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(float(triangle.number_of_points)/max_points), alpha = alpha)
                 elif color_scale == "log":
-                    plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(0.75), alpha = (np.log10(float(triangle.number_of_points))/np.log10(max_points)))
+                    # plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(0.75), alpha = (np.log10(float(triangle.number_of_points))/np.log10(max_points)))
+                    if delta_llh[i_triangle] > 2.30:
+                        plt.fill(xx,yy,lw = 0., zorder = -0.8, color = 'blue', alpha = np.sqrt(float(triangle.number_of_points)/max_points))
+                    else:
+                        plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(0.75), alpha = np.sqrt(float(triangle.number_of_points)/max_points))
                     #plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(0.7), alpha = (np.log10(float(triangle.number_of_points))/np.log10(max_points))**(2./3.))
                     #plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(np.log10(float(triangle.number_of_points))/np.log10(max_points)), alpha = alpha)
                     #plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(np.log10(float(triangle.number_of_points))))
@@ -186,15 +195,18 @@ def MakeFlavorTriangle(list_of_flavor_ratios, scale = 8,
             cbaxes = fig.add_axes([left,bottom,width,height])
             if color_scale == "lin":
                 norm = mpl.colors.Normalize(vmin = 0., vmax = max_points)
+                label_format='%.0e'
             elif color_scale == "log":
-                norm = mpl.colors.Normalize(vmin = 0., vmax = 1.0)
+                # norm = mpl.colors.Normalize(vmin = 0., vmax = 1.0)
+                norm = mpl.colors.LogNorm(vmin = 1., vmax = max_points)
+                label_format=None
             else :
                 raise NameError('Error. Love CA.')
             mpl.rcParams.update({'font.size': 10})
             triangle_colorbar = mpl.colorbar.ColorbarBase(cbaxes, cmap = color_map, norm = norm,
                                                           orientation = "horizontal", spacing = "proportional",
 							 # )
-                                                          format ='%.0e')
+                                                          format =label_format)
             cbaxes.set_xlabel("Likelihood", fontsize = 12)
 
     # plot flavor ratio points

@@ -157,7 +157,7 @@ def parse_args():
         help='Spectral index for spectral energy dependance'
     )
     parser.add_argument(
-        '--binning', default=[1e4, 1e7, 10], type=int, nargs=3,
+        '--binning', default=[1e4, 1e7, 10], type=float, nargs=3,
         help='Binning for spectral energy dependance'
     )
     parser.add_argument(

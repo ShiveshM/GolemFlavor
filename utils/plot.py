@@ -28,9 +28,18 @@ rc('text', usetex=False)
 rc('font', **{'family':'serif', 'serif':['Computer Modern'], 'size':18})
 
 
+def centers(x):
+    return (x[:-1]+x[1:])*0.5
+
+
 def calc_nbins(x):
     n =  (np.max(x) - np.min(x)) / (2 * len(x)**(-1./3) * (np.percentile(x, 75) - np.percentile(x, 25)))
     return np.floor(n)
+
+
+def calc_bins(x):
+    nbins = calc_nbins(x)
+    return np.linspace(np.min(x), np.max(x)+2, num=nbins+1)
 
 
 def most_likely(arr):
@@ -169,6 +178,25 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
             mpl.pyplot.figtext(0.4, 0.7, fig_text, fontsize=4)
         else:
             mpl.pyplot.figtext(0.5, 0.7, fig_text, fontsize=15)
+
+        for i_ax_1, ax_1 in enumerate(g.subplots):
+            for i_ax_2, ax_2 in enumerate(ax_1):
+                if i_ax_1 == i_ax_2:
+                    itv = interval(Tchain[:,i_ax_1], percentile=90.)
+                    for l in itv:
+                        ax_2.axvline(l, color='gray', ls='--')
+                        ax_2.set_title(r'${0:.2f}_{{-{1:.2f}}}^{{+{2:.2f}}}$'.format(
+                            itv[1], itv[0], itv[2]
+                        ), fontsize=10)
+
+        # if not args.fix_mixing:
+        #     sc_index = mcmc_paramset.from_tag(ParamTag.SCALE, index=True)
+        #     itv = interval(Tchain[:,sc_index], percentile=90.)
+        #     mpl.pyplot.figtext(
+        #         0.5, 0.3, 'Scale 90% Interval = [1E{0}, 1E{1}], Center = '
+        #         '1E{2}'.format(itv[0], itv[2], itv[1])
+        #     )
+
         for of in outformat:
             g.export(outfile+'_angles.'+of)
 

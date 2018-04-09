@@ -18,15 +18,15 @@ full_scan_mfr = [
 fix_sfr_mfr = [
     (1, 1, 1, 1, 0, 0),
     (1, 1, 1, 0, 1, 0),
-    # (1, 1, 1, 0, 0, 1),
+    (1, 1, 1, 0, 0, 1),
     (1, 1, 1, 1, 2, 0),
-    # (1, 1, 0, 0, 1, 0),
+    (1, 1, 0, 0, 1, 0),
     (1, 1, 0, 1, 2, 0),
-    # (1, 1, 0, 1, 0, 0),
-    # (1, 0, 0, 1, 0, 0),
+    (1, 1, 0, 1, 0, 0),
+    (1, 0, 0, 1, 0, 0),
     (0, 1, 0, 0, 1, 0),
-    # (1, 2, 0, 0, 1, 0),
-    # (1, 2, 0, 1, 2, 0)
+    (1, 2, 0, 0, 1, 0),
+    (1, 2, 0, 1, 2, 0)
 ]
 
 # MCMC
@@ -79,7 +79,10 @@ with open(outfile, 'w') as f:
         for en in energy:
             print 'energy {0:.0E}'.format(en)
 
-            outchain_head = '/data/user/smandalia/flavour_ratio/data/{0}/DIM{1}/{2:.0E}'.format(likelihood, dim, en)
+            if energy_dependance == 'mono':
+                outchain_head = '/data/user/smandalia/flavour_ratio/data/{0}/DIM{1}/{2:.0E}'.format(likelihood, dim, en)
+            elif energy_dependance == 'spectral':
+                outchain_head = '/data/user/smandalia/flavour_ratio/data/{0}/DIM{1}/SI_{2}'.format(likelihood, dim, spectral_index)
 
             for sig in sigma_ratio:
                 print 'sigma', sig

@@ -174,10 +174,7 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
         Tchain = raw
         g = plot_Tchain(Tchain, axes_labels, ranges)
 
-        if args.fix_mixing and args.fix_source_ratio:
-            mpl.pyplot.figtext(0.4, 0.7, fig_text, fontsize=4)
-        else:
-            mpl.pyplot.figtext(0.5, 0.7, fig_text, fontsize=15)
+        mpl.pyplot.figtext(0.5, 0.7, fig_text, fontsize=15)
 
         for i_ax_1, ax_1 in enumerate(g.subplots):
             for i_ax_2, ax_2 in enumerate(ax_1):
@@ -238,9 +235,6 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
 
         g = plot_Tchain(Tchain, trns_axes_labels, trns_ranges)
 
-        if args.fix_mixing and args.fix_source_ratio:
-            mpl.pyplot.figtext(0.4, 0.7, fig_text, fontsize=4)
-        else:
-            mpl.pyplot.figtext(0.5, 0.7, fig_text, fontsize=15)
+        mpl.pyplot.figtext(0.5, 0.7, fig_text, fontsize=15)
         for of in outformat:
             g.export(outfile+'_elements.'+of)

@@ -99,8 +99,6 @@ def get_paramsets(args):
 
 def process_args(args):
     """Process the input args."""
-    if args.fix_mixing and args.fix_source_ratio:
-        raise NotImplementedError('Fixed mixing and sfr not implemented')
     if args.fix_mixing and args.fix_scale:
         raise NotImplementedError('Fixed mixing and scale not implemented')
 

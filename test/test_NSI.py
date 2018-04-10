@@ -57,24 +57,38 @@ ax.step(binning, np.concatenate([[exp[0]], exp]), alpha=1,
 print '0.1 mutau min_llh', golem.MinLLH().likelihood
 print '0.1 mutau expectation', exp
 
-# npp = gf.NewPhysicsParams()
-# npp.epsilon_mutau = 0
-# # npp.epsilon_prime = 0
+np.epsilon_mutau = 0.2
 
-# golem.SetNewPhysicsParams(npp)
+golem.SetNewPhysicsParams(npp)
 
-# exp = np.sum(golem.GetExpectation(fit_params), axis=(0, 1, 2, 3))
-# ax.step(binning, np.concatenate([[exp[0]], exp]), alpha=1,
-#         drawstyle='steps-pre', label='1e-10 LV', linestyle='--')
+exp = np.sum(golem.GetExpectation(fit_params), axis=(0, 1, 2, 3))
+ax.step(binning, np.concatenate([[exp[0]], exp]), alpha=1,
+        drawstyle='steps-pre', label='0.2 mutau', linestyle='--')
 
-# print '1e10 LV min_llh', golem.MinLLH().likelihood
-# print '1e10 LV expectation', exp
+print '0.2 mutau min_llh', golem.MinLLH().likelihood
+print '0.2 mutau expectation', exp
 
-# npp = gf.NewPhysicsParams()
-# npp.epsilon_mutau = 0
-# # npp.epsilon_prime = 0
+np.epsilon_mutau = 0.3
 
-# golem.SetNewPhysicsParams(npp)
+golem.SetNewPhysicsParams(npp)
+
+exp = np.sum(golem.GetExpectation(fit_params), axis=(0, 1, 2, 3))
+ax.step(binning, np.concatenate([[exp[0]], exp]), alpha=1,
+        drawstyle='steps-pre', label='0.3 mutau', linestyle='--')
+
+print '0.3 mutau min_llh', golem.MinLLH().likelihood
+print '0.3 mutau expectation', exp
+
+np.epsilon_mutau = 0.4
+
+golem.SetNewPhysicsParams(npp)
+
+exp = np.sum(golem.GetExpectation(fit_params), axis=(0, 1, 2, 3))
+ax.step(binning, np.concatenate([[exp[0]], exp]), alpha=1,
+        drawstyle='steps-pre', label='0.4 mutau', linestyle='--')
+
+print '0.4 mutau min_llh', golem.MinLLH().likelihood
+print '0.4 mutau expectation', exp
 
 ax.tick_params(axis='x', labelsize=12)
 ax.tick_params(axis='y', labelsize=12)

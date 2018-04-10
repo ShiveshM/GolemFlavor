@@ -79,7 +79,7 @@ def triangle_llh(theta, args, asimov_paramset, mcmc_paramset, fitter):
         elif args.energy_dependance is EnergyDependance.SPECTRAL:
             source_flux = np.array(
                 [fr * np.power(bin_centers, args.spectral_index)
-                 for fr in angles_to_fr(theta[-2:])]
+                 for fr in fr_utils.angles_to_fr(theta[-2:])]
             ).T
 
     bsm_angles = mcmc_paramset.from_tag(

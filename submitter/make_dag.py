@@ -16,30 +16,30 @@ full_scan_mfr = [
 ]
 
 fix_sfr_mfr = [
-    (1, 1, 1, 1, 0, 0),
-    (1, 1, 1, 0, 1, 0),
-    (1, 1, 1, 0, 0, 1),
+    # (1, 1, 1, 1, 0, 0),
+    # (1, 1, 1, 0, 1, 0),
+    # (1, 1, 1, 0, 0, 1),
     (1, 1, 1, 1, 2, 0),
     (1, 1, 0, 0, 1, 0),
-    (1, 1, 0, 1, 2, 0),
-    (1, 1, 0, 1, 0, 0),
-    (1, 0, 0, 1, 0, 0),
-    (0, 1, 0, 0, 1, 0),
-    (1, 2, 0, 0, 1, 0),
-    (1, 2, 0, 1, 2, 0)
+    # (1, 1, 0, 1, 2, 0),
+    # (1, 1, 0, 1, 0, 0),
+    # (1, 0, 0, 1, 0, 0),
+    # (0, 1, 0, 0, 1, 0),
+    # (1, 2, 0, 0, 1, 0),
+    # (1, 2, 0, 1, 2, 0)
 ]
 
 # MCMC
 run_mcmc = 'True'
 burnin   = 1000
 nsteps   = 4000
-nwalkers = 70
+nwalkers = 60
 seed     = 24
-threads  = 12
+threads  = 4
 mcmc_seed_type = 'uniform'
 
 # FR
-dimension         = [3, 6]
+dimension         = [6]
 energy            = [1e6]
 likelihood        = 'golemfit'
 no_bsm            = 'False'
@@ -49,6 +49,7 @@ scale_region      = "1E10"
 energy_dependance = 'spectral'
 spectral_index    = -2
 binning           = [1e4, 1e7, 10]
+fix_mixing        = 'False'
 
 # Likelihood
 likelihood = 'golemfit'
@@ -108,7 +109,7 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\tnwalkers="{1}"\n'.format(job_number, nwalkers))
                     f.write('VARS\tjob{0}\tnsteps="{1}"\n'.format(job_number, nsteps))
                     f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outchains))
-                    f.write('VARS\tjob{0}\tfix_mixing="{1}"\n'.format(job_number, 'False'))
+                    f.write('VARS\tjob{0}\tfix_mixing="{1}"\n'.format(job_number, fix_mixing))
                     f.write('VARS\tjob{0}\tno_bsm="{1}"\n'.format(job_number, no_bsm))
                     f.write('VARS\tjob{0}\trun_mcmc="{1}"\n'.format(job_number, run_mcmc))
                     f.write('VARS\tjob{0}\tastroDeltaGamma="{1}"\n'.format(job_number, astroDeltaGamma))
@@ -131,47 +132,47 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\tbinning_2="{1}"\n'.format(job_number, binning[2]))
                     job_number += 1
 
-                for frs in full_scan_mfr:
-                    print frs
-                    outchains = outchain_head + '/full_scan/{0}/mcmc_chain'.format(str(sig).replace('.', '_'))
-                    f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))
-                    f.write('VARS\tjob{0}\tmr0="{1}"\n'.format(job_number, frs[0]))
-                    f.write('VARS\tjob{0}\tmr1="{1}"\n'.format(job_number, frs[1]))
-                    f.write('VARS\tjob{0}\tmr2="{1}"\n'.format(job_number, frs[2]))
-                    f.write('VARS\tjob{0}\tsigma_ratio="{1}"\n'.format(job_number, sig))
-                    f.write('VARS\tjob{0}\tfix_source_ratio="{1}"\n'.format(job_number, 'False'))
-                    f.write('VARS\tjob{0}\tsr0="{1}"\n'.format(job_number, 0))
-                    f.write('VARS\tjob{0}\tsr1="{1}"\n'.format(job_number, 0))
-                    f.write('VARS\tjob{0}\tsr2="{1}"\n'.format(job_number, 0))
-                    f.write('VARS\tjob{0}\tfix_scale="{1}"\n'.format(job_number, 'False'))
-                    f.write('VARS\tjob{0}\tscale="{1}"\n'.format(job_number, 0))
-                    f.write('VARS\tjob{0}\tscale_region="{1}"\n'.format(job_number, scale_region))
-                    f.write('VARS\tjob{0}\tdimension="{1}"\n'.format(job_number, dim))
-                    f.write('VARS\tjob{0}\tenergy="{1}"\n'.format(job_number, en))
-                    f.write('VARS\tjob{0}\tlikelihood="{1}"\n'.format(job_number, likelihood))
-                    f.write('VARS\tjob{0}\tburnin="{1}"\n'.format(job_number, burnin))
-                    f.write('VARS\tjob{0}\tnwalkers="{1}"\n'.format(job_number, nwalkers))
-                    f.write('VARS\tjob{0}\tnsteps="{1}"\n'.format(job_number, nsteps))
-                    f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outchains))
-                    f.write('VARS\tjob{0}\tfix_mixing="{1}"\n'.format(job_number, 'False'))
-                    f.write('VARS\tjob{0}\tno_bsm="{1}"\n'.format(job_number, no_bsm))
-                    f.write('VARS\tjob{0}\trun_mcmc="{1}"\n'.format(job_number, run_mcmc))
-                    f.write('VARS\tjob{0}\tastroDeltaGamma="{1}"\n'.format(job_number, astroDeltaGamma))
-                    f.write('VARS\tjob{0}\tastroNorm="{1}"\n'.format(job_number, astroNorm))
-                    f.write('VARS\tjob{0}\tconvNorm="{1}"\n'.format(job_number, convNorm))
-                    f.write('VARS\tjob{0}\tmuonNorm="{1}"\n'.format(job_number, muonNorm))
-                    f.write('VARS\tjob{0}\tpromptNorm="{1}"\n'.format(job_number, promptNorm))
-                    f.write('VARS\tjob{0}\tdata="{1}"\n'.format(job_number, data))
-                    f.write('VARS\tjob{0}\tast="{1}"\n'.format(job_number, ast))
-                    f.write('VARS\tjob{0}\tplot_angles="{1}"\n'.format(job_number, plot_angles))
-                    f.write('VARS\tjob{0}\tplot_elements="{1}"\n'.format(job_number, plot_elements))
-                    f.write('VARS\tjob{0}\tseed="{1}"\n'.format(job_number, seed))
-                    f.write('VARS\tjob{0}\tthreads="{1}"\n'.format(job_number, threads))
-                    f.write('VARS\tjob{0}\tlikelihood="{1}"\n'.format(job_number, likelihood))
-                    f.write('VARS\tjob{0}\tmcmc_seed_type="{1}"\n'.format(job_number, mcmc_seed_type))
-                    f.write('VARS\tjob{0}\tenergy_dependance="{1}"\n'.format(job_number, energy_dependance))
-                    f.write('VARS\tjob{0}\tspectral_index="{1}"\n'.format(job_number, spectral_index))
-                    f.write('VARS\tjob{0}\tbinning_0="{1}"\n'.format(job_number, binning[0]))
-                    f.write('VARS\tjob{0}\tbinning_1="{1}"\n'.format(job_number, binning[1]))
-                    f.write('VARS\tjob{0}\tbinning_2="{1}"\n'.format(job_number, binning[2]))
-                    job_number += 1
+                # for frs in full_scan_mfr:
+                #     print frs
+                #     outchains = outchain_head + '/full_scan/{0}/mcmc_chain'.format(str(sig).replace('.', '_'))
+                #     f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))
+                #     f.write('VARS\tjob{0}\tmr0="{1}"\n'.format(job_number, frs[0]))
+                #     f.write('VARS\tjob{0}\tmr1="{1}"\n'.format(job_number, frs[1]))
+                #     f.write('VARS\tjob{0}\tmr2="{1}"\n'.format(job_number, frs[2]))
+                #     f.write('VARS\tjob{0}\tsigma_ratio="{1}"\n'.format(job_number, sig))
+                #     f.write('VARS\tjob{0}\tfix_source_ratio="{1}"\n'.format(job_number, 'False'))
+                #     f.write('VARS\tjob{0}\tsr0="{1}"\n'.format(job_number, 0))
+                #     f.write('VARS\tjob{0}\tsr1="{1}"\n'.format(job_number, 0))
+                #     f.write('VARS\tjob{0}\tsr2="{1}"\n'.format(job_number, 0))
+                #     f.write('VARS\tjob{0}\tfix_scale="{1}"\n'.format(job_number, 'False'))
+                #     f.write('VARS\tjob{0}\tscale="{1}"\n'.format(job_number, 0))
+                #     f.write('VARS\tjob{0}\tscale_region="{1}"\n'.format(job_number, scale_region))
+                #     f.write('VARS\tjob{0}\tdimension="{1}"\n'.format(job_number, dim))
+                #     f.write('VARS\tjob{0}\tenergy="{1}"\n'.format(job_number, en))
+                #     f.write('VARS\tjob{0}\tlikelihood="{1}"\n'.format(job_number, likelihood))
+                #     f.write('VARS\tjob{0}\tburnin="{1}"\n'.format(job_number, burnin))
+                #     f.write('VARS\tjob{0}\tnwalkers="{1}"\n'.format(job_number, nwalkers))
+                #     f.write('VARS\tjob{0}\tnsteps="{1}"\n'.format(job_number, nsteps))
+                #     f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outchains))
+                #     f.write('VARS\tjob{0}\tfix_mixing="{1}"\n'.format(job_number, fix_mixing))
+                #     f.write('VARS\tjob{0}\tno_bsm="{1}"\n'.format(job_number, no_bsm))
+                #     f.write('VARS\tjob{0}\trun_mcmc="{1}"\n'.format(job_number, run_mcmc))
+                #     f.write('VARS\tjob{0}\tastroDeltaGamma="{1}"\n'.format(job_number, astroDeltaGamma))
+                #     f.write('VARS\tjob{0}\tastroNorm="{1}"\n'.format(job_number, astroNorm))
+                #     f.write('VARS\tjob{0}\tconvNorm="{1}"\n'.format(job_number, convNorm))
+                #     f.write('VARS\tjob{0}\tmuonNorm="{1}"\n'.format(job_number, muonNorm))
+                #     f.write('VARS\tjob{0}\tpromptNorm="{1}"\n'.format(job_number, promptNorm))
+                #     f.write('VARS\tjob{0}\tdata="{1}"\n'.format(job_number, data))
+                #     f.write('VARS\tjob{0}\tast="{1}"\n'.format(job_number, ast))
+                #     f.write('VARS\tjob{0}\tplot_angles="{1}"\n'.format(job_number, plot_angles))
+                #     f.write('VARS\tjob{0}\tplot_elements="{1}"\n'.format(job_number, plot_elements))
+                #     f.write('VARS\tjob{0}\tseed="{1}"\n'.format(job_number, seed))
+                #     f.write('VARS\tjob{0}\tthreads="{1}"\n'.format(job_number, threads))
+                #     f.write('VARS\tjob{0}\tlikelihood="{1}"\n'.format(job_number, likelihood))
+                #     f.write('VARS\tjob{0}\tmcmc_seed_type="{1}"\n'.format(job_number, mcmc_seed_type))
+                #     f.write('VARS\tjob{0}\tenergy_dependance="{1}"\n'.format(job_number, energy_dependance))
+                #     f.write('VARS\tjob{0}\tspectral_index="{1}"\n'.format(job_number, spectral_index))
+                #     f.write('VARS\tjob{0}\tbinning_0="{1}"\n'.format(job_number, binning[0]))
+                #     f.write('VARS\tjob{0}\tbinning_1="{1}"\n'.format(job_number, binning[1]))
+                #     f.write('VARS\tjob{0}\tbinning_2="{1}"\n'.format(job_number, binning[2]))
+                #     job_number += 1

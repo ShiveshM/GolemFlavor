@@ -71,13 +71,18 @@ def get_paramsets(args):
     ])
     asimov_paramset = ParamSet(asimov_paramset)
 
-    if not args.fix_mixing:
+    if not args.fix_mixing and not args.fix_mixing_almost:
         tag = ParamTag.MMANGLES
         mcmc_paramset.extend([
             Param(name='s_12^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{12}^2', tag=tag),
             Param(name='c_13^4', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{c}_{13}^4', tag=tag),
             Param(name='s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^4', tag=tag),
             Param(name='dcp', value=np.pi, ranges=[0., 2*np.pi], std=0.2, tex=r'\tilde{\delta_{CP}}', tag=tag)
+        ])
+    if args.fix_mixing_almost:
+        tag = ParamTag.MMANGLES
+        mcmc_paramset.extend([
+            Param(name='s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^4', tag=tag)
         ])
     if not args.fix_scale:
         logLam, scale_region = np.log10(args.scale), np.log10(args.scale_region)
@@ -101,6 +106,10 @@ def process_args(args):
     """Process the input args."""
     if args.fix_mixing and args.fix_scale:
         raise NotImplementedError('Fixed mixing and scale not implemented')
+    if args.fix_mixing and args.fix_mixing_almost:
+        raise NotImplementedError(
+            '--fix-mixing and --fix-mixing-almost cannot be used together'
+        )
 
     args.measured_ratio = normalise_fr(args.measured_ratio)
     if args.fix_source_ratio:
@@ -168,7 +177,11 @@ def parse_args():
     )
     parser.add_argument(
         '--fix-mixing', type=misc_utils.parse_bool, default='False',
-        help='Fix all mixing parameters except one'
+        help='Fix all mixing parameters to bi-maximal mixing'
+    )
+    parser.add_argument(
+        '--fix-mixing-almost', type=misc_utils.parse_bool, default='False',
+        help='Fix all mixing parameters except s23'
     )
     parser.add_argument(
         '--fix-scale', type=misc_utils.parse_bool, default='False',

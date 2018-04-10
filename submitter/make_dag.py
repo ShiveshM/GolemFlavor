@@ -31,15 +31,15 @@ fix_sfr_mfr = [
 
 # MCMC
 run_mcmc = 'True'
-burnin   = 1000
-nsteps   = 4000
+burnin   = 500
+nsteps   = 2000
 nwalkers = 60
 seed     = 24
 threads  = 4
 mcmc_seed_type = 'uniform'
 
 # FR
-dimension         = [6]
+dimension         = [3, 6]
 energy            = [1e6]
 likelihood        = 'golemfit'
 no_bsm            = 'False'
@@ -50,6 +50,7 @@ energy_dependance = 'spectral'
 spectral_index    = -2
 binning           = [1e4, 1e7, 10]
 fix_mixing        = 'False'
+fix_mixing_almost = 'True'
 
 # Likelihood
 likelihood = 'golemfit'
@@ -69,7 +70,7 @@ data = 'real'
 plot_angles   = 'True'
 plot_elements = 'False'
 
-outfile = 'dagman_FR.submit'
+outfile = 'dagman_FR_fix_mixing_almost.submit'
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/submit.sub'
 
@@ -130,6 +131,7 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\tbinning_0="{1}"\n'.format(job_number, binning[0]))
                     f.write('VARS\tjob{0}\tbinning_1="{1}"\n'.format(job_number, binning[1]))
                     f.write('VARS\tjob{0}\tbinning_2="{1}"\n'.format(job_number, binning[2]))
+                    f.write('VARS\tjob{0}\tfix_mixing_almost="{1}"\n'.format(job_number, fix_mixing_almost))
                     job_number += 1
 
                 # for frs in full_scan_mfr:
@@ -175,4 +177,5 @@ with open(outfile, 'w') as f:
                 #     f.write('VARS\tjob{0}\tbinning_0="{1}"\n'.format(job_number, binning[0]))
                 #     f.write('VARS\tjob{0}\tbinning_1="{1}"\n'.format(job_number, binning[1]))
                 #     f.write('VARS\tjob{0}\tbinning_2="{1}"\n'.format(job_number, binning[2]))
+                #     f.write('VARS\tjob{0}\tfix_mixing_almost="{1}"\n'.format(job_number, fix_mixing_almost))
                 #     job_number += 1

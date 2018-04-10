@@ -214,6 +214,11 @@ def gen_outfile_name(args):
                 int(mr[0]*100), int(mr[1]*100), int(mr[2]*100), int(si*1000),
                 int(sr[0]*100), int(sr[1]*100), int(sr[2]*100), args.dimension
             )
+        elif args.fix_mixing_almost:
+            outfile = args.outfile+'_{0:03d}_{1:03d}_{2:03d}_{3:04d}_sfr_{4:03d}_{5:03d}_{6:03d}_DIM{7}_fix_mixing_almost'.format(
+                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100), int(si*1000),
+                int(sr[0]*100), int(sr[1]*100), int(sr[2]*100), args.dimension
+            )
         elif args.fix_scale:
             outfile = args.outfile+'_{0:03d}_{1:03d}_{2:03d}_{3:04d}_sfr_{4:03d}_{5:03d}_{6:03d}_DIM{7}_fixed_scale_{8}'.format(
                 int(mr[0]*100), int(mr[1]*100), int(mr[2]*100), int(si*1000),
@@ -228,6 +233,11 @@ def gen_outfile_name(args):
     else:
         if args.fix_mixing:
             outfile = args.outfile+'_{0:03d}_{1:03d}_{2:03d}_{3:04d}_DIM{4}_fix_mixing'.format(
+                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100),
+                int(si*1000), args.dimension
+            )
+        elif args.fix_mixing_almost:
+            outfile = args.outfile+'_{0:03d}_{1:03d}_{2:03d}_{3:04d}_DIM{4}_fix_mixing_almost'.format(
                 int(mr[0]*100), int(mr[1]*100), int(mr[2]*100),
                 int(si*1000), args.dimension
             )

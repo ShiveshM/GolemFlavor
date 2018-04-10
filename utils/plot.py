@@ -198,6 +198,8 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
             g.export(outfile+'_angles.'+of)
 
     if args.plot_elements:
+        if args.fix_mixing_almost:
+            raise NotImplementedError
         nu_index = mcmc_paramset.from_tag(ParamTag.NUISANCE, index=True)
         fr_index = mcmc_paramset.from_tag(ParamTag.MMANGLES, index=True)
         sc_index = mcmc_paramset.from_tag(ParamTag.SCALE, index=True)

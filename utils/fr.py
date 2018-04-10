@@ -200,7 +200,8 @@ NUFIT_U = angles_to_u((0.307, (1-0.02195)**2, 0.565, 3.97935))
 
 def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
                    nufit_u=NUFIT_U, no_bsm=False, fix_mixing=False,
-                   fix_scale=False, scale=None, check_uni=True):
+                   fix_mixing_almost=False, fix_scale=False, scale=None,
+                   check_uni=True):
     """Construct the BSM mixing matrix from the BSM parameters.
 
     Parameters
@@ -225,6 +226,9 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
 
     fix_mixing : bool
         Fix the BSM mixing angles
+
+    fix_mixing_almost : bool
+        Fix the BSM mixing angles except one
 
     fix_scale : bool
         Fix the BSM scale
@@ -254,8 +258,16 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
             'got\n{0}'.format(ham)
         )
 
+    if fix_mixing and fix_mixing_almost:
+        raise NotImplementedError(
+            '--fix-mixing and --fix-mixing-almost cannot be used together'
+        )
+
     if fix_mixing:
         s12_2, c13_4, s23_2, dcp, sc2 = 0.5, 1.0-1E-6, 0.5, 0., theta
+    elif fix_mixing_almost:
+        s12_2, c13_4, dcp = 0.5, 1.0-1E-6, 0.
+        s23_2, sc2 = theta
     elif fix_scale:
         s12_2, c13_4, s23_2, dcp = theta
         sc2 = np.log10(scale)

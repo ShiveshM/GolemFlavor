@@ -88,26 +88,28 @@ def triangle_llh(theta, args, asimov_paramset, mcmc_paramset, fitter):
 
     if args.energy_dependance is EnergyDependance.MONO:
         u = fr_utils.params_to_BSMu(
-            theta      = bsm_angles,
-            dim        = args.dimension,
-            energy     = args.energy,
-            no_bsm     = args.no_bsm,
-            fix_mixing = args.fix_mixing,
-            fix_scale  = args.fix_scale,
-            scale      = args.scale
+            theta             = bsm_angles,
+            dim               = args.dimension,
+            energy            = args.energy,
+            no_bsm            = args.no_bsm,
+            fix_mixing        = args.fix_mixing,
+            fix_mixing_almost = args.fix_mixing_almost,
+            fix_scale         = args.fix_scale,
+            scale             = args.scale
         )
         fr = fr_utils.u_to_fr(source_flux, u)
     elif args.energy_dependance is EnergyDependance.SPECTRAL:
         mf_perbin = []
         for i_sf, sf_perbin in enumerate(source_flux):
-            u = fr_utils.params_to_BSMu(
-                theta      = bsm_angles,
-                dim        = args.dimension,
-                energy     = args.energy,
-                no_bsm     = args.no_bsm,
-                fix_mixing = args.fix_mixing,
-                fix_scale  = args.fix_scale,
-                scale      = args.scale
+            u                     = fr_utils.params_to_BSMu(
+                theta             = bsm_angles,
+                dim               = args.dimension,
+                energy            = args.energy,
+                no_bsm            = args.no_bsm,
+                fix_mixing        = args.fix_mixing,
+                fix_mixing_almost = args.fix_mixing_almost,
+                fix_scale         = args.fix_scale,
+                scale             = args.scale
             )
             fr = fr_utils.u_to_fr(sf_perbin, u)
             mf_perbin.append(fr)

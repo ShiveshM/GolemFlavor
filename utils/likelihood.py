@@ -101,7 +101,7 @@ def triangle_llh(theta, args, asimov_paramset, mcmc_paramset, fitter):
     elif args.energy_dependance is EnergyDependance.SPECTRAL:
         mf_perbin = []
         for i_sf, sf_perbin in enumerate(source_flux):
-            u                     = fr_utils.params_to_BSMu(
+            u = fr_utils.params_to_BSMu(
                 theta             = bsm_angles,
                 dim               = args.dimension,
                 energy            = args.energy,
@@ -119,10 +119,9 @@ def triangle_llh(theta, args, asimov_paramset, mcmc_paramset, fitter):
             intergrated_measured_flux
         fr = averaged_measured_flux / np.sum(averaged_measured_flux)
 
+    flavour_angles = fr_utils.fr_to_angles(fr)
     for idx, param in enumerate(hypo_paramset.from_tag(ParamTag.BESTFIT)):
-        param.value = fr[idx]
-
-    # print 'hypo_paramset', hypo_paramset
+        param.value = flavour_angles[idx]
 
     if args.likelihood is Likelihood.FLAT:
         return 1.
@@ -131,6 +130,9 @@ def triangle_llh(theta, args, asimov_paramset, mcmc_paramset, fitter):
         return gaussian_llh(fr, fr_bf, args.sigma_ratio)
     elif args.likelihood is Likelihood.GOLEMFIT:
         return gf_utils.get_llh(fitter, hypo_paramset)
+    elif args.likelihood is Likelihood.GF_FREQ:
+        return gf_utils.get_llh_freq(fitter, hypo_paramset)
+
 
 def ln_prob(theta, args, fitter, asimov_paramset, mcmc_paramset):
     lp = lnprior(theta, paramset=mcmc_paramset)

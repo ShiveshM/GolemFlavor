@@ -6,3 +6,4 @@ plots/
 *.pdf
 dagman_FR.submit*
 submitter/logs/
+mnrun_*

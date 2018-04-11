@@ -22,7 +22,7 @@ from utils import likelihood as llh_utils
 from utils import mcmc as mcmc_utils
 from utils import misc as misc_utils
 from utils.enums import EnergyDependance, Likelihood, MCMCSeedType, ParamTag
-from utils.fr import MASS_EIGENVALUES, normalise_fr
+from utils.fr import MASS_EIGENVALUES, normalise_fr, fr_to_angles
 from utils.misc import enum_parse, Param, ParamSet
 from utils.plot import plot_argparse, chainer_plot
 
@@ -64,10 +64,10 @@ def get_paramsets(args):
         for parm in nuisance_paramset:
             parm.value = args.__getattribute__(parm.name)
     tag = ParamTag.BESTFIT
+    flavour_angles = fr_to_angles(args.measured_ratio)
     asimov_paramset.extend([
-        Param(name='astroENorm'  , value=args.measured_ratio[0], ranges=[0., 1.], std=0.2, tag=tag),
-        Param(name='astroMuNorm' , value=args.measured_ratio[1], ranges=[0., 1.], std=0.2, tag=tag),
-        Param(name='astroTauNorm', value=args.measured_ratio[2], ranges=[0., 1.], std=0.2, tag=tag)
+        Param(name='astroFlavorAngle1', value=flavour_angles[0], ranges=[0., 1.], std=0.2, tag=tag),
+        Param(name='astroFlavorAngle2', value=flavour_angles[1], ranges=[-1., 1.], std=0.2, tag=tag),
     ])
     asimov_paramset = ParamSet(asimov_paramset)
 
@@ -109,6 +109,10 @@ def process_args(args):
     if args.fix_mixing and args.fix_mixing_almost:
         raise NotImplementedError(
             '--fix-mixing and --fix-mixing-almost cannot be used together'
+        )
+    if args.bayes_factor and args.fix_scale:
+        raise NotImplementedError(
+            '--bayes-factor and --fix-scale cannot be used together'
         )
 
     args.measured_ratio = normalise_fr(args.measured_ratio)
@@ -164,8 +168,20 @@ def parse_args():
         help='Spectral index for spectral energy dependance'
     )
     parser.add_argument(
-        '--binning', default=[1e4, 1e7, 10], type=float, nargs=3,
+        '--binning', default=[1e4, 1e7, 5], type=float, nargs=3,
         help='Binning for spectral energy dependance'
+    )
+    parser.add_argument(
+        '--bayes-factor', type=misc_utils.parse_bool, default='False',
+        help='Make the bayes factor plot for the scale'
+    )
+    parser.add_argument(
+        '--bayes-bins', type=int, default=100,
+        help='Number of bins for the Bayes factor plot'
+    )
+    parser.add_argument(
+        '--bayes-output', type=str, default='./mnrun/',
+        help='Folder to store MultiNest evaluations'
     )
     parser.add_argument(
         '--source-ratio', type=int, nargs=3, default=[2, 1, 0],
@@ -239,7 +255,6 @@ def main():
             datapaths = gf.DataPaths()
             sparams = gf_utils.steering_params(args)
             npp = gf.NewPhysicsParams()
-
             fitter = gf.GolemFit(datapaths, sparams, npp)
             gf_utils.set_up_as(fitter, asimov_paramset)
             # fitter.WriteCompact()
@@ -274,7 +289,6 @@ def main():
         )
         mcmc_utils.save_chains(samples, outfile)
 
-    print "Making triangle plots"
     chainer_plot(
         infile        = outfile+'.npy',
         outfile       = outfile[:5]+outfile[5:].replace('data', 'plots'),
@@ -282,6 +296,71 @@ def main():
         args          = args,
         mcmc_paramset = mcmc_paramset
     )
+
+    if args.bayes_factor:
+        # TODO(shivesh)
+        import pymultinest
+        from pymultinest.solve import solve
+        from pymultinest.watch import ProgressPrinter
+
+        if not args.run_mcmc and args.likelihood is Likelihood.GOLEMFIT:
+            datapaths = gf.DataPaths()
+            sparams = gf_utils.steering_params(args)
+            npp = gf.NewPhysicsParams()
+            fitter = gf.GolemFit(datapaths, sparams, npp)
+            gf_utils.set_up_as(fitter, asimov_paramset)
+        else:
+            fitter = None
+
+        sc_range = mcmc_paramset.from_tag(ParamTag.SCALE)[0].ranges
+        scales = np.linspace(
+            sc_range[0], sc_range[1], args.bayes_bins+1
+        )
+
+        p = mcmc_paramset.from_tag(ParamTag.SCALE, invert=True)
+        prior_ranges = p.ranges
+        n_params = len(p)
+        hypo_paramset = asimov_paramset
+
+        def CubePrior(cube, ndim, nparams):
+            # default are uniform priors
+            return ;
+
+        arr = []
+        for s in scales:
+            theta = np.zeros(n_params)
+            def lnProb(cube, ndim, nparams):
+                for i in range(ndim):
+                    prange = prior_ranges[i][1] - prior_ranges[i][0]
+                    theta[i] = prange*cube[i] + prior_ranges[i][0]
+                theta_ = np.concatenate([theta, [s]])
+                return llh_utils.triangle_llh(
+                    theta=theta_,
+                    args=args,
+                    asimov_paramset=asimov_paramset,
+                    mcmc_paramset=mcmc_paramset,
+                    fitter=fitter
+                )
+
+            prefix = 'mnrun_{0:.0E}'.format(np.power(10, s))
+            print 'begin running evidence calculation for {0}'.format(prefix)
+            result = pymultinest.run(
+                LogLikelihood=lnProb, Prior=CubePrior, n_dims=n_params,
+                outputfiles_basename=prefix#, verbose=True
+            )
+            print 'end running evidence calculation for {0}'.format(prefix)
+
+            print 'begin analysis for {0}'.format(prefix)
+            analyzer = pymultinest.Analyzer(outputfiles_basename=prefix, n_params=n_params)
+            a_lnZ = analyzer.get_stats()['global evidence']
+            print 'end analysis for {0}'.format(prefix)
+            print 'Evidence = {0}'.format(a_lnZ)
+
+            arr.append([s, a_lnZ])
+            out = args.bayes_output+'fr_evidence_'+outfile[2:]+'.npy'
+        misc_utils.make_dir(out)
+        np.save(out, np.array(arr))
+
     print "DONE!"
 
 

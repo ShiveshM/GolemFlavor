@@ -194,6 +194,23 @@ def normalise_fr(fr):
     return np.array(fr) / float(np.sum(fr))
 
 
+def fr_to_angles(ratios):
+    """Convert from flavour ratio into the angular projection of the flavour
+    ratios.
+
+    Parameters
+    ----------
+    TODO(shivesh)
+    """
+    fr0, fr1, fr2 = normalise_fr(ratios)
+    sphi4 = (fr2 - 1.0)**2
+    if (fr2 - 1.0) == 0:
+        c2psi = 0
+    else:
+        c2psi = (fr1*2.0 + fr2 - 1.0) * (fr2 - 1.0)
+    return sphi4, c2psi
+
+
 NUFIT_U = angles_to_u((0.307, (1-0.02195)**2, 0.565, 3.97935))
 """NuFIT mixing matrix (s_12^2, c_13^4, s_23^2, dcp)"""
 

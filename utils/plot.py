@@ -171,6 +171,7 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
     ranges = mcmc_paramset.ranges
 
     if args.plot_angles:
+        print "Making triangle plots"
         Tchain = raw
         g = plot_Tchain(Tchain, axes_labels, ranges)
 
@@ -182,8 +183,8 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
                     itv = interval(Tchain[:,i_ax_1], percentile=90.)
                     for l in itv:
                         ax_2.axvline(l, color='gray', ls='--')
-                        ax_2.set_title(r'${0:.2f}_{{-{1:.2f}}}^{{+{2:.2f}}}$'.format(
-                            itv[1], itv[0], itv[2]
+                        ax_2.set_title(r'${0:.2f}_{{{1:.2f}}}^{{+{2:.2f}}}$'.format(
+                            itv[1], itv[0]-itv[1], itv[2]-itv[1]
                         ), fontsize=10)
 
         # if not args.fix_mixing:
@@ -198,6 +199,7 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
             g.export(outfile+'_angles.'+of)
 
     if args.plot_elements:
+        print "Making triangle plots"
         if args.fix_mixing_almost:
             raise NotImplementedError
         nu_index = mcmc_paramset.from_tag(ParamTag.NUISANCE, index=True)

@@ -44,12 +44,19 @@ def set_up_as(fitter, params):
 
 def get_llh(fitter, params):
     fitparams = gf.FitParameters(gf.sampleTag.HESE)
-    # print params
     for parm in params:
         fitparams.__setattr__(parm.name, parm.value)
     llh = -fitter.EvalLLH(fitparams)
-    # print '=== llh = {0}'.format(llh)
     return llh
+
+
+def get_llh_freq(fitter, params):
+    print 'setting to {0}'.format(params)
+    fitparams = gf.FitParameters(gf.sampleTag.HESE)
+    for parm in params:
+        fitparams.__setattr__(parm.name, parm.value)
+    fitter.SetFitParametersSeed(fitparams)
+    return -fitter.MinLLH().likelihood
 
 
 def data_distributions(fitter):

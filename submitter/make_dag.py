@@ -16,17 +16,17 @@ full_scan_mfr = [
 ]
 
 fix_sfr_mfr = [
-    # (1, 1, 1, 1, 0, 0),
-    # (1, 1, 1, 0, 1, 0),
-    # (1, 1, 1, 0, 0, 1),
+    (1, 1, 1, 1, 0, 0),
+    (1, 1, 1, 0, 1, 0),
+    (1, 1, 1, 0, 0, 1),
     (1, 1, 1, 1, 2, 0),
     (1, 1, 0, 0, 1, 0),
-    # (1, 1, 0, 1, 2, 0),
-    # (1, 1, 0, 1, 0, 0),
-    # (1, 0, 0, 1, 0, 0),
-    # (0, 1, 0, 0, 1, 0),
-    # (1, 2, 0, 0, 1, 0),
-    # (1, 2, 0, 1, 2, 0)
+    (1, 1, 0, 1, 2, 0),
+    (1, 1, 0, 1, 0, 0),
+    (1, 0, 0, 1, 0, 0),
+    (0, 1, 0, 0, 1, 0),
+    (1, 2, 0, 0, 1, 0),
+    (1, 2, 0, 1, 2, 0)
 ]
 
 # MCMC
@@ -39,7 +39,7 @@ threads  = 4
 mcmc_seed_type = 'uniform'
 
 # FR
-dimension         = [3, 6]
+dimension         = [4, 5, 7, 8]
 energy            = [1e6]
 likelihood        = 'golemfit'
 no_bsm            = 'False'
@@ -48,9 +48,9 @@ scale             = "1E-20 1E-30"
 scale_region      = "1E10"
 energy_dependance = 'spectral'
 spectral_index    = -2
-binning           = [1e4, 1e7, 10]
+binning           = [1e4, 1e7, 5]
 fix_mixing        = 'False'
-fix_mixing_almost = 'True'
+fix_mixing_almost = 'False'
 
 # Likelihood
 likelihood = 'golemfit'
@@ -70,7 +70,7 @@ data = 'real'
 plot_angles   = 'True'
 plot_elements = 'False'
 
-outfile = 'dagman_FR_fix_mixing_almost.submit'
+outfile = 'dagman_FR.submit'
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/submit.sub'
 

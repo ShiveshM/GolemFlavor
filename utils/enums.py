@@ -30,6 +30,7 @@ class Likelihood(Enum):
     FLAT     = 1
     GAUSSIAN = 2
     GOLEMFIT = 3
+    GF_FREQ  = 4
 
 
 class ParamTag(Enum):

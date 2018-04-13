@@ -42,6 +42,15 @@ def set_up_as(fitter, params):
     fitter.SetupAsimov(asimov_params)
 
 
+def setup_fitter(args, asimov_paramset):
+    datapaths = gf.DataPaths()
+    sparams = steering_params(args)
+    npp = gf.NewPhysicsParams()
+    fitter = gf.GolemFit(datapaths, sparams, npp)
+    set_up_as(fitter, asimov_paramset)
+    return fitter
+
+
 def get_llh(fitter, params):
     fitparams = gf.FitParameters(gf.sampleTag.HESE)
     for parm in params:

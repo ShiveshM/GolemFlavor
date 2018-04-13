@@ -15,6 +15,8 @@ import numpy as np
 import matplotlib as mpl
 mpl.use('Agg')
 from matplotlib import rc
+from matplotlib import pyplot as plt
+from matplotlib.offsetbox import AnchoredText
 
 import getdist
 from getdist import plots
@@ -30,6 +32,15 @@ rc('font', **{'family':'serif', 'serif':['Computer Modern'], 'size':18})
 
 def centers(x):
     return (x[:-1]+x[1:])*0.5
+
+
+def get_units(dimension):
+    if dimension == 3: return r' / GeV'
+    if dimension == 4: return r''
+    if dimension == 5: return r' / GeV^{-1}'
+    if dimension == 6: return r' / GeV^{-2}'
+    if dimension == 7: return r' / GeV^{-3}'
+    if dimension == 8: return r' / GeV^{-4}'
 
 
 def calc_nbins(x):
@@ -83,6 +94,10 @@ def plot_argparse(parser):
     parser.add_argument(
         '--plot-elements', type=misc_utils.parse_bool, default='False',
         help='Plot MCMC triangle in the mixing elements space'
+    )
+    parser.add_argument(
+        '--plot-bayes', type=misc_utils.parse_bool, default='False',
+        help='Plot Bayes factor'
     )
 
 
@@ -139,7 +154,7 @@ def gen_figtext(args):
                         mr1, mr2, mr3, args.dimension, int(args.energy),
                         args.scale
                     )
-	else:
+        else:
             t += 'IC observed flavour ratio = [{0:.2f}, {1:.2f}, ' \
                     '{2:.2f}]\nDimension = {3}'.format(
                         mr1, mr2, mr3, args.dimension, int(args.energy)
@@ -242,3 +257,99 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
         mpl.pyplot.figtext(0.5, 0.7, fig_text, fontsize=15)
         for of in outformat:
             g.export(outfile+'_elements.'+of)
+
+
+def bayes_factor_plot(infile, outfile, outformat, args):
+    """Make Bayes factor plot."""
+    if not args.plot_bayes: return
+    print "Making Bayes Factor plot"
+    fig_text = gen_figtext(args)
+
+    raw = np.load(infile)
+    scales, evidences = raw.T
+    null = evidences[0]
+
+    reduced_ev = -(evidences - null)
+
+    fig = plt.figure(figsize=(7, 5))
+    ax = fig.add_subplot(111)
+
+    ax.set_xlabel(r'{\rm log}_{10} \Lambda ' + get_units(args.dimension))
+    ax.set_ylabel(r'Bayes Factor')
+
+    ax.plot(scales, reduced_ev)
+
+    for ymaj in ax.yaxis.get_majorticklocs():
+        ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.7, linewidth=1)
+    for xmaj in ax.xaxis.get_majorticklocs():
+        ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.7, linewidth=1)
+
+    at = AnchoredText(
+        fig_text, prop=dict(size=7), frameon=True, loc=2
+    )
+    at.patch.set_boxstyle("round,pad=0.,rounding_size=0.5")
+    ax.add_artist(at)
+    for of in outformat:
+        fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
+
+
+def myround(x, base=5, up=False, down=False):
+    if up == down and up is True: assert 0
+    if up: return int(base * np.round(float(x)/base-0.5))
+    elif down: return int(base * np.round(float(x)/base+0.5))
+    else: int(base * np.round(float(x)/base))
+
+
+def plot_BSM_angles_limit(infile, outfile, xticks, outformat, args):
+    """Make BSM angles vs scale limit plot."""
+    print "Making BSM angles limit plot."""
+    fig_text = gen_figtext(args)
+
+    raw = np.load(infile)
+    sc_ranges = (
+        myround(np.min(raw[0][:,0]), down=True),
+        myround(np.max(raw[0][:,0]), up=True)
+    )
+
+    proc = []
+    for idx, theta in enumerate(raw):
+        scale, llh = theta.T
+        delta_llh = -2 * (llh - np.max(llh))
+        # 90% CL for 1 dof
+        al = scale[delta_llh > 2.71]
+        proc.append((idx+1, al[0]))
+
+    limits = np.array(proc)
+
+    fig = plt.figure(figsize=(7, 5))
+    ax = fig.add_subplot(111)
+
+    ax.set_xticklabels(['']+xticks+[''])
+    ax.set_xlim(0, len(xticks)+1)
+    ax.set_ylim(sc_ranges[0], sc_ranges[-1])
+    ax.set_xlabel(r'BSM angle')
+    ylabel = r'${\rm log}_{10} \Lambda' + get_units(args.dimension) + r'$'
+    ax.set_ylabel(ylabel)
+
+    for l in limits:
+        line = plt.Line2D(
+            (l[0]-0.1, l[0]+0.1), (l[1], l[1]), lw=3, color='r'
+        )
+        ax.add_line(line)
+        # ax.arrow(
+        #     l[0], l[1], 0, -1.5, head_width=0.05, head_length=0.2, fc='r',
+        #     ec='r', lw=2
+        # )
+        ax.annotate(
+            s='', xy=l, xytext=(l[0], l[1]-1.5),
+            arrowprops={'arrowstyle': '<-', 'lw': 1.5, 'color':'r'}
+        )
+
+    for ymaj in ax.yaxis.get_majorticklocs():
+        ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.4, linewidth=1)
+    for xmaj in ax.xaxis.get_majorticklocs():
+        ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.4, linewidth=1)
+
+    for of in outformat:
+        fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
+

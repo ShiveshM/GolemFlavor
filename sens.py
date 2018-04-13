@@ -23,12 +23,13 @@ from utils import gf as gf_utils
 from utils import likelihood as llh_utils
 from utils import misc as misc_utils
 from utils.enums import Likelihood, ParamTag
+from utils.plot import plot_BSM_angles_limit
 
 rc('text', usetex=False)
 rc('font', **{'family':'serif', 'serif':['Computer Modern'], 'size':18})
 
 
-RUN = True
+RUN = False
 
 
 z = 0+1E-6
@@ -77,6 +78,8 @@ def main():
     fr.process_args(args)
     misc_utils.print_args(args)
 
+    bins = 10
+
     asimov_paramset, mcmc_paramset = fr.get_paramsets(args)
     outfile = misc_utils.gen_outfile_name(args)
     print '== {0:<25} = {1}'.format('outfile', outfile)
@@ -85,9 +88,10 @@ def main():
     mcmc_paramset = mcmc_paramset.from_tag(ParamTag.NUISANCE, invert=True)
 
     sc_range = mcmc_paramset.from_tag(ParamTag.SCALE)[0].ranges
-    scan_scales = np.linspace(sc_range[0], sc_range[1], 100)
+    scan_scales = np.linspace(sc_range[0], sc_range[1], bins+1)
     print 'scan_scales', scan_scales
 
+    outfile = './sens'
     if RUN:
         datapaths = gf.DataPaths()
         sparams = gf_utils.steering_params(args)
@@ -96,10 +100,10 @@ def main():
         fitter.SetFitParametersFlag(fit_flags(default_flags))
         gf_utils.set_up_as(fitter, asimov_paramset)
 
-        x = []
-        y = []
+        data = np.zeros((len(scenarios), bins+1, 2))
         mm_angles = mcmc_paramset.from_tag(ParamTag.MMANGLES)
         for idx, scen in enumerate(scenarios):
+            arr = []
             scales = []
             llhs = []
             for yidx, an in enumerate(mm_angles):
@@ -114,28 +118,20 @@ def main():
                 print 'llh', llh
                 scales.append(sc)
                 llhs.append(llh)
-            min_llh = np.min(llhs)
-            delta_llh = 2*(np.array(llhs) - min_llh)
-            print 'scales', scales
-            print 'delta_llh', delta_llh
 
-            n_arr = []
-            for i, d in enumerate(delta_llh):
-                # 90% for 1 DOF
-                if d < 2.71:
-                    x.append(idx)
-                    y.append(scales[i])
+            for i, d in enumerate(llhs):
+                data[idx][i][0] = scales[i]
+                data[idx][i][1] = d
 
-        np.save('sens.npy', np.array([x, y]))
-    else:
-        x, y = np.load('sens.npy')
+        np.save(outfile + '.npy', data)
 
-    plt.plot(x, y, linewidth=0., marker='.')
-    plt.xticks(range(len(scenarios)), xticks)
-    plt.xlim(-1,  len(scenarios))
-    plt.ylim(sc_range[0], sc_range[1])
-    plt.ylabel(r'${\rm log}_{10}\Lambda / GeV$')
-    plt.savefig('./sens.png', bbox_inches='tight', dpi=150)
+    plot_BSM_angles_limit(
+        infile=outfile+'.npy',
+        outfile=outfile,
+        xticks=xticks,
+        outformat=['png'],
+        args=args
+    )
 
 
 main.__doc__ = __doc__

@@ -7,7 +7,7 @@ from matplotlib import rc
 rc('text', usetex=False)
 rc('font', **{'family':'serif', 'serif':['Computer Modern'], 'size':18})
 
-arr = np.load('fr_evidence_test_050_050_000_0100_sfr_033_066_000_DIM3_single_scale.npy')
+arr = np.load('fr_evidence_test_033_033_033_0010_sfr_033_066_000_DIM6_single_scale.npy')
 
 print arr
 ev = arr.T[1]

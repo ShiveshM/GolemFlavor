@@ -16,30 +16,30 @@ full_scan_mfr = [
 ]
 
 fix_sfr_mfr = [
-    (1, 1, 1, 1, 0, 0),
-    (1, 1, 1, 0, 1, 0),
-    (1, 1, 1, 0, 0, 1),
     (1, 1, 1, 1, 2, 0),
-    (1, 1, 0, 0, 1, 0),
-    (1, 1, 0, 1, 2, 0),
-    (1, 1, 0, 1, 0, 0),
-    (1, 0, 0, 1, 0, 0),
-    (0, 1, 0, 0, 1, 0),
-    (1, 2, 0, 0, 1, 0),
-    (1, 2, 0, 1, 2, 0)
+    # (1, 1, 0, 1, 2, 0),
+    # (1, 2, 0, 1, 2, 0),
+    # (1, 1, 1, 1, 0, 0),
+    # (1, 1, 0, 1, 0, 0),
+    # (1, 0, 0, 1, 0, 0),
+    # (1, 1, 1, 0, 1, 0),
+    # (1, 1, 0, 0, 1, 0),
+    # (0, 1, 0, 0, 1, 0),
+    # (1, 2, 0, 0, 1, 0),
+    # (1, 1, 1, 0, 0, 1),
 ]
 
 # MCMC
-run_mcmc = 'True'
+run_mcmc = 'False'
 burnin   = 500
 nsteps   = 2000
 nwalkers = 60
 seed     = 24
-threads  = 4
+threads  = 12
 mcmc_seed_type = 'uniform'
 
 # FR
-dimension         = [4, 5, 7, 8]
+dimension         = [3, 6]
 energy            = [1e6]
 likelihood        = 'golemfit'
 no_bsm            = 'False'
@@ -66,9 +66,15 @@ promptNorm      = 0.
 ast  = 'p2_0'
 data = 'real'
 
+# Bayes Factor
+run_bayes_factor  = 'True'
+bayes_bins        = 10
+bayes_live_points = 200
+
 # Plot
-plot_angles   = 'True'
+plot_angles   = 'False'
 plot_elements = 'False'
+plot_bayes    = 'True'
 
 outfile = 'dagman_FR.submit'
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
@@ -86,11 +92,15 @@ with open(outfile, 'w') as f:
             elif energy_dependance == 'spectral':
                 outchain_head = '/data/user/smandalia/flavour_ratio/data/{0}/DIM{1}/SI_{2}'.format(likelihood, dim, spectral_index)
 
+            bayes_output = 'None'
             for sig in sigma_ratio:
                 print 'sigma', sig
                 for frs in fix_sfr_mfr:
                     print frs
-                    outchains = outchain_head + '/fix_ifr/{0}/mcmc_chain'.format(str(sig).replace('.', '_'))
+                    outchains = outchain_head + '/fix_ifr/{0}/'.format(str(sig).replace('.', '_'))
+                    if run_bayes_factor == 'True':
+                        bayes_output = outchains + '/bayes_factor/'
+                    outchains += 'mcmc_chain'
                     f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))
                     f.write('VARS\tjob{0}\tmr0="{1}"\n'.format(job_number, frs[0]))
                     f.write('VARS\tjob{0}\tmr1="{1}"\n'.format(job_number, frs[1]))
@@ -132,11 +142,19 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\tbinning_1="{1}"\n'.format(job_number, binning[1]))
                     f.write('VARS\tjob{0}\tbinning_2="{1}"\n'.format(job_number, binning[2]))
                     f.write('VARS\tjob{0}\tfix_mixing_almost="{1}"\n'.format(job_number, fix_mixing_almost))
+                    f.write('VARS\tjob{0}\trun_bayes_factor="{1}"\n'.format(job_number, run_bayes_factor))
+                    f.write('VARS\tjob{0}\tbayes_bins="{1}"\n'.format(job_number, bayes_bins))
+                    f.write('VARS\tjob{0}\tbayes_output="{1}"\n'.format(job_number, bayes_output))
+                    f.write('VARS\tjob{0}\tbayes_live_points="{1}"\n'.format(job_number, bayes_live_points))
+                    f.write('VARS\tjob{0}\tplot_bayes="{1}"\n'.format(job_number, plot_bayes))
                     job_number += 1
 
                 # for frs in full_scan_mfr:
                 #     print frs
-                #     outchains = outchain_head + '/full_scan/{0}/mcmc_chain'.format(str(sig).replace('.', '_'))
+                #     outchains = outchain_head + '/full_scan/{0}'.format(str(sig).replace('.', '_'))
+                #     if run_bayes_factor == 'True':
+                #         bayes_output = outchains + '/bayes_factor/'
+                #     outchains += 'mcmc_chain'
                 #     f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))
                 #     f.write('VARS\tjob{0}\tmr0="{1}"\n'.format(job_number, frs[0]))
                 #     f.write('VARS\tjob{0}\tmr1="{1}"\n'.format(job_number, frs[1]))
@@ -178,4 +196,9 @@ with open(outfile, 'w') as f:
                 #     f.write('VARS\tjob{0}\tbinning_1="{1}"\n'.format(job_number, binning[1]))
                 #     f.write('VARS\tjob{0}\tbinning_2="{1}"\n'.format(job_number, binning[2]))
                 #     f.write('VARS\tjob{0}\tfix_mixing_almost="{1}"\n'.format(job_number, fix_mixing_almost))
+                #     f.write('VARS\tjob{0}\trun_bayes_factor="{1}"\n'.format(job_number, run_bayes_factor))
+                #     f.write('VARS\tjob{0}\tbayes_bins="{1}"\n'.format(job_number, bayes_bins))
+                #     f.write('VARS\tjob{0}\tbayes_output="{1}"\n'.format(job_number, bayes_output))
+                #     f.write('VARS\tjob{0}\tbayes_live_points="{1}"\n'.format(job_number, bayes_live_points))
+                #     f.write('VARS\tjob{0}\tplot_bayes="{1}"\n'.format(job_number, plot_bayes))
                 #     job_number += 1

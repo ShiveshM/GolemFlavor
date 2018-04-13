@@ -21,10 +21,10 @@ from utils import gf as gf_utils
 from utils import likelihood as llh_utils
 from utils import mcmc as mcmc_utils
 from utils import misc as misc_utils
+from utils import plot as plot_utils
 from utils.enums import EnergyDependance, Likelihood, MCMCSeedType, ParamTag
 from utils.fr import MASS_EIGENVALUES, normalise_fr, fr_to_angles
 from utils.misc import enum_parse, Param, ParamSet
-from utils.plot import plot_argparse, chainer_plot
 
 
 def define_nuisance():
@@ -89,7 +89,8 @@ def get_paramsets(args):
         lL_range = (logLam-scale_region, logLam+scale_region)
         tag = ParamTag.SCALE
         mcmc_paramset.append(
-            Param(name='logLam', value=logLam, ranges=lL_range, std=3, tex=r'{\rm log}_{10}\Lambda', tag=tag)
+            Param(name='logLam', value=logLam, ranges=lL_range, std=3,
+                  tex=r'{\rm log}_{10}\Lambda'+plot_utils.get_units(args.dimension), tag=tag)
         )
     if not args.fix_source_ratio:
         tag = ParamTag.SRCANGLES
@@ -98,7 +99,6 @@ def get_paramsets(args):
             Param(name='c_2psi', value=0.5, ranges=[0., 1.], std=0.2, tex=r'cos(2\psi)', tag=tag)
         ])
     mcmc_paramset = ParamSet(mcmc_paramset)
-    # TODO(shivesh): unify
     return asimov_paramset, mcmc_paramset
 
 
@@ -110,9 +110,9 @@ def process_args(args):
         raise NotImplementedError(
             '--fix-mixing and --fix-mixing-almost cannot be used together'
         )
-    if args.bayes_factor and args.fix_scale:
+    if args.run_bayes_factor and args.fix_scale:
         raise NotImplementedError(
-            '--bayes-factor and --fix-scale cannot be used together'
+            '--run-bayes-factor and --fix-scale cannot be used together'
         )
 
     args.measured_ratio = normalise_fr(args.measured_ratio)
@@ -172,12 +172,16 @@ def parse_args():
         help='Binning for spectral energy dependance'
     )
     parser.add_argument(
-        '--bayes-factor', type=misc_utils.parse_bool, default='False',
+        '--run-bayes-factor', type=misc_utils.parse_bool, default='False',
         help='Make the bayes factor plot for the scale'
     )
     parser.add_argument(
-        '--bayes-bins', type=int, default=100,
+        '--bayes-bins', type=int, default=10,
         help='Number of bins for the Bayes factor plot'
+    )
+    parser.add_argument(
+        '--bayes-live-points', type=int, default=400,
+        help='Number of live points for MultiNest evaluations'
     )
     parser.add_argument(
         '--bayes-output', type=str, default='./mnrun/',
@@ -233,9 +237,9 @@ def parse_args():
     )
     llh_utils.likelihood_argparse(parser)
     mcmc_utils.mcmc_argparse(parser)
-    nuisance_argparse(parser)
     gf_utils.gf_argparse(parser)
-    plot_argparse(parser)
+    plot_utils.plot_argparse(parser)
+    nuisance_argparse(parser)
     return parser.parse_args()
 
 
@@ -252,12 +256,7 @@ def main():
 
     if args.run_mcmc:
         if args.likelihood is Likelihood.GOLEMFIT:
-            datapaths = gf.DataPaths()
-            sparams = gf_utils.steering_params(args)
-            npp = gf.NewPhysicsParams()
-            fitter = gf.GolemFit(datapaths, sparams, npp)
-            gf_utils.set_up_as(fitter, asimov_paramset)
-            # fitter.WriteCompact()
+            fitter = gf_utils.setup_fitter(args, asimov_paramset)
         else:
             fitter = None
 
@@ -289,7 +288,7 @@ def main():
         )
         mcmc_utils.save_chains(samples, outfile)
 
-    chainer_plot(
+    plot_utils.chainer_plot(
         infile        = outfile+'.npy',
         outfile       = outfile[:5]+outfile[5:].replace('data', 'plots'),
         outformat     = ['pdf'],
@@ -297,18 +296,14 @@ def main():
         mcmc_paramset = mcmc_paramset
     )
 
-    if args.bayes_factor:
+    if args.run_bayes_factor:
         # TODO(shivesh)
         import pymultinest
         from pymultinest.solve import solve
         from pymultinest.watch import ProgressPrinter
 
         if not args.run_mcmc and args.likelihood is Likelihood.GOLEMFIT:
-            datapaths = gf.DataPaths()
-            sparams = gf_utils.steering_params(args)
-            npp = gf.NewPhysicsParams()
-            fitter = gf.GolemFit(datapaths, sparams, npp)
-            gf_utils.set_up_as(fitter, asimov_paramset)
+            fitter = gf_utils.setup_fitter(args, asimov_paramset)
         else:
             fitter = None
 
@@ -318,9 +313,8 @@ def main():
         )
 
         p = mcmc_paramset.from_tag(ParamTag.SCALE, invert=True)
-        prior_ranges = p.ranges
         n_params = len(p)
-        hypo_paramset = asimov_paramset
+        prior_ranges = p.ranges
 
         def CubePrior(cube, ndim, nparams):
             # default are uniform priors
@@ -333,7 +327,7 @@ def main():
                 for i in range(ndim):
                     prange = prior_ranges[i][1] - prior_ranges[i][0]
                     theta[i] = prange*cube[i] + prior_ranges[i][0]
-                theta_ = np.concatenate([theta, [s]])
+                theta_ = np.array(theta.tolist() + [s])
                 return llh_utils.triangle_llh(
                     theta=theta_,
                     args=args,
@@ -342,24 +336,30 @@ def main():
                     fitter=fitter
                 )
 
-            prefix = 'mnrun_{0:.0E}'.format(np.power(10, s))
+            prefix = 'mnrun_{0:.0E}'.format(np.power(10, s)) + '_' + outfile[2:]
             print 'begin running evidence calculation for {0}'.format(prefix)
             result = pymultinest.run(
-                LogLikelihood=lnProb, Prior=CubePrior, n_dims=n_params,
-                outputfiles_basename=prefix#, verbose=True
+                LogLikelihood=lnProb,
+                Prior=CubePrior,
+                n_dims=n_params,
+                n_live_points=args.bayes_live_points,
+                outputfiles_basename=prefix,
+                # resume=False
             )
-            print 'end running evidence calculation for {0}'.format(prefix)
 
-            print 'begin analysis for {0}'.format(prefix)
             analyzer = pymultinest.Analyzer(outputfiles_basename=prefix, n_params=n_params)
             a_lnZ = analyzer.get_stats()['global evidence']
-            print 'end analysis for {0}'.format(prefix)
             print 'Evidence = {0}'.format(a_lnZ)
 
             arr.append([s, a_lnZ])
-            out = args.bayes_output+'fr_evidence_'+outfile[2:]+'.npy'
+        out = args.bayes_output+'fr_evidence_'+outfile[2:]+'.npy'
         misc_utils.make_dir(out)
         np.save(out, np.array(arr))
+
+    b_out = args.bayes_output+'fr_evidence_'+outfile[2:]
+    plot_utils.bayes_factor_plot(
+        infile=b_out+'.npy', outfile=b_out, outformat=['png'], args=args
+    )
 
     print "DONE!"
 

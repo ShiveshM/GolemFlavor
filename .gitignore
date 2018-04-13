@@ -7,3 +7,4 @@ plots/
 dagman_FR.submit*
 submitter/logs/
 mnrun_*
+*.png

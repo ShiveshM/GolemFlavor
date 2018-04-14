@@ -1,10 +1,10 @@
 *.npy
-nohup.out
+nohup*
 *.pyc
 *.nfs*
 plots/
 *.pdf
-dagman_FR.submit*
+dagman_FR*
 submitter/logs/
 mnrun_*
 *.png

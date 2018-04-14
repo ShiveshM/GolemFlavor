@@ -196,6 +196,57 @@ class SortingHelpFormatter(argparse.HelpFormatter):
         super(SortingHelpFormatter, self).add_arguments(actions)
 
 
+def gen_identifier(args):
+    mr = args.measured_ratio
+    si = args.sigma_ratio
+    if args.fix_source_ratio:
+        sr = args.source_ratio
+        if args.fix_mixing:
+            out = '_{0:03d}_{1:03d}_{2:03d}_{3:04d}_sfr_{4:03d}_{5:03d}_{6:03d}_DIM{7}_fix_mixing'.format(
+                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100), int(si*1000),
+                int(sr[0]*100), int(sr[1]*100), int(sr[2]*100), args.dimension
+            )
+        elif args.fix_mixing_almost:
+            out = '_{0:03d}_{1:03d}_{2:03d}_{3:04d}_sfr_{4:03d}_{5:03d}_{6:03d}_DIM{7}_fix_mixing_almost'.format(
+                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100), int(si*1000),
+                int(sr[0]*100), int(sr[1]*100), int(sr[2]*100), args.dimension
+            )
+        elif args.fix_scale:
+            out = '_{0:03d}_{1:03d}_{2:03d}_{3:04d}_sfr_{4:03d}_{5:03d}_{6:03d}_DIM{7}_fixed_scale_{8}'.format(
+                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100), int(si*1000),
+                int(sr[0]*100), int(sr[1]*100), int(sr[2]*100), args.dimension,
+                args.scale
+            )
+        else:
+            out = '_{0:03d}_{1:03d}_{2:03d}_{3:04d}_sfr_{4:03d}_{5:03d}_{6:03d}_DIM{7}_single_scale'.format(
+                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100), int(si*1000),
+                int(sr[0]*100), int(sr[1]*100), int(sr[2]*100), args.dimension
+            )
+    else:
+        if args.fix_mixing:
+            out = '_{0:03d}_{1:03d}_{2:03d}_{3:04d}_DIM{4}_fix_mixing'.format(
+                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100),
+                int(si*1000), args.dimension
+            )
+        elif args.fix_mixing_almost:
+            out = '_{0:03d}_{1:03d}_{2:03d}_{3:04d}_DIM{4}_fix_mixing_almost'.format(
+                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100),
+                int(si*1000), args.dimension
+            )
+        elif args.fix_scale:
+            out = '_{0:03d}_{1:03d}_{2:03d}_{3:04d}_DIM{4}_fixed_scale_{5}'.format(
+                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100),
+                int(si*1000), args.dimension, args.scale
+            )
+        else:
+            out = '_{0:03d}_{1:03d}_{2:03d}_{3:04d}_DIM{4}'.format(
+                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100),
+                int(si*1000), args.dimension
+            )
+    if args.likelihood is Likelihood.FLAT: out += '_flat'
+    return out
+
+
 def gen_outfile_name(args):
     """Generate a name for the output file based on the input args.
 
@@ -205,54 +256,7 @@ def gen_outfile_name(args):
         argparse object to print
 
     """
-    mr = args.measured_ratio
-    si = args.sigma_ratio
-    if args.fix_source_ratio:
-        sr = args.source_ratio
-        if args.fix_mixing:
-            outfile = args.outfile+'_{0:03d}_{1:03d}_{2:03d}_{3:04d}_sfr_{4:03d}_{5:03d}_{6:03d}_DIM{7}_fix_mixing'.format(
-                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100), int(si*1000),
-                int(sr[0]*100), int(sr[1]*100), int(sr[2]*100), args.dimension
-            )
-        elif args.fix_mixing_almost:
-            outfile = args.outfile+'_{0:03d}_{1:03d}_{2:03d}_{3:04d}_sfr_{4:03d}_{5:03d}_{6:03d}_DIM{7}_fix_mixing_almost'.format(
-                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100), int(si*1000),
-                int(sr[0]*100), int(sr[1]*100), int(sr[2]*100), args.dimension
-            )
-        elif args.fix_scale:
-            outfile = args.outfile+'_{0:03d}_{1:03d}_{2:03d}_{3:04d}_sfr_{4:03d}_{5:03d}_{6:03d}_DIM{7}_fixed_scale_{8}'.format(
-                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100), int(si*1000),
-                int(sr[0]*100), int(sr[1]*100), int(sr[2]*100), args.dimension,
-                args.scale
-            )
-        else:
-            outfile = args.outfile+'_{0:03d}_{1:03d}_{2:03d}_{3:04d}_sfr_{4:03d}_{5:03d}_{6:03d}_DIM{7}_single_scale'.format(
-                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100), int(si*1000),
-                int(sr[0]*100), int(sr[1]*100), int(sr[2]*100), args.dimension
-            )
-    else:
-        if args.fix_mixing:
-            outfile = args.outfile+'_{0:03d}_{1:03d}_{2:03d}_{3:04d}_DIM{4}_fix_mixing'.format(
-                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100),
-                int(si*1000), args.dimension
-            )
-        elif args.fix_mixing_almost:
-            outfile = args.outfile+'_{0:03d}_{1:03d}_{2:03d}_{3:04d}_DIM{4}_fix_mixing_almost'.format(
-                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100),
-                int(si*1000), args.dimension
-            )
-        elif args.fix_scale:
-            outfile = args.outfile+'_{0:03d}_{1:03d}_{2:03d}_{3:04d}_DIM{4}_fixed_scale_{5}'.format(
-                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100),
-                int(si*1000), args.dimension, args.scale
-            )
-        else:
-            outfile = args.outfile+'_{0:03d}_{1:03d}_{2:03d}_{3:04d}_DIM{4}'.format(
-                int(mr[0]*100), int(mr[1]*100), int(mr[2]*100),
-                int(si*1000), args.dimension
-            )
-    if args.likelihood is Likelihood.FLAT: outfile += '_flat'
-    return outfile
+    return args.outfile + gen_identifier(args)
 
 
 def parse_bool(s):

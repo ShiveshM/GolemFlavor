@@ -100,6 +100,10 @@ def plot_argparse(parser):
         '--plot-bayes', type=misc_utils.parse_bool, default='False',
         help='Plot Bayes factor'
     )
+    parser.add_argument(
+        '--plot-angles-limit', type=misc_utils.parse_bool, default='False',
+        help='Plot limit vs BSM angles'
+    )
 
 
 def flat_angles_to_u(x):
@@ -274,6 +278,7 @@ def bayes_factor_plot(dirname, outfile, outformat, args, xlim):
                 raw.append(np.load(os.path.join(root, fn)))
     raw = np.sort(np.vstack(raw), axis=0)
     print 'raw', raw
+    print 'raw.shape', raw.shape
     scales, evidences = raw.T
     null = evidences[0]
 
@@ -309,12 +314,19 @@ def myround(x, base=5, up=False, down=False):
     else: int(base * np.round(float(x)/base))
 
 
-def plot_BSM_angles_limit(infile, outfile, xticks, outformat, args, bayesian):
+def plot_BSM_angles_limit(dirname, outfile, outformat, args, bayesian):
     """Make BSM angles vs scale limit plot."""
+    if not args.plot_angles_limit: return
     print "Making BSM angles limit plot."""
     fig_text = gen_figtext(args)
+    xticks = [r'$\mathcal{O}_{12}$', r'$\mathcal{O}_{13}$', r'$\mathcal{O}_{23}$']
 
-    raw = np.load(infile)
+    raw = []
+    for root, dirs, filenames in os.walk(dirname):
+        for fn in filenames:
+            if fn[-4:] == '.npy':
+                raw.append(np.load(os.path.join(root, fn)))
+    raw = np.sort(np.vstack(raw), axis=0)
     print 'raw', raw
     print 'raw.shape', raw.shape
     sc_ranges = (

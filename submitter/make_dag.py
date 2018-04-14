@@ -35,7 +35,7 @@ burnin   = 500
 nsteps   = 2000
 nwalkers = 60
 seed     = 24
-threads  = 4
+threads  = 1
 mcmc_seed_type = 'uniform'
 
 # FR
@@ -68,6 +68,7 @@ data = 'real'
 
 # Bayes Factor
 run_bayes_factor  = 'False'
+run_angles_limit  = 'True'
 bayes_bins        = 10
 bayes_live_points = 200
 bayes_tolerance   = 0.01
@@ -78,7 +79,7 @@ plot_angles   = 'False'
 plot_elements = 'False'
 plot_bayes    = 'False'
 
-outfile = 'dagman_FR.submit'
+outfile = 'dagman_FR_angles_limit.submit'
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/submit.sub'
 
@@ -105,6 +106,8 @@ with open(outfile, 'w') as f:
                     outchains = outchain_head + '/fix_ifr/{0}/'.format(str(sig).replace('.', '_'))
                     if run_bayes_factor == 'True':
                         bayes_output = outchains + '/bayes_factor/'
+                    if run_angles_limit == 'True':
+                        angles_lim_output = outchains + '/angles_limit/'
                     outchains += 'mcmc_chain'
                     for r in range(b_runs):
                         print 'run', r
@@ -156,6 +159,8 @@ with open(outfile, 'w') as f:
                         f.write('VARS\tjob{0}\tbayes_tolerance="{1}"\n'.format(job_number, bayes_tolerance))
                         f.write('VARS\tjob{0}\tplot_bayes="{1}"\n'.format(job_number, plot_bayes))
                         f.write('VARS\tjob{0}\tbayes_eval_bin="{1}"\n'.format(job_number, r))
+                        f.write('VARS\tjob{0}\trun_angles_limit="{1}"\n'.format(job_number, run_angles_limit))
+                        f.write('VARS\tjob{0}\tangles_lim_output="{1}"\n'.format(job_number, angles_lim_output))
                         job_number += 1
 
                 for frs in full_scan_mfr:
@@ -163,6 +168,8 @@ with open(outfile, 'w') as f:
                     outchains = outchain_head + '/full_scan/{0}'.format(str(sig).replace('.', '_'))
                     if run_bayes_factor == 'True':
                         bayes_output = outchains + '/bayes_factor/'
+                    if run_angles_limit == 'True':
+                        angles_lim_output = outchains + '/angles_limit/'
                     outchains += 'mcmc_chain'
                     for r in range(b_runs):
                         print 'run', r
@@ -214,4 +221,6 @@ with open(outfile, 'w') as f:
                         f.write('VARS\tjob{0}\tbayes_tolerance="{1}"\n'.format(job_number, bayes_tolerance))
                         f.write('VARS\tjob{0}\tplot_bayes="{1}"\n'.format(job_number, plot_bayes))
                         f.write('VARS\tjob{0}\tbayes_eval_bin="{1}"\n'.format(job_number, r))
+                        f.write('VARS\tjob{0}\trun_angles_limit="{1}"\n'.format(job_number, run_angles_limit))
+                        f.write('VARS\tjob{0}\tangles_lim_output="{1}"\n'.format(job_number, angles_lim_output))
                         job_number += 1

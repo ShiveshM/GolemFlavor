@@ -10,6 +10,7 @@ HESE BSM flavour ratio analysis script
 
 from __future__ import absolute_import, division
 
+import os
 import argparse
 from functools import partial
 
@@ -33,11 +34,11 @@ def define_nuisance():
     """
     tag = ParamTag.NUISANCE
     nuisance = ParamSet(
-        Param(name='convNorm',        value=1., seed=[0.5, 2. ], ranges=[0. , 50.], std=0.3,  tag=tag),
-        Param(name='promptNorm',      value=0., seed=[0. , 6. ], ranges=[0. , 50.], std=0.05, tag=tag),
-        Param(name='muonNorm',        value=1., seed=[0. , 2. ], ranges=[0. , 50.], std=0.1,  tag=tag),
-        Param(name='astroNorm',       value=1., seed=[4. , 10.], ranges=[0. , 50.], std=0.1,  tag=tag),
-        Param(name='astroDeltaGamma', value=2., seed=[2. , 3. ], ranges=[-5., 5. ], std=0.1,  tag=tag)
+        Param(name='convNorm',        value=1.,  seed=[0.5, 2. ], ranges=[0. , 50.], std=0.3,  tag=tag),
+        Param(name='promptNorm',      value=0.,  seed=[0. , 6. ], ranges=[0. , 50.], std=0.05, tag=tag),
+        Param(name='muonNorm',        value=1.,  seed=[0.1, 2. ], ranges=[0. , 50.], std=0.1,  tag=tag),
+        Param(name='astroNorm',       value=6.9, seed=[0.1, 10.], ranges=[0. , 50.], std=0.1,  tag=tag),
+        Param(name='astroDeltaGamma', value=2.5, seed=[1. , 3. ], ranges=[-5., 5. ], std=0.1,  tag=tag)
     )
     return nuisance
 
@@ -73,11 +74,12 @@ def get_paramsets(args):
 
     if not args.fix_mixing and not args.fix_mixing_almost:
         tag = ParamTag.MMANGLES
+        e = 1e-10
         mcmc_paramset.extend([
-            Param(name='s_12^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{12}^2', tag=tag),
-            Param(name='c_13^4', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{c}_{13}^4', tag=tag),
-            Param(name='s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^4', tag=tag),
-            Param(name='dcp', value=np.pi, ranges=[0., 2*np.pi], std=0.2, tex=r'\tilde{\delta_{CP}}', tag=tag)
+            Param(name='s_12^2', value=0.5, ranges=[0.+e, 1.-e], std=0.2, tex=r'\tilde{s}_{12}^2', tag=tag),
+            Param(name='c_13^4', value=0.5, ranges=[0.+e, 1.-e], std=0.2, tex=r'\tilde{c}_{13}^4', tag=tag),
+            Param(name='s_23^2', value=0.5, ranges=[0.+e, 1.-e], std=0.2, tex=r'\tilde{s}_{23}^4', tag=tag),
+            Param(name='dcp', value=np.pi, ranges=[0.+e, 2*np.pi-e], std=0.2, tex=r'\tilde{\delta_{CP}}', tag=tag)
         ])
     if args.fix_mixing_almost:
         tag = ParamTag.MMANGLES
@@ -128,16 +130,21 @@ def process_args(args):
         if args.energy_dependance is EnergyDependance.MONO:
             args.scale = np.power(
                 10, np.round(np.log10(MASS_EIGENVALUES[1]/args.energy)) - \
-                np.log10(args.energy**(args.dimension-3))
+                np.log10(args.energy**(args.dimension-3)) + 6
             )
         elif args.energy_dependance is EnergyDependance.SPECTRAL:
             args.scale = np.power(
                 10, np.round(
                     np.log10(MASS_EIGENVALUES[1]/np.power(10, np.average(np.log10(args.binning)))) \
                     - np.log10(np.power(10, np.average(np.log10(args.binning)))**(args.dimension-3))
-                )
+                ) + 6
             )
             """Estimate the scale of when to expect the BSM term to contribute."""
+
+    if args.bayes_eval_bin.lower() == 'all':
+        args.bayes_eval_bin = None
+    else:
+        args.bayes_eval_bin = int(args.bayes_eval_bin)
 
 
 def parse_args():
@@ -180,8 +187,16 @@ def parse_args():
         help='Number of bins for the Bayes factor plot'
     )
     parser.add_argument(
+        '--bayes-eval-bin', type=str, default='all',
+        help='Which bin to evalaute for Bayes factor plot'
+    )
+    parser.add_argument(
         '--bayes-live-points', type=int, default=400,
         help='Number of live points for MultiNest evaluations'
+    )
+    parser.add_argument(
+        '--bayes-tolerance', type=float, default=0.5,
+        help='Tolerance for MultiNest'
     )
     parser.add_argument(
         '--bayes-output', type=str, default='./mnrun/',
@@ -212,7 +227,7 @@ def parse_args():
         help='Set the new physics scale'
     )
     parser.add_argument(
-        '--scale-region', type=float, default=1e10,
+        '--scale-region', type=float, default=5e5,
         help='Set the size of the box to scan for the scale'
     )
     parser.add_argument(
@@ -296,38 +311,43 @@ def main():
         mcmc_paramset = mcmc_paramset
     )
 
+    out = args.bayes_output+'/fr_evidence'
+
+    sc_range = mcmc_paramset.from_tag(ParamTag.SCALE)[0].ranges
+    scales = np.linspace(
+        sc_range[0], sc_range[1], args.bayes_bins
+    )
     if args.run_bayes_factor:
-        # TODO(shivesh)
         import pymultinest
-        from pymultinest.solve import solve
-        from pymultinest.watch import ProgressPrinter
 
         if not args.run_mcmc and args.likelihood is Likelihood.GOLEMFIT:
             fitter = gf_utils.setup_fitter(args, asimov_paramset)
         else:
             fitter = None
 
-        sc_range = mcmc_paramset.from_tag(ParamTag.SCALE)[0].ranges
-        scales = np.linspace(
-            sc_range[0], sc_range[1], args.bayes_bins+1
-        )
-
         p = mcmc_paramset.from_tag(ParamTag.SCALE, invert=True)
         n_params = len(p)
-        prior_ranges = p.ranges
+        prior_ranges = p.seeds
 
         def CubePrior(cube, ndim, nparams):
             # default are uniform priors
             return ;
 
         arr = []
-        for s in scales:
+        for s_idx, s in enumerate(scales):
+            if args.bayes_eval_bin is not None:
+                if args.bayes_eval_bin == s_idx:
+                    out += '_scale_{0:.0E}'.format(np.power(10, s))
+                else: continue
+
+            print '== SCALE = {0:.0E}'.format(np.power(10, s))
             theta = np.zeros(n_params)
             def lnProb(cube, ndim, nparams):
                 for i in range(ndim):
                     prange = prior_ranges[i][1] - prior_ranges[i][0]
                     theta[i] = prange*cube[i] + prior_ranges[i][0]
                 theta_ = np.array(theta.tolist() + [s])
+                # print 'mcmc_paramset', mcmc_paramset
                 return llh_utils.triangle_llh(
                     theta=theta_,
                     args=args,
@@ -336,29 +356,35 @@ def main():
                     fitter=fitter
                 )
 
-            prefix = 'mnrun_{0:.0E}'.format(np.power(10, s)) + '_' + outfile[2:]
+            prefix = 'mnrun_{0:.0E}'.format(np.power(10, s)) + \
+                '_' + os.path.basename(outfile) + '_'
             print 'begin running evidence calculation for {0}'.format(prefix)
             result = pymultinest.run(
                 LogLikelihood=lnProb,
                 Prior=CubePrior,
                 n_dims=n_params,
+                importance_nested_sampling=True,
                 n_live_points=args.bayes_live_points,
+                evidence_tolerance=args.bayes_tolerance,
                 outputfiles_basename=prefix,
-                # resume=False
+                resume=False,
+                verbose=True
             )
 
-            analyzer = pymultinest.Analyzer(outputfiles_basename=prefix, n_params=n_params)
+            analyzer = pymultinest.Analyzer(
+                outputfiles_basename=prefix, n_params=n_params
+            )
             a_lnZ = analyzer.get_stats()['global evidence']
             print 'Evidence = {0}'.format(a_lnZ)
-
             arr.append([s, a_lnZ])
-        out = args.bayes_output+'fr_evidence_'+outfile[2:]+'.npy'
-        misc_utils.make_dir(out)
-        np.save(out, np.array(arr))
 
-    b_out = args.bayes_output+'fr_evidence_'+outfile[2:]
+        misc_utils.make_dir(out)
+        np.save(out+'.npy', np.array(arr))
+
+    dirname = os.path.dirname(out)
     plot_utils.bayes_factor_plot(
-        infile=b_out+'.npy', outfile=b_out, outformat=['png'], args=args
+        dirname=dirname, outfile=out, outformat=['png'], args=args,
+        xlim=sc_range
     )
 
     print "DONE!"

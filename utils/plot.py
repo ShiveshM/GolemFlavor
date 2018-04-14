@@ -9,6 +9,7 @@ Plotting functions for the BSM flavour ratio analysis
 
 from __future__ import absolute_import, division
 
+import os
 import argparse
 
 import numpy as np
@@ -259,13 +260,20 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
             g.export(outfile+'_elements.'+of)
 
 
-def bayes_factor_plot(infile, outfile, outformat, args):
+def bayes_factor_plot(dirname, outfile, outformat, args, xlim):
     """Make Bayes factor plot."""
     if not args.plot_bayes: return
     print "Making Bayes Factor plot"
+    print 'dirname', dirname
     fig_text = gen_figtext(args)
 
-    raw = np.load(infile)
+    raw = []
+    for root, dirs, filenames in os.walk(dirname):
+        for fn in filenames:
+            if fn[-4:] == '.npy':
+                raw.append(np.load(os.path.join(root, fn)))
+    raw = np.sort(np.vstack(raw), axis=0)
+    print 'raw', raw
     scales, evidences = raw.T
     null = evidences[0]
 
@@ -274,15 +282,16 @@ def bayes_factor_plot(infile, outfile, outformat, args):
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
 
-    ax.set_xlabel(r'{\rm log}_{10} \Lambda ' + get_units(args.dimension))
+    ax.set_xlim(xlim)
+    ax.set_xlabel(r'${\rm log}_{10} \Lambda ' + get_units(args.dimension) +r'$')
     ax.set_ylabel(r'Bayes Factor')
 
     ax.plot(scales, reduced_ev)
 
     for ymaj in ax.yaxis.get_majorticklocs():
-        ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.7, linewidth=1)
+        ax.axhline(y=ymaj, ls='-', color='gray', alpha=0.4, linewidth=1)
     for xmaj in ax.xaxis.get_majorticklocs():
-        ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.7, linewidth=1)
+        ax.axvline(x=xmaj, ls='-', color='gray', alpha=0.4, linewidth=1)
 
     at = AnchoredText(
         fig_text, prop=dict(size=7), frameon=True, loc=2
@@ -300,26 +309,37 @@ def myround(x, base=5, up=False, down=False):
     else: int(base * np.round(float(x)/base))
 
 
-def plot_BSM_angles_limit(infile, outfile, xticks, outformat, args):
+def plot_BSM_angles_limit(infile, outfile, xticks, outformat, args, bayesian):
     """Make BSM angles vs scale limit plot."""
     print "Making BSM angles limit plot."""
     fig_text = gen_figtext(args)
 
     raw = np.load(infile)
+    print 'raw', raw
+    print 'raw.shape', raw.shape
     sc_ranges = (
-        myround(np.min(raw[0][:,0]), down=True),
-        myround(np.max(raw[0][:,0]), up=True)
+        myround(np.min(raw[0][:,0]), up=True),
+        myround(np.max(raw[0][:,0]), down=True)
     )
 
     proc = []
-    for idx, theta in enumerate(raw):
-        scale, llh = theta.T
-        delta_llh = -2 * (llh - np.max(llh))
-        # 90% CL for 1 dof
-        al = scale[delta_llh > 2.71]
-        proc.append((idx+1, al[0]))
+    if bayesian:
+        for idx, theta in enumerate(raw):
+            scale, evidences = theta.T
+            null = evidences[0]
+            reduced_ev = -(evidences - null)
+            al = scale[reduced_ev > np.log(10**(1/2.))]
+            proc.append((idx+1, al[0]))
+    else:
+        for idx, theta in enumerate(raw):
+            scale, llh = theta.T
+            delta_llh = -2 * (llh - np.max(llh))
+            # 90% CL for 1 dof
+            al = scale[delta_llh > 2.71]
+            proc.append((idx+1, al[0]))
 
     limits = np.array(proc)
+    print 'limits',  limits
 
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
@@ -341,14 +361,14 @@ def plot_BSM_angles_limit(infile, outfile, xticks, outformat, args):
         #     ec='r', lw=2
         # )
         ax.annotate(
-            s='', xy=l, xytext=(l[0], l[1]-1.5),
+            s='', xy=l, xytext=(l[0], l[1]+1.5),
             arrowprops={'arrowstyle': '<-', 'lw': 1.5, 'color':'r'}
         )
 
     for ymaj in ax.yaxis.get_majorticklocs():
-        ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.4, linewidth=1)
+        ax.axhline(y=ymaj, ls='-', color='gray', alpha=0.4, linewidth=1)
     for xmaj in ax.xaxis.get_majorticklocs():
-        ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.4, linewidth=1)
+        ax.axvline(x=xmaj, ls='-', color='gray', alpha=0.4, linewidth=1)
 
     for of in outformat:
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)

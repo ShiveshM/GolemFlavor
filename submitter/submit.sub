@@ -1,5 +1,5 @@
 Executable = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/fr.py
-Arguments = "--ast $(ast) --astroDeltaGamma $(astroDeltaGamma) --astroNorm $(astroNorm) --burnin $(burnin) --convNorm $(convNorm) --data $(data) --dimension $(dimension) --energy $(energy) --fix-mixing $(fix_mixing) --fix-scale $(fix_scale) --fix-source-ratio $(fix_source_ratio) --likelihood $(likelihood) --measured-ratio $(mr0) $(mr1) $(mr2) --muonNorm $(muonNorm) --no-bsm $(no_bsm) --nsteps $(nsteps) --nwalkers $(nwalkers) --outfile $(outfile) --plot-angles $(plot_angles) --plot-elements $(plot_elements) --promptNorm $(promptNorm) --run-mcmc $(run_mcmc) --scale $(scale) --scale-region $(scale_region) --seed $(seed) --sigma-ratio $(sigma_ratio) --source-ratio $(sr0) $(sr1) $(sr2) --threads $(threads) --likelihood $(likelihood) --mcmc-seed-type $(mcmc_seed_type) --energy-dependance $(energy_dependance) --spectral-index $(spectral_index) --binning $(binning_0) $(binning_1) $(binning_2) --fix-mixing-almost $(fix_mixing_almost) --run-bayes-factor $(run_bayes_factor) --bayes-bins $(bayes_bins) --bayes-output $(bayes_output) --bayes-live-points $(bayes_live_points) --plot-bayes $(plot_bayes)"
+Arguments = "--ast $(ast) --astroDeltaGamma $(astroDeltaGamma) --astroNorm $(astroNorm) --burnin $(burnin) --convNorm $(convNorm) --data $(data) --dimension $(dimension) --energy $(energy) --fix-mixing $(fix_mixing) --fix-scale $(fix_scale) --fix-source-ratio $(fix_source_ratio) --likelihood $(likelihood) --measured-ratio $(mr0) $(mr1) $(mr2) --muonNorm $(muonNorm) --no-bsm $(no_bsm) --nsteps $(nsteps) --nwalkers $(nwalkers) --outfile $(outfile) --plot-angles $(plot_angles) --plot-elements $(plot_elements) --promptNorm $(promptNorm) --run-mcmc $(run_mcmc) --scale $(scale) --scale-region $(scale_region) --seed $(seed) --sigma-ratio $(sigma_ratio) --source-ratio $(sr0) $(sr1) $(sr2) --threads $(threads) --likelihood $(likelihood) --mcmc-seed-type $(mcmc_seed_type) --energy-dependance $(energy_dependance) --spectral-index $(spectral_index) --binning $(binning_0) $(binning_1) $(binning_2) --fix-mixing-almost $(fix_mixing_almost) --run-bayes-factor $(run_bayes_factor) --bayes-bins $(bayes_bins) --bayes-output $(bayes_output) --bayes-live-points $(bayes_live_points) --plot-bayes $(plot_bayes) --bayes-tolerance $(bayes_tolerance) --bayes-eval-bin $(bayes_eval_bin)"
 
 # All logs will go to a single file 
 log    = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/logs/job_$(Cluster).log
@@ -17,7 +17,7 @@ getenv = True
 transfer_output_files = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/metaouts/
 
 request_memory = 30GB
-request_cpus = 12
+request_cpus = 4
 
 Universe        = vanilla 
 Notification    = never 

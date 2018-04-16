@@ -264,7 +264,7 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
             g.export(outfile+'_elements.'+of)
 
 
-def bayes_factor_plot(dirname, outfile, outformat, args, xlim):
+def bayes_factor_plot(dirname, outfile, outformat, args):
     """Make Bayes factor plot."""
     if not args.plot_bayes: return
     print "Making Bayes Factor plot"
@@ -287,7 +287,7 @@ def bayes_factor_plot(dirname, outfile, outformat, args, xlim):
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
 
-    ax.set_xlim(xlim)
+    ax.set_xlim(np.log10(args.scale_region))
     ax.set_xlabel(r'${\rm log}_{10} \Lambda ' + get_units(args.dimension) +r'$')
     ax.set_ylabel(r'Bayes Factor')
 

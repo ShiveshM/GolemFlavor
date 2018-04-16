@@ -87,11 +87,9 @@ def get_paramsets(args):
             Param(name='s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^4', tag=tag)
         ])
     if not args.fix_scale:
-        logLam, scale_region = np.log10(args.scale), np.log10(args.scale_region)
-        lL_range = (logLam-scale_region, logLam+scale_region)
         tag = ParamTag.SCALE
         mcmc_paramset.append(
-            Param(name='logLam', value=logLam, ranges=lL_range, std=3,
+            Param(name='logLam', value=np.log10(args.scale), ranges=np.log10(args.scale_region), std=3,
                   tex=r'{\rm log}_{10}\Lambda'+plot_utils.get_units(args.dimension), tag=tag)
         )
     if not args.fix_source_ratio:
@@ -140,6 +138,7 @@ def process_args(args):
                 ) + 6
             )
             """Estimate the scale of when to expect the BSM term to contribute."""
+        args.scale_region = (args.scale/args.scale_region, args.scale*args.scale_region)
 
     if args.bayes_eval_bin.lower() == 'all':
         args.bayes_eval_bin = None
@@ -147,7 +146,7 @@ def process_args(args):
         args.bayes_eval_bin = int(args.bayes_eval_bin)
 
 
-def parse_args():
+def parse_args(args=None):
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
         description="BSM flavour ratio analysis",
@@ -187,6 +186,10 @@ def parse_args():
         help='Make the limit vs BSM angles plot'
     )
     parser.add_argument(
+        '--run-angles-correlation', type=misc_utils.parse_bool, default='False',
+        help='Make the limit vs BSM angles plot'
+    )
+    parser.add_argument(
         '--bayes-bins', type=int, default=10,
         help='Number of bins for the Bayes factor plot'
     )
@@ -208,6 +211,10 @@ def parse_args():
     )
     parser.add_argument(
         '--angles-lim-output', type=str, default='./mnrun/',
+        help='Folder to store MultiNest evaluations'
+    )
+    parser.add_argument(
+        '--angles-corr-output', type=str, default='./mnrun/',
         help='Folder to store MultiNest evaluations'
     )
     parser.add_argument(
@@ -263,7 +270,8 @@ def parse_args():
     gf_utils.gf_argparse(parser)
     plot_utils.plot_argparse(parser)
     nuisance_argparse(parser)
-    return parser.parse_args()
+    if args is None: return parser.parse_args()
+    else: return parser.parse_args(args.split())
 
 
 def main():
@@ -320,9 +328,8 @@ def main():
     )
 
     out = args.bayes_output+'/fr_evidence' + misc_utils.gen_identifier(args)
-    sc_range = mcmc_paramset.from_tag(ParamTag.SCALE)[0].ranges
     scan_scales = np.linspace(
-        sc_range[0], sc_range[1], args.bayes_bins
+        np.log10(args.scale_region[0]), np.log10(args.scale_region[1]), args.bayes_bins
     )
     if args.run_bayes_factor:
         import pymultinest
@@ -362,8 +369,9 @@ def main():
                     fitter=fitter
                 )
 
-            prefix = 'mnrun_{0:.0E}'.format(np.power(10, sc)) + \
-                '_' + os.path.basename(out) + '_'
+            prefix = 'mnrun/' + os.path.basename(out) + '_'
+            if args.bayes_eval_bin is not None:
+                prefix += '{0}_'.format(s_idx)
             print 'begin running evidence calculation for {0}'.format(prefix)
             result = pymultinest.run(
                 LogLikelihood=lnProb,
@@ -389,8 +397,7 @@ def main():
 
     dirname = os.path.dirname(out)
     plot_utils.bayes_factor_plot(
-        dirname=dirname, outfile=out, outformat=['png'], args=args,
-        xlim=sc_range
+        dirname=dirname, outfile=out, outformat=['png'], args=args
     )
 
     out = args.angles_lim_output+'/fr_an_evidence' + misc_utils.gen_identifier(args)
@@ -414,7 +421,9 @@ def main():
             # default are uniform priors
             return ;
 
-        data = np.zeros((len(scenarios), args.bayes_bins, 2))
+        if args.bayes_eval_bin is not None:
+            data = np.zeros((len(scenarios), 1, 2))
+        else: data = np.zeros((len(scenarios), args.bayes_bins, 2))
         mm_angles = mcmc_paramset.from_tag(ParamTag.MMANGLES)
         sc_angles = mcmc_paramset.from_tag(ParamTag.SCALE)[0]
         for idx, scen in enumerate(scenarios):
@@ -446,8 +455,9 @@ def main():
                         mcmc_paramset=mcmc_paramset,
                         fitter=fitter
                     )
-                prefix = 'mnrun_{0:.0E}'.format(np.power(10, sc)) + \
-                    '_' + os.path.basename(out) + '_'
+                prefix = 'mnrun/' + os.path.basename(out) + '_'
+                if args.bayes_eval_bin is not None:
+                    prefix += '{0}_{1}_'.format(idx, s_idx)
                 print 'begin running evidence calculation for {0}'.format(prefix)
                 result = pymultinest.run(
                     LogLikelihood=lnProb,
@@ -480,6 +490,104 @@ def main():
         dirname=dirname, outfile=outfile, outformat=['png'],
         args=args, bayesian=True
     )
+
+    out = args.angles_corr_output+'/fr_co_evidence' + misc_utils.gen_identifier(args)
+    if args.run_angles_correlation:
+        if args.bayes_eval_bin is None: assert 0
+        import pymultinest
+
+        scenarios = [
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+        ]
+        nuisance = mcmc_paramset.from_tag(ParamTag.NUISANCE)
+        mm_angles = mcmc_paramset.from_tag(ParamTag.MMANGLES)
+        sc_angles = mcmc_paramset.from_tag(ParamTag.SCALE)[0]
+
+        if not args.run_mcmc and args.likelihood is Likelihood.GOLEMFIT:
+            fitter = gf_utils.setup_fitter(args, asimov_paramset)
+        else: fitter = None
+
+        def CubePrior(cube, ndim, nparams):
+            # default are uniform priors
+            return ;
+
+        scan_angles = np.linspace(0, 1, args.bayes_bins)
+
+        if args.bayes_eval_bin is not None:
+            data = np.zeros((len(scenarios), 1, 1, 3))
+        else: data = np.zeros((len(scenarios), scale_bins, angle_bins, 3))
+        for idx, scen in enumerate(scenarios):
+            for an in mm_angles:
+                an.value = 0
+            keep = mcmc_paramset.from_tag(ParamTag.MMANGLES)[idx]
+            q = ParamSet(nuisance.params + [x for x in mm_angles if x.name != keep.name])
+            n_params = len(q)
+            prior_ranges = q.seeds
+
+            scales, angles, evidences = [], [], []
+            for s_idx, sc in enumerate(scan_scales):
+                for a_idx, an in enumerate(scan_angles):
+                    index = s_idx*args.bayes_bins + a_idx
+                    if args.bayes_eval_bin is not None:
+                        if args.bayes_eval_bin == index:
+                            if idx == 0:
+                                out += '_scale_{0:.0E}'.format(np.power(10, sc))
+                        else: continue
+
+                    print '== SCALE = {0:.0E}'.format(np.power(10, sc))
+                    print '== ANGLE = {0:.2f}'.format(an)
+                    sc_angles.value = sc
+                    keep.value = an
+                    def lnProb(cube, ndim, nparams):
+                        for i in range(ndim-1):
+                            prange = prior_ranges[i][1] - prior_ranges[i][0]
+                            q[i].value = prange*cube[i] + prior_ranges[i][0]
+                        for name in q.names:
+                            mcmc_paramset[name].value = q[name].value
+                        theta = mcmc_paramset.values
+                        # print 'theta', theta
+                        # print 'mcmc_paramset', mcmc_paramset
+                        return llh_utils.triangle_llh(
+                            theta=theta,
+                            args=args,
+                            asimov_paramset=asimov_paramset,
+                            mcmc_paramset=mcmc_paramset,
+                            fitter=fitter
+                        )
+                    prefix = 'mnrun/' + os.path.basename(out) + '_'
+                    if args.bayes_eval_bin is not None:
+                        prefix += '{0}_{1}_{2}'.format(idx, s_idx, a_idx)
+
+                    print 'begin running evidence calculation for {0}'.format(prefix)
+                    result = pymultinest.run(
+                        LogLikelihood=lnProb,
+                        Prior=CubePrior,
+                        n_dims=n_params,
+                        importance_nested_sampling=True,
+                        n_live_points=args.bayes_live_points,
+                        evidence_tolerance=args.bayes_tolerance,
+                        outputfiles_basename=prefix,
+                        resume=False,
+                        verbose=True
+                    )
+
+                    analyzer = pymultinest.Analyzer(outputfiles_basename=prefix, n_params=n_params)
+                    a_lnZ = analyzer.get_stats()['global evidence']
+                    print 'Evidence = {0}'.format(a_lnZ)
+                    scales.append(sc)
+                    angles.append(an)
+                    evidences.append(a_lnZ)
+
+                for i, d in enumerate(evidences):
+                    data[idx][i][i][0] = scales[i]
+                    data[idx][i][i][1] = angles[i]
+                    data[idx][i][i][2] = d
+
+        misc_utils.make_dir(out)
+        print 'saving to {0}.npy'.format(out)
+        np.save(out+'.npy', np.array(data))
 
     print "DONE!"
 

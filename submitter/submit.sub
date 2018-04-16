@@ -1,5 +1,5 @@
 Executable = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/fr.py
-Arguments = "--ast $(ast) --astroDeltaGamma $(astroDeltaGamma) --astroNorm $(astroNorm) --burnin $(burnin) --convNorm $(convNorm) --data $(data) --dimension $(dimension) --energy $(energy) --fix-mixing $(fix_mixing) --fix-scale $(fix_scale) --fix-source-ratio $(fix_source_ratio) --likelihood $(likelihood) --measured-ratio $(mr0) $(mr1) $(mr2) --muonNorm $(muonNorm) --no-bsm $(no_bsm) --nsteps $(nsteps) --nwalkers $(nwalkers) --outfile $(outfile) --plot-angles $(plot_angles) --plot-elements $(plot_elements) --promptNorm $(promptNorm) --run-mcmc $(run_mcmc) --scale $(scale) --scale-region $(scale_region) --seed $(seed) --sigma-ratio $(sigma_ratio) --source-ratio $(sr0) $(sr1) $(sr2) --threads $(threads) --likelihood $(likelihood) --mcmc-seed-type $(mcmc_seed_type) --energy-dependance $(energy_dependance) --spectral-index $(spectral_index) --binning $(binning_0) $(binning_1) $(binning_2) --fix-mixing-almost $(fix_mixing_almost) --run-bayes-factor $(run_bayes_factor) --bayes-bins $(bayes_bins) --bayes-output $(bayes_output) --bayes-live-points $(bayes_live_points) --plot-bayes $(plot_bayes) --bayes-tolerance $(bayes_tolerance) --bayes-eval-bin $(bayes_eval_bin) --run-angles-limit $(run_angles_limit) --angles-lim-out $(angles_lim_output)"
+Arguments = "--ast $(ast) --astroDeltaGamma $(astroDeltaGamma) --astroNorm $(astroNorm) --burnin $(burnin) --convNorm $(convNorm) --data $(data) --dimension $(dimension) --energy $(energy) --fix-mixing $(fix_mixing) --fix-scale $(fix_scale) --fix-source-ratio $(fix_source_ratio) --likelihood $(likelihood) --measured-ratio $(mr0) $(mr1) $(mr2) --muonNorm $(muonNorm) --no-bsm $(no_bsm) --nsteps $(nsteps) --nwalkers $(nwalkers) --outfile $(outfile) --plot-angles $(plot_angles) --plot-elements $(plot_elements) --promptNorm $(promptNorm) --run-mcmc $(run_mcmc) --scale $(scale) --scale-region $(scale_region) --seed $(seed) --sigma-ratio $(sigma_ratio) --source-ratio $(sr0) $(sr1) $(sr2) --threads $(threads) --mcmc-seed-type $(mcmc_seed_type) --energy-dependance $(energy_dependance) --spectral-index $(spectral_index) --binning $(binning_0) $(binning_1) $(binning_2) --fix-mixing-almost $(fix_mixing_almost) --run-bayes-factor $(run_bayes_factor) --bayes-bins $(bayes_bins) --bayes-output $(bayes_output) --bayes-live-points $(bayes_live_points) --plot-bayes $(plot_bayes) --bayes-tolerance $(bayes_tolerance) --bayes-eval-bin $(bayes_eval_bin) --run-angles-limit $(run_angles_limit) --angles-lim-out $(angles_lim_output) --plot-angles-limit $(plot_angles_limit) --run-angles-correlation $(run_angles_correlation) --angles-corr-output $(angles_corr_output)"
 
 # All logs will go to a single file 
 log    = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/logs/job_$(Cluster).log
@@ -14,9 +14,9 @@ getenv = True
 
 # but do not try to copy outputs back (see: https://htcondor-wiki.cs.wisc.edu/index.cgi/tktview?tn=3081) 
 # +TransferOutput="" 
-transfer_output_files = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/metaouts/
+Transfer_output_files = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/metaouts/
 
-request_memory = 10GB
+request_memory = 1GB
 request_cpus = 1
 
 Universe        = vanilla 
@@ -33,7 +33,7 @@ Notification    = never
 
 # Requirements = IS_GLIDEIN && HAS_CVMFS_icecube_opensciencegrid_org && (OpSysAndVer =?= "CentOS6" || OpSysAndVer =?= "RedHat6" || OpSysAndVer =?= "SL6")
 # Requirements = IS_GLIDEIN
-requirements = (OpSysMajorVer =?= 6)
+# Requirements = (OpSysMajorVer =?= 6)
 
 # GO! 
 queue

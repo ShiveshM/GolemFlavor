@@ -19,10 +19,10 @@ fix_sfr_mfr = [
     (1, 1, 1, 1, 2, 0),
     # (1, 1, 0, 1, 2, 0),
     # (1, 2, 0, 1, 2, 0),
-    # (1, 1, 1, 1, 0, 0),
+    (1, 1, 1, 1, 0, 0),
     # (1, 1, 0, 1, 0, 0),
     # (1, 0, 0, 1, 0, 0),
-    # (1, 1, 1, 0, 1, 0),
+    (1, 1, 1, 0, 1, 0),
     # (1, 1, 0, 0, 1, 0),
     # (0, 1, 0, 0, 1, 0),
     # (1, 2, 0, 0, 1, 0),
@@ -31,17 +31,16 @@ fix_sfr_mfr = [
 
 # MCMC
 run_mcmc = 'False'
-burnin   = 500
-nsteps   = 2000
+burnin   = 2500
+nsteps   = 10000
 nwalkers = 60
 seed     = 24
-threads  = 1
+threads  = 4
 mcmc_seed_type = 'uniform'
 
 # FR
 dimension         = [6]
 energy            = [1e6]
-likelihood        = 'golemfit'
 no_bsm            = 'False'
 sigma_ratio       = ['0.01']
 scale             = "1E-20 1E-30"
@@ -67,23 +66,30 @@ ast  = 'p2_0'
 data = 'real'
 
 # Bayes Factor
-run_bayes_factor  = 'False'
-run_angles_limit  = 'True'
-bayes_bins        = 10
-bayes_live_points = 200
-bayes_tolerance   = 0.01
-bayes_eval_bin    = True # set to 'all' to run normally
+run_bayes_factor       = 'False'
+run_angles_limit       = 'False'
+run_angles_correlation = 'True'
+bayes_bins             = 20
+bayes_live_points      = 1000
+bayes_tolerance        = 0.01
+bayes_eval_bin         = 'None' # set to 'all' to run normally
 
 # Plot
-plot_angles   = 'False'
-plot_elements = 'False'
-plot_bayes    = 'False'
+plot_angles       = 'False'
+plot_elements     = 'False'
+plot_bayes        = 'False'
+plot_angles_limit = 'False'
 
-outfile = 'dagman_FR_angles_limit.submit'
+# outfile = 'dagman_FR.submit'.format(dimension[0])
+outfile = 'dagman_FR_angles_correlation_DIM{0}.submit'.format(dimension[0])
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/submit.sub'
 
-if bayes_eval_bin != 'all': b_runs = bayes_bins
+if bayes_eval_bin != 'all':
+    if run_angles_correlation == 'True':
+        b_runs = bayes_bins**2
+    else:
+        b_runs = bayes_bins
 else: b_runs = 1
 
 with open(outfile, 'w') as f:
@@ -99,6 +105,7 @@ with open(outfile, 'w') as f:
                 outchain_head = '/data/user/smandalia/flavour_ratio/data/{0}/DIM{1}/SI_{2}'.format(likelihood, dim, spectral_index)
 
             bayes_output = 'None'
+            angles_lim_output = 'None'
             for sig in sigma_ratio:
                 print 'sigma', sig
                 for frs in fix_sfr_mfr:
@@ -108,6 +115,8 @@ with open(outfile, 'w') as f:
                         bayes_output = outchains + '/bayes_factor/'
                     if run_angles_limit == 'True':
                         angles_lim_output = outchains + '/angles_limit/'
+                    if run_angles_correlation == 'True':
+                        angles_corr_output = outchains + '/angles_corr/'
                     outchains += 'mcmc_chain'
                     for r in range(b_runs):
                         print 'run', r
@@ -144,7 +153,6 @@ with open(outfile, 'w') as f:
                         f.write('VARS\tjob{0}\tplot_elements="{1}"\n'.format(job_number, plot_elements))
                         f.write('VARS\tjob{0}\tseed="{1}"\n'.format(job_number, seed))
                         f.write('VARS\tjob{0}\tthreads="{1}"\n'.format(job_number, threads))
-                        f.write('VARS\tjob{0}\tlikelihood="{1}"\n'.format(job_number, likelihood))
                         f.write('VARS\tjob{0}\tmcmc_seed_type="{1}"\n'.format(job_number, mcmc_seed_type))
                         f.write('VARS\tjob{0}\tenergy_dependance="{1}"\n'.format(job_number, energy_dependance))
                         f.write('VARS\tjob{0}\tspectral_index="{1}"\n'.format(job_number, spectral_index))
@@ -161,6 +169,9 @@ with open(outfile, 'w') as f:
                         f.write('VARS\tjob{0}\tbayes_eval_bin="{1}"\n'.format(job_number, r))
                         f.write('VARS\tjob{0}\trun_angles_limit="{1}"\n'.format(job_number, run_angles_limit))
                         f.write('VARS\tjob{0}\tangles_lim_output="{1}"\n'.format(job_number, angles_lim_output))
+                        f.write('VARS\tjob{0}\tplot_angles_limit="{1}"\n'.format(job_number, plot_angles_limit))
+                        f.write('VARS\tjob{0}\trun_angles_correlation="{1}"\n'.format(job_number, run_angles_correlation))
+                        f.write('VARS\tjob{0}\tangles_corr_output="{1}"\n'.format(job_number, angles_corr_output))
                         job_number += 1
 
                 for frs in full_scan_mfr:
@@ -170,6 +181,8 @@ with open(outfile, 'w') as f:
                         bayes_output = outchains + '/bayes_factor/'
                     if run_angles_limit == 'True':
                         angles_lim_output = outchains + '/angles_limit/'
+                    if run_angles_correlation == 'True':
+                        angles_corr_output = outchains + '/angles_corr/'
                     outchains += 'mcmc_chain'
                     for r in range(b_runs):
                         print 'run', r
@@ -206,7 +219,6 @@ with open(outfile, 'w') as f:
                         f.write('VARS\tjob{0}\tplot_elements="{1}"\n'.format(job_number, plot_elements))
                         f.write('VARS\tjob{0}\tseed="{1}"\n'.format(job_number, seed))
                         f.write('VARS\tjob{0}\tthreads="{1}"\n'.format(job_number, threads))
-                        f.write('VARS\tjob{0}\tlikelihood="{1}"\n'.format(job_number, likelihood))
                         f.write('VARS\tjob{0}\tmcmc_seed_type="{1}"\n'.format(job_number, mcmc_seed_type))
                         f.write('VARS\tjob{0}\tenergy_dependance="{1}"\n'.format(job_number, energy_dependance))
                         f.write('VARS\tjob{0}\tspectral_index="{1}"\n'.format(job_number, spectral_index))
@@ -223,4 +235,7 @@ with open(outfile, 'w') as f:
                         f.write('VARS\tjob{0}\tbayes_eval_bin="{1}"\n'.format(job_number, r))
                         f.write('VARS\tjob{0}\trun_angles_limit="{1}"\n'.format(job_number, run_angles_limit))
                         f.write('VARS\tjob{0}\tangles_lim_output="{1}"\n'.format(job_number, angles_lim_output))
+                        f.write('VARS\tjob{0}\tplot_angles_limit="{1}"\n'.format(job_number, plot_angles_limit))
+                        f.write('VARS\tjob{0}\trun_angles_correlation="{1}"\n'.format(job_number, run_angles_correlation))
+                        f.write('VARS\tjob{0}\tangles_corr_output="{1}"\n'.format(job_number, angles_corr_output))
                         job_number += 1

@@ -19,7 +19,7 @@ fix_sfr_mfr = [
     (1, 1, 1, 1, 2, 0),
     # (1, 1, 0, 1, 2, 0),
     # (1, 2, 0, 1, 2, 0),
-    (1, 1, 1, 1, 0, 0),
+    # (1, 1, 1, 1, 0, 0),
     # (1, 1, 0, 1, 0, 0),
     # (1, 0, 0, 1, 0, 0),
     (1, 1, 1, 0, 1, 0),
@@ -34,12 +34,12 @@ run_mcmc = 'False'
 burnin   = 2500
 nsteps   = 10000
 nwalkers = 60
-seed     = 24
+seed     = 'None'
 threads  = 4
 mcmc_seed_type = 'uniform'
 
 # FR
-dimension         = [6]
+dimension         = [4, 5, 7, 8]
 energy            = [1e6]
 no_bsm            = 'False'
 sigma_ratio       = ['0.01']
@@ -66,13 +66,13 @@ ast  = 'p2_0'
 data = 'real'
 
 # Bayes Factor
-run_bayes_factor       = 'False'
+run_bayes_factor       = 'True'
 run_angles_limit       = 'False'
-run_angles_correlation = 'True'
-bayes_bins             = 20
-bayes_live_points      = 1000
+run_angles_correlation = 'False'
+bayes_bins             = 100
+bayes_live_points      = 3000
 bayes_tolerance        = 0.01
-bayes_eval_bin         = 'None' # set to 'all' to run normally
+bayes_eval_bin         = 'all' # set to 'all' to run normally
 
 # Plot
 plot_angles       = 'False'
@@ -80,8 +80,8 @@ plot_elements     = 'False'
 plot_bayes        = 'False'
 plot_angles_limit = 'False'
 
-# outfile = 'dagman_FR.submit'.format(dimension[0])
-outfile = 'dagman_FR_angles_correlation_DIM{0}.submit'.format(dimension[0])
+outfile = 'dagman_FR_freq_fullscan_otherdims.submit'
+# outfile = 'dagman_FR_bayes_freq.submit'
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/submit.sub'
 
@@ -106,6 +106,7 @@ with open(outfile, 'w') as f:
 
             bayes_output = 'None'
             angles_lim_output = 'None'
+            angles_corr_output = 'None'
             for sig in sigma_ratio:
                 print 'sigma', sig
                 for frs in fix_sfr_mfr:

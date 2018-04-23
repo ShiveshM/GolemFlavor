@@ -9,7 +9,6 @@ Likelihood functions for the BSM flavour ratio analysis
 
 from __future__ import absolute_import, division
 
-import argparse
 from functools import partial
 
 import numpy as np
@@ -34,6 +33,10 @@ def likelihood_argparse(parser):
         '--likelihood', default='gaussian', type=partial(enum_parse, c=Likelihood),
         choices=Likelihood, help='likelihood contour'
     )
+    parser.add_argument(
+        '--sigma-ratio', type=float, default=0.01,
+        help='Set the 1 sigma for the measured flavour ratio for a gaussian LLH'
+    )
 
 
 def lnprior(theta, paramset):
@@ -46,17 +49,17 @@ def lnprior(theta, paramset):
     return 0.
 
 
-def triangle_llh(theta, args, asimov_paramset, mcmc_paramset, fitter):
+def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
     """-Log likelihood function for a given theta."""
-    if len(theta) != len(mcmc_paramset):
+    if len(theta) != len(llh_paramset):
         raise AssertionError(
             'Length of MCMC scan is not the same as the input '
-            'params\ntheta={0}\nmcmc_paramset]{1}'.format(theta, mcmc_paramset)
+            'params\ntheta={0}\nmcmc_paramset]{1}'.format(theta, llh_paramset)
         )
-    for idx, param in enumerate(mcmc_paramset):
+    for idx, param in enumerate(llh_paramset):
         param.value = theta[idx]
     hypo_paramset = asimov_paramset
-    for param in mcmc_paramset.from_tag(ParamTag.NUISANCE):
+    for param in llh_paramset.from_tag(ParamTag.NUISANCE):
         hypo_paramset[param.name].value = param.value
 
     if args.energy_dependance is EnergyDependance.SPECTRAL:
@@ -67,14 +70,14 @@ def triangle_llh(theta, args, asimov_paramset, mcmc_paramset, fitter):
         if args.energy_dependance is EnergyDependance.MONO:
             source_flux = args.source_ratio
         elif args.energy_dependance is EnergyDependance.SPECTRAL:
-	    source_flux = np.array(
-		[fr * np.power(bin_centers, args.spectral_index)
-		 for fr in args.source_ratio]
-	    ).T
+            source_flux = np.array(
+                [fr * np.power(bin_centers, args.spectral_index)
+                 for fr in args.source_ratio]
+            ).T
     else:
         if args.energy_dependance is EnergyDependance.MONO:
             source_flux = fr_utils.angles_to_fr(
-                mcmc_paramset.from_tag(ParamTag.SRCANGLES, values=True)
+                llh_paramset.from_tag(ParamTag.SRCANGLES, values=True)
             )
         elif args.energy_dependance is EnergyDependance.SPECTRAL:
             source_flux = np.array(
@@ -82,7 +85,7 @@ def triangle_llh(theta, args, asimov_paramset, mcmc_paramset, fitter):
                  for fr in fr_utils.angles_to_fr(theta[-2:])]
             ).T
 
-    bsm_angles = mcmc_paramset.from_tag(
+    bsm_angles = llh_paramset.from_tag(
         [ParamTag.SCALE, ParamTag.MMANGLES], values=True
     )
 
@@ -134,11 +137,11 @@ def triangle_llh(theta, args, asimov_paramset, mcmc_paramset, fitter):
         return gf_utils.get_llh_freq(fitter, hypo_paramset)
 
 
-def ln_prob(theta, args, fitter, asimov_paramset, mcmc_paramset):
-    lp = lnprior(theta, paramset=mcmc_paramset)
+def ln_prob(theta, args, fitter, asimov_paramset, llh_paramset):
+    lp = lnprior(theta, paramset=llh_paramset)
     if not np.isfinite(lp):
         return -np.inf
     return lp + triangle_llh(
         theta, args=args, asimov_paramset=asimov_paramset,
-        mcmc_paramset=mcmc_paramset, fitter=fitter
+        llh_paramset=llh_paramset, fitter=fitter
     )

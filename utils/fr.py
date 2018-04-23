@@ -9,10 +9,14 @@ Useful functions for the BSM flavour ratio analysis
 
 from __future__ import absolute_import, division
 
-import sys
+import argparse
+from functools import partial
 
 import numpy as np
 from scipy import linalg
+
+from utils.enums import EnergyDependance
+from utils.misc import enum_parse, parse_bool
 
 
 MASS_EIGENVALUES = [7.40E-23, 2.515E-21]
@@ -194,6 +198,83 @@ def normalise_fr(fr):
     return np.array(fr) / float(np.sum(fr))
 
 
+def estimate_scale(args, mass_eigenvalues=MASS_EIGENVALUES):
+    """Estimate the scale at which new physics will enter."""
+    if args.energy_dependance is EnergyDependance.MONO:
+        scale = np.power(
+            10, np.round(np.log10(MASS_EIGENVALUES[1]/args.energy)) - \
+            np.log10(args.energy**(args.dimension-3))
+        )
+    elif args.energy_dependance is EnergyDependance.SPECTRAL:
+        scale = np.power(
+            10, np.round(
+                np.log10(MASS_EIGENVALUES[1]/np.power(10, np.average(np.log10(args.binning)))) \
+                - np.log10(np.power(10, np.average(np.log10(args.binning)))**(args.dimension-3))
+            )
+        )
+    return scale
+
+
+def fr_argparse(parser):
+    parser.add_argument(
+        '--measured-ratio', type=int, nargs=3, default=[1, 1, 1],
+        help='Set the central value for the measured flavour ratio at IceCube'
+    )
+    parser.add_argument(
+        '--source-ratio', type=int, nargs=3, default=[2, 1, 0],
+        help='Set the source flavour ratio for the case when you want to fix it'
+    )
+    parser.add_argument(
+        '--no-bsm', type=parse_bool, default='False',
+        help='Turn off BSM terms'
+    )
+    parser.add_argument(
+        '--dimension', type=int, default=3,
+        help='Set the new physics dimension to consider'
+    )
+    parser.add_argument(
+        '--energy-dependance', default='spectral', type=partial(enum_parse, c=EnergyDependance),
+        choices=EnergyDependance,
+        help='Type of energy dependance to use in the BSM fit'
+    )
+    parser.add_argument(
+        '--spectral-index', default=-2, type=int,
+        help='Spectral index for spectral energy dependance'
+    )
+    parser.add_argument(
+        '--binning', default=[1e4, 1e7, 5], type=float, nargs=3,
+        help='Binning for spectral energy dependance'
+    )
+    parser.add_argument(
+        '--fix-source-ratio', type=parse_bool, default='False',
+        help='Fix the source flavour ratio'
+    )
+    parser.add_argument(
+        '--fix-mixing', type=parse_bool, default='False',
+        help='Fix all mixing parameters to bi-maximal mixing'
+    )
+    parser.add_argument(
+        '--fix-mixing-almost', type=parse_bool, default='False',
+        help='Fix all mixing parameters except s23'
+    )
+    parser.add_argument(
+        '--fix-scale', type=parse_bool, default='False',
+        help='Fix the new physics scale'
+    )
+    parser.add_argument(
+        '--scale', type=float, default=1e-30,
+        help='Set the new physics scale'
+    )
+    parser.add_argument(
+        '--scale-region', type=float, default=1e10,
+        help='Set the size of the box to scan for the scale'
+    )
+    parser.add_argument(
+        '--energy', type=float, default=1000,
+        help='Set the energy scale'
+    )
+
+
 def fr_to_angles(ratios):
     """Convert from flavour ratio into the angular projection of the flavour
     ratios.
@@ -218,7 +299,7 @@ NUFIT_U = angles_to_u((0.307, (1-0.02195)**2, 0.565, 3.97935))
 def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
                    nufit_u=NUFIT_U, no_bsm=False, fix_mixing=False,
                    fix_mixing_almost=False, fix_scale=False, scale=None,
-                   check_uni=True):
+                   check_uni=True, epsilon=1e-9):
     """Construct the BSM mixing matrix from the BSM parameters.
 
     Parameters
@@ -311,8 +392,8 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
 
     if check_uni:
         tu = test_unitarity(eg_vector)
-        if not abs(np.trace(tu) - 3.) < 1e-5 or \
-           not abs(np.sum(tu) - 3.) < 1e-5:
+        if not abs(np.trace(tu) - 3.) < epsilon or \
+           not abs(np.sum(tu) - 3.) < epsilon:
             raise AssertionError(
                 'Matrix is not unitary!\neg_vector\n{0}\ntest '
                 'u\n{1}'.format(eg_vector, tu)
@@ -378,4 +459,3 @@ def u_to_fr(source_fr, matrix):
     )
     ratio = composition / np.sum(source_fr)
     return ratio
-

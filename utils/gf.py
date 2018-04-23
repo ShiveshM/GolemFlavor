@@ -9,7 +9,6 @@ Useful GolemFit wrappers for the BSM flavour ratio analysis
 
 from __future__ import absolute_import, division
 
-import argparse
 import socket
 from functools import partial
 

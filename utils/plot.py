@@ -86,26 +86,6 @@ def interval(arr, percentile=68.):
     return sarr[curr_low], center, sarr[curr_up]
 
 
-def plot_argparse(parser):
-    """Arguments for plotting."""
-    parser.add_argument(
-        '--plot-angles', type=misc_utils.parse_bool, default='True',
-        help='Plot MCMC triangle in the angles space'
-    )
-    parser.add_argument(
-        '--plot-elements', type=misc_utils.parse_bool, default='False',
-        help='Plot MCMC triangle in the mixing elements space'
-    )
-    parser.add_argument(
-        '--plot-bayes', type=misc_utils.parse_bool, default='False',
-        help='Plot Bayes factor'
-    )
-    parser.add_argument(
-        '--plot-angles-limit', type=misc_utils.parse_bool, default='False',
-        help='Plot limit vs BSM angles'
-    )
-
-
 def flat_angles_to_u(x):
     """Convert from angles to mixing elements."""
     return abs(angles_to_u(x)).astype(np.float32).flatten().tolist()
@@ -138,32 +118,19 @@ def gen_figtext(args):
     mr1, mr2, mr3 = args.measured_ratio
     if args.fix_source_ratio:
         sr1, sr2, sr3 = args.source_ratio
-        if args.fix_scale:
-            t += 'Source flavour ratio = [{0:.2f}, {1:.2f}, {2:.2f}]\nIC ' \
-                    'observed flavour ratio = [{3:.2f}, {4:.2f}, ' \
-                    '{5:.2f}]\nDimension = {6}\nScale = {7}'.format(
-                        sr1, sr2, sr3, mr1, mr2, mr3, args.dimension,
-                        int(args.energy), args.scale
-                    )
-        else:
-            t += 'Source flavour ratio = [{0:.2f}, {1:.2f}, {2:.2f}]\nIC ' \
-                    'observed flavour ratio = [{3:.2f}, {4:.2f}, ' \
-                    '{5:.2f}]\nDimension = {6}'.format(
-                        sr1, sr2, sr3, mr1, mr2, mr3, args.dimension,
-                        int(args.energy)
-                    )
+        t += 'Source flavour ratio = [{0:.2f}, {1:.2f}, {2:.2f}]\nIC ' \
+                'observed flavour ratio = [{3:.2f}, {4:.2f}, ' \
+                '{5:.2f}]\nDimension = {6}'.format(
+                    sr1, sr2, sr3, mr1, mr2, mr3, args.dimension,
+                    int(args.energy)
+                )
     else:
-        if args.fix_scale:
-            t += 'IC observed flavour ratio = [{0:.2f}, {1:.2f}, ' \
-                    '{2:.2f}]\nDimension = {3}\nScale = {4}'.format(
-                        mr1, mr2, mr3, args.dimension, int(args.energy),
-                        args.scale
-                    )
-        else:
-            t += 'IC observed flavour ratio = [{0:.2f}, {1:.2f}, ' \
-                    '{2:.2f}]\nDimension = {3}'.format(
-                        mr1, mr2, mr3, args.dimension, int(args.energy)
-                    )
+        t += 'IC observed flavour ratio = [{0:.2f}, {1:.2f}, ' \
+                '{2:.2f}]\nDimension = {3}'.format(
+                    mr1, mr2, mr3, args.dimension, int(args.energy)
+                )
+    if args.fix_scale:
+        t += 'Scale = {0}'.format(args.scale)
     if args.likelihood is Likelihood.GAUSSIAN:
         t += '\nSigma = {0:.3f}'.format(args.sigma_ratio)
     if args.energy_dependance is EnergyDependance.SPECTRAL:
@@ -176,7 +143,7 @@ def gen_figtext(args):
     return t
 
 
-def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
+def chainer_plot(infile, outfile, outformat, args, llh_paramset):
     """Make the triangle plot."""
     if not args.plot_angles and not args.plot_elements:
         return
@@ -187,8 +154,8 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
     misc_utils.make_dir(outfile)
     fig_text = gen_figtext(args)
 
-    axes_labels = mcmc_paramset.labels
-    ranges = mcmc_paramset.ranges
+    axes_labels = llh_paramset.labels
+    ranges = llh_paramset.ranges
 
     if args.plot_angles:
         print "Making triangle plots"
@@ -208,7 +175,7 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
                         ), fontsize=10)
 
         # if not args.fix_mixing:
-        #     sc_index = mcmc_paramset.from_tag(ParamTag.SCALE, index=True)
+        #     sc_index = llh_paramset.from_tag(ParamTag.SCALE, index=True)
         #     itv = interval(Tchain[:,sc_index], percentile=90.)
         #     mpl.pyplot.figtext(
         #         0.5, 0.3, 'Scale 90% Interval = [1E{0}, 1E{1}], Center = '
@@ -222,11 +189,11 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
         print "Making triangle plots"
         if args.fix_mixing_almost:
             raise NotImplementedError
-        nu_index = mcmc_paramset.from_tag(ParamTag.NUISANCE, index=True)
-        fr_index = mcmc_paramset.from_tag(ParamTag.MMANGLES, index=True)
-        sc_index = mcmc_paramset.from_tag(ParamTag.SCALE, index=True)
+        nu_index = llh_paramset.from_tag(ParamTag.NUISANCE, index=True)
+        fr_index = llh_paramset.from_tag(ParamTag.MMANGLES, index=True)
+        sc_index = llh_paramset.from_tag(ParamTag.SCALE, index=True)
         if not args.fix_source_ratio:
-            sr_index = mcmc_paramset.from_tag(ParamTag.SRCANGLES, index=True)
+            sr_index = llh_paramset.from_tag(ParamTag.SRCANGLES, index=True)
 
         nu_elements = raw[:,nu_index]
         fr_elements = np.array(map(flat_angles_to_u, raw[:,fr_index]))
@@ -264,45 +231,39 @@ def chainer_plot(infile, outfile, outformat, args, mcmc_paramset):
             g.export(outfile+'_elements.'+of)
 
 
-def bayes_factor_plot(dirname, outfile, outformat, args):
-    """Make Bayes factor plot."""
-    if not args.plot_bayes: return
-    print "Making Bayes Factor plot"
-    print 'dirname', dirname
+def plot_multinest(data, outfile, outformat, args, scale_param, label=None):
+    """Make MultiNest factor plot."""
+    print "Making MultiNest Factor plot"
     fig_text = gen_figtext(args)
+    if label is not None: fig_text += '\n' + label
 
-    raw = []
-    for root, dirs, filenames in os.walk(dirname):
-        for fn in filenames:
-            if fn[-4:] == '.npy':
-                raw.append(np.load(os.path.join(root, fn)))
-    raw = np.sort(np.vstack(raw), axis=0)
-    print 'raw', raw
-    print 'raw.shape', raw.shape
-    scales, evidences = raw.T
-    null = evidences[0]
+    print 'data.shape', data.shape
+    scales, evidences = data.T
+    min_idx = np.argmin(scales)
+    null = evidences[min_idx]
 
     reduced_ev = -(evidences - null)
 
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
 
-    ax.set_xlim(np.log10(args.scale_region))
-    ax.set_xlabel(r'${\rm log}_{10} \Lambda ' + get_units(args.dimension) +r'$')
+    ax.set_xlim(scale_param.ranges)
+    ax.set_xlabel('$'+scale_param.tex+'$')
     ax.set_ylabel(r'Bayes Factor')
 
     ax.plot(scales, reduced_ev)
 
     for ymaj in ax.yaxis.get_majorticklocs():
-        ax.axhline(y=ymaj, ls='-', color='gray', alpha=0.4, linewidth=1)
+        ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.3, linewidth=1)
     for xmaj in ax.xaxis.get_majorticklocs():
-        ax.axvline(x=xmaj, ls='-', color='gray', alpha=0.4, linewidth=1)
+        ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.3, linewidth=1)
 
     at = AnchoredText(
-        fig_text, prop=dict(size=7), frameon=True, loc=2
+        '\n'+fig_text, prop=dict(size=7), frameon=True, loc=2
     )
-    at.patch.set_boxstyle("round,pad=0.,rounding_size=0.5")
+    at.patch.set_boxstyle("round,pad=0.1,rounding_size=0.5")
     ax.add_artist(at)
+    misc_utils.make_dir(outfile)
     for of in outformat:
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
 
@@ -326,7 +287,8 @@ def plot_BSM_angles_limit(dirname, outfile, outformat, args, bayesian):
         for fn in filenames:
             if fn[-4:] == '.npy':
                 raw.append(np.load(os.path.join(root, fn)))
-    raw = np.sort(np.vstack(raw), axis=0)
+    raw = np.vstack(raw)
+    raw = raw[np.argsort(raw[:,0])]
     print 'raw', raw
     print 'raw.shape', raw.shape
     sc_ranges = (

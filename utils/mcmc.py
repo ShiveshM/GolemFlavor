@@ -9,7 +9,6 @@ Useful functions to use an MCMC for the BSM flavour ratio analysis
 
 from __future__ import absolute_import, division
 
-import argparse
 from functools import partial
 
 import emcee
@@ -71,6 +70,14 @@ def mcmc_argparse(parser):
         '--mcmc-seed-type', default='uniform',
         type=partial(enum_parse, c=MCMCSeedType), choices=MCMCSeedType,
         help='Type of distrbution to make the initial MCMC seed'
+    )
+    parser.add_argument(
+        '--plot-angles', type=misc_utils.parse_bool, default='True',
+        help='Plot MCMC triangle in the angles space'
+    )
+    parser.add_argument(
+        '--plot-elements', type=misc_utils.parse_bool, default='False',
+        help='Plot MCMC triangle in the mixing elements space'
     )
 
 

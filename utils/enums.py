@@ -47,6 +47,17 @@ class MCMCSeedType(Enum):
     GAUSSIAN = 2
 
 
+class SensitivityCateg(Enum):
+    FULL        = 1
+    FIXED_ANGLE = 2
+    CORR_ANGLE  = 3
+
+
+class StatCateg(Enum):
+    BAYESIAN    = 1
+    FREQUENTIST = 2
+
+
 class SteeringCateg(Enum):
     P2_0 = 1
     P2_1 = 2

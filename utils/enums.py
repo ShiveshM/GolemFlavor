@@ -21,11 +21,6 @@ class EnergyDependance(Enum):
     SPECTRAL = 2
 
 
-class FitPriorsCateg(Enum):
-    DEFAULT = 1
-    XS      = 2
-
-
 class Likelihood(Enum):
     FLAT     = 1
     GAUSSIAN = 2
@@ -35,11 +30,17 @@ class Likelihood(Enum):
 
 class ParamTag(Enum):
     NUISANCE  = 1
-    MMANGLES  = 2
-    SCALE     = 3
-    SRCANGLES = 4
-    BESTFIT   = 5
-    NONE      = 6
+    SM_ANGLES = 2
+    MMANGLES  = 3
+    SCALE     = 4
+    SRCANGLES = 5
+    BESTFIT   = 6
+    NONE      = 7
+
+
+class PriorsCateg(Enum):
+    UNIFORM  = 1
+    GAUSSIAN = 2
 
 
 class MCMCSeedType(Enum):

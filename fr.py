@@ -21,29 +21,43 @@ from utils import likelihood as llh_utils
 from utils import mcmc as mcmc_utils
 from utils import misc as misc_utils
 from utils import plot as plot_utils
-from utils.enums import EnergyDependance, Likelihood, MCMCSeedType, ParamTag
-from utils.fr import estimate_scale, normalise_fr
+from utils.enums import EnergyDependance, Likelihood, MCMCSeedType
+from utils.enums import ParamTag, PriorsCateg
 from utils.param import Param, ParamSet, get_paramsets
 
 
 def define_nuisance():
-    """Define the nuisance parameters to scan over with default values,
-    ranges and sigma.
-    """
+    """Define the nuisance parameters."""
+    tag = ParamTag.SM_ANGLES
+    g_prior = PriorsCateg.GAUSSIAN
+    nuisance = [
+        Param(name='s_12_2', value=0.307,          seed=[0.29, 0.31], ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2', prior=g_prior, tag=tag),
+        Param(name='c_13_4', value=1-(0.02206)**2, seed=[0.998, 1.0], ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=g_prior, tag=tag),
+        Param(name='s_23_2', value=0.538,          seed=[0.46, 0.61], ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2', prior=g_prior, tag=tag),
+        Param(name='dcp',    value=4.08404,        seed=[0, 2*np.pi], ranges=[0., 2*np.pi], std=2.0,     tex=r'\delta_{CP}', tag=tag),
+        Param(
+            name='m21_2', value=7.40E-23, seed=[7.2E-23, 7.6E-23], ranges=[6.80E-23, 8.02E-23],
+            std=2.1E-24, tex=r'\Delta m_{21}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag
+        ),
+        Param(
+            name='m3x_2', value=2.494E-21, seed=[2.46E-21, 2.53E-21], ranges=[2.399E-21, 2.593E-21],
+            std=3.3E-23, tex=r'\Delta m_{3x}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag
+        )
+    ]
     tag = ParamTag.NUISANCE
-    nuisance = ParamSet(
+    nuisance.extend([
         Param(name='convNorm',        value=1.,  seed=[0.5, 2. ], ranges=[0. , 50.], std=0.3,  tag=tag),
         Param(name='promptNorm',      value=0.,  seed=[0. , 6. ], ranges=[0. , 50.], std=0.05, tag=tag),
         Param(name='muonNorm',        value=1.,  seed=[0.1, 2. ], ranges=[0. , 50.], std=0.1,  tag=tag),
         Param(name='astroNorm',       value=6.9, seed=[0.1, 10.], ranges=[0. , 50.], std=0.1,  tag=tag),
         Param(name='astroDeltaGamma', value=2.5, seed=[1. , 3. ], ranges=[-5., 5. ], std=0.1,  tag=tag)
-    )
-    return nuisance
+    ])
+    return ParamSet(nuisance)
 
 
 def nuisance_argparse(parser):
-    nuisance_paramset = define_nuisance()
-    for parm in nuisance_paramset:
+    nuisance = define_nuisance()
+    for parm in nuisance:
         parser.add_argument(
             '--'+parm.name, type=float, default=parm.value,
             help=parm.name+' to inject'
@@ -59,9 +73,9 @@ def process_args(args):
             '--fix-mixing and --fix-mixing-almost cannot be used together'
         )
 
-    args.measured_ratio = normalise_fr(args.measured_ratio)
+    args.measured_ratio = fr_utils.normalise_fr(args.measured_ratio)
     if args.fix_source_ratio:
-        args.source_ratio = normalise_fr(args.source_ratio)
+        args.source_ratio = fr_utils.normalise_fr(args.source_ratio)
 
     if args.energy_dependance is EnergyDependance.SPECTRAL:
         args.binning = np.logspace(
@@ -69,7 +83,7 @@ def process_args(args):
         )
 
     if not args.fix_scale:
-        args.scale = estimate_scale(args)
+        args.scale = fr_utils.estimate_scale(args)
         args.scale_region = (args.scale/args.scale_region, args.scale*args.scale_region)
 
 
@@ -108,7 +122,7 @@ def main():
     if args.seed is not None:
         np.random.seed(args.seed)
 
-    asimov_paramset, llh_paramset = get_paramsets(args)
+    asimov_paramset, llh_paramset = get_paramsets(args, define_nuisance())
     outfile = misc_utils.gen_outfile_name(args)
     print '== {0:<25} = {1}'.format('outfile', outfile)
 

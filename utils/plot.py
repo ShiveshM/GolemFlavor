@@ -24,7 +24,7 @@ from getdist import plots
 from getdist import mcsamples
 
 from utils import misc as misc_utils
-from utils.enums import EnergyDependance, Likelihood, ParamTag
+from utils.enums import EnergyDependance, Likelihood, ParamTag, StatCateg
 from utils.fr import angles_to_u, angles_to_fr
 
 rc('text', usetex=False)
@@ -231,25 +231,32 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset):
             g.export(outfile+'_elements.'+of)
 
 
-def plot_multinest(data, outfile, outformat, args, scale_param, label=None):
-    """Make MultiNest factor plot."""
+def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
+    """Make MultiNest factor or LLH value plot."""
     print "Making MultiNest Factor plot"
     fig_text = gen_figtext(args)
     if label is not None: fig_text += '\n' + label
 
     print 'data.shape', data.shape
-    scales, evidences = data.T
-    min_idx = np.argmin(scales)
-    null = evidences[min_idx]
-
-    reduced_ev = -(evidences - null)
+    scales, statistic = data.T
+    if args.stat_method is StatCateg.BAYESIAN:
+        min_idx = np.argmin(scales)
+        null = statistic[min_idx]
+        reduced_ev = -(statistic - null)
+    elif args.stat_method is StatCateg.FREQUENTIST:
+        min_idx = np.argmin(statistic)
+        null = statistic[min_idx]
+        reduced_ev = 2*(statistic - null)
 
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
 
     ax.set_xlim(scale_param.ranges)
     ax.set_xlabel('$'+scale_param.tex+'$')
-    ax.set_ylabel(r'Bayes Factor')
+    if args.stat_method is StatCateg.BAYESIAN:
+        ax.set_ylabel(r'Bayes Factor')
+    elif args.stat_method is StatCateg.FREQUENTIST:
+        ax.set_ylabel(r'$\Delta {\rm LLH}$')
 
     ax.plot(scales, reduced_ev)
 

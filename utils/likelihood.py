@@ -18,14 +18,19 @@ import GolemFitPy as gf
 
 from utils import fr as fr_utils
 from utils import gf as gf_utils
-from utils.enums import EnergyDependance, Likelihood, ParamTag
+from utils.enums import EnergyDependance, Likelihood, ParamTag, PriorsCateg
 from utils.misc import enum_parse
 
 
-def gaussian_llh(fr, fr_bf, sigma):
+def multi_gaussian(fr, fr_bf, sigma):
     """Multivariate gaussian likelihood."""
     cov_fr = np.identity(3) * sigma
     return np.log(multivariate_normal.pdf(fr, mean=fr_bf, cov=cov_fr))
+
+
+def log_gaussian(x, mu, sig):
+    """Log gaussian for one dimension."""
+    return np.log((1./np.sqrt(2*np.pi*sig**2))*np.exp(-((x-mu)**2)/(2*sig**2)))
 
 
 def likelihood_argparse(parser):
@@ -41,16 +46,25 @@ def likelihood_argparse(parser):
 
 def lnprior(theta, paramset):
     """Priors on theta."""
+    for idx, param in enumerate(paramset):
+        param.value = theta[idx]
     ranges = paramset.ranges
     for value, range in zip(theta, ranges):
         if range[0] <= value <= range[1]:
             pass
         else: return -np.inf
-    return 0.
+
+    prior = 0
+    for param in paramset:
+        if param.prior is PriorsCateg.GAUSSIAN:
+            prior += log_gaussian(
+                param.nominal_value, param.value, param.std
+            )
+    return prior
 
 
 def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
-    """-Log likelihood function for a given theta."""
+    """Log likelihood function for a given theta."""
     if len(theta) != len(llh_paramset):
         raise AssertionError(
             'Length of MCMC scan is not the same as the input '
@@ -89,11 +103,21 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
         [ParamTag.SCALE, ParamTag.MMANGLES], values=True
     )
 
+    m_eig_names = ['m21_2', 'm3x_2']
+    mass_eigenvalues = [x.value for x in llh_paramset if x.name in m_eig_names]
+
+    ma_names = ['s_12_2', 'c_13_4', 's_23_2', 'dcp']
+    sm_u = fr_utils.angles_to_u(
+        [x.value for x in llh_paramset if x.name in ma_names]
+    )
+
     if args.energy_dependance is EnergyDependance.MONO:
         u = fr_utils.params_to_BSMu(
             theta             = bsm_angles,
             dim               = args.dimension,
             energy            = args.energy,
+            mass_eigenvalues  = mass_eigenvalues,
+            sm_u              = sm_u,
             no_bsm            = args.no_bsm,
             fix_mixing        = args.fix_mixing,
             fix_mixing_almost = args.fix_mixing_almost,
@@ -108,6 +132,8 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
                 theta             = bsm_angles,
                 dim               = args.dimension,
                 energy            = args.energy,
+                mass_eigenvalues  = mass_eigenvalues,
+                sm_u              = sm_u,
                 no_bsm            = args.no_bsm,
                 fix_mixing        = args.fix_mixing,
                 fix_mixing_almost = args.fix_mixing_almost,
@@ -130,14 +156,14 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
         return 1.
     elif args.likelihood is Likelihood.GAUSSIAN:
         fr_bf = args.measured_ratio
-        return gaussian_llh(fr, fr_bf, args.sigma_ratio)
+        return multi_gaussian(fr, fr_bf, args.sigma_ratio)
     elif args.likelihood is Likelihood.GOLEMFIT:
         return gf_utils.get_llh(fitter, hypo_paramset)
     elif args.likelihood is Likelihood.GF_FREQ:
         return gf_utils.get_llh_freq(fitter, hypo_paramset)
 
 
-def ln_prob(theta, args, fitter, asimov_paramset, llh_paramset):
+def ln_prob(theta, args, asimov_paramset, llh_paramset, fitter):
     lp = lnprior(theta, paramset=llh_paramset)
     if not np.isfinite(lp):
         return -np.inf

@@ -15,13 +15,27 @@ import numpy as np
 
 from pymultinest import analyse, run
 
-from utils.likelihood import triangle_llh
+from utils import likelihood
 from utils.misc import make_dir, parse_bool
 
 
-def CubePrior(cube, ndim, n_params):
-    # default are uniform priors
-    return ;
+def CubePrior(cube, ndim, n_params, mn_paramset):
+    if ndim != len(mn_paramset):
+        raise AssertionError(
+            'Length of MultiNest scan paramset is not the same as the input '
+            'params\ncube={0}\nmn_paramset]{1}'.format(cube, mn_paramset)
+        )
+    pranges = mn_paramset.seeds
+    for i in xrange(ndim):
+        mn_paramset[i].value = (pranges[i][1]-pranges[i][0])*cube[i] + pranges[i][0]
+    prior = 0
+    for parm in mn_paramset:
+        if parm.prior is PriorsCateg.GAUSSIAN:
+            prior_penatly += multivariate_normal(
+                parm.nominal_value, mean=parm.value, cov=parm.std
+            )
+    print 'prior', prior
+    return prior
 
 
 def lnProb(cube, ndim, n_params, mn_paramset, llh_paramset, asimov_paramset,
@@ -38,7 +52,7 @@ def lnProb(cube, ndim, n_params, mn_paramset, llh_paramset, asimov_paramset,
         llh_paramset[pm].value = mn_paramset[pm].value
     theta = llh_paramset.values
     # print 'llh_paramset', llh_paramset
-    return triangle_llh(
+    return likelihood.ln_prob(
         theta=theta,
         args=args,
         asimov_paramset=asimov_paramset,
@@ -71,10 +85,6 @@ def mn_argparse(parser):
     parser.add_argument(
         '--mn-output', type=str, default='./mnrun/',
         help='Folder to store MultiNest evaluations'
-    )
-    parser.add_argument(
-        '--plot-multinest', type=parse_bool, default='False',
-        help='Plot MultiNest evidence'
     )
 
 

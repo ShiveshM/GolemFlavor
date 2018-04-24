@@ -72,11 +72,11 @@ def mcmc_argparse(parser):
         help='Type of distrbution to make the initial MCMC seed'
     )
     parser.add_argument(
-        '--plot-angles', type=misc_utils.parse_bool, default='True',
+        '--plot-angles', type=parse_bool, default='True',
         help='Plot MCMC triangle in the angles space'
     )
     parser.add_argument(
-        '--plot-elements', type=misc_utils.parse_bool, default='False',
+        '--plot-elements', type=parse_bool, default='False',
         help='Plot MCMC triangle in the mixing elements space'
     )
 

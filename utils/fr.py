@@ -198,17 +198,18 @@ def normalise_fr(fr):
     return np.array(fr) / float(np.sum(fr))
 
 
-def estimate_scale(args, mass_eigenvalues=MASS_EIGENVALUES):
+def estimate_scale(args):
     """Estimate the scale at which new physics will enter."""
+    m_eign = args.m3x_2
     if args.energy_dependance is EnergyDependance.MONO:
         scale = np.power(
-            10, np.round(np.log10(MASS_EIGENVALUES[1]/args.energy)) - \
+            10, np.round(np.log10(m_eign/args.energy)) - \
             np.log10(args.energy**(args.dimension-3))
         )
     elif args.energy_dependance is EnergyDependance.SPECTRAL:
         scale = np.power(
             10, np.round(
-                np.log10(MASS_EIGENVALUES[1]/np.power(10, np.average(np.log10(args.binning)))) \
+                np.log10(m_eign/np.power(10, np.average(np.log10(args.binning)))) \
                 - np.log10(np.power(10, np.average(np.log10(args.binning)))**(args.dimension-3))
             )
         )
@@ -297,7 +298,7 @@ NUFIT_U = angles_to_u((0.307, (1-0.02195)**2, 0.565, 3.97935))
 
 
 def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
-                   nufit_u=NUFIT_U, no_bsm=False, fix_mixing=False,
+                   sm_u=NUFIT_U, no_bsm=False, fix_mixing=False,
                    fix_mixing_almost=False, fix_scale=False, scale=None,
                    check_uni=True, epsilon=1e-9):
     """Construct the BSM mixing matrix from the BSM parameters.
@@ -316,8 +317,8 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
     mass_eigenvalues : list, length = 2
         SM mass eigenvalues
 
-    nufit_u : numpy ndarray, dimension 3
-        SM NuFIT mixing matrix
+    sm_u : numpy ndarray, dimension 3
+        SM mixing matrix
 
     no_bsm : bool
         Turn off BSM behaviour
@@ -350,7 +351,7 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
            [-0.32561308 -3.95946524e-01j,  0.64294909 -2.23453580e-01j, 0.03700830 +5.22032403e-01j]])
 
     """
-    if np.shape(nufit_u) != (3, 3):
+    if np.shape(sm_u) != (3, 3):
         raise ValueError(
             'Input matrix should be a square and dimension 3, '
             'got\n{0}'.format(ham)
@@ -377,7 +378,7 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
     mass_matrix = np.array(
         [[0, 0, 0], [0, mass_eigenvalues[0], 0], [0, 0, mass_eigenvalues[1]]]
     )
-    sm_ham = (1./(2*energy))*np.dot(nufit_u, np.dot(mass_matrix, nufit_u.conj().T))
+    sm_ham = (1./(2*energy))*np.dot(sm_u, np.dot(mass_matrix, sm_u.conj().T))
     if no_bsm:
         eg_vector = cardano_eqn(sm_ham)
     else:

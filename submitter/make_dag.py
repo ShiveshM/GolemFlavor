@@ -17,29 +17,29 @@ full_scan_mfr = [
 
 fix_sfr_mfr = [
     (1, 1, 1, 1, 2, 0),
-    # (1, 1, 0, 1, 2, 0),
-    # (1, 2, 0, 1, 2, 0),
-    # (1, 1, 1, 1, 0, 0),
-    # (1, 1, 0, 1, 0, 0),
-    # (1, 0, 0, 1, 0, 0),
+    (1, 1, 1, 1, 0, 0),
     (1, 1, 1, 0, 1, 0),
+    (1, 1, 1, 0, 0, 1),
+    # (1, 1, 0, 1, 2, 0),
+    # (1, 1, 0, 1, 0, 0),
     # (1, 1, 0, 0, 1, 0),
+    # (1, 0, 0, 1, 0, 0),
     # (0, 1, 0, 0, 1, 0),
+    # (1, 2, 0, 1, 2, 0),
     # (1, 2, 0, 0, 1, 0),
-    # (1, 1, 1, 0, 0, 1),
 ]
 
 # MCMC
-run_mcmc = 'False'
+run_mcmc = 'True'
 burnin   = 2500
 nsteps   = 10000
 nwalkers = 60
 seed     = 'None'
-threads  = 4
+threads  = 1
 mcmc_seed_type = 'uniform'
 
 # FR
-dimension         = [4, 5, 7, 8]
+dimension         = [3, 6]
 energy            = [1e6]
 no_bsm            = 'False'
 sigma_ratio       = ['0.01']
@@ -52,7 +52,7 @@ fix_mixing        = 'False'
 fix_mixing_almost = 'False'
 
 # Likelihood
-likelihood = 'golemfit'
+likelihood = 'gaussian'
 
 # Nuisance
 convNorm        = 1.
@@ -66,7 +66,7 @@ ast  = 'p2_0'
 data = 'real'
 
 # Bayes Factor
-run_bayes_factor       = 'True'
+run_bayes_factor       = 'False'
 run_angles_limit       = 'False'
 run_angles_correlation = 'False'
 bayes_bins             = 100
@@ -75,13 +75,12 @@ bayes_tolerance        = 0.01
 bayes_eval_bin         = 'all' # set to 'all' to run normally
 
 # Plot
-plot_angles       = 'False'
+plot_angles       = 'True'
 plot_elements     = 'False'
 plot_bayes        = 'False'
 plot_angles_limit = 'False'
 
-outfile = 'dagman_FR_freq_fullscan_otherdims.submit'
-# outfile = 'dagman_FR_bayes_freq.submit'
+outfile = 'dagman_FR.submit'
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/submit.sub'
 
@@ -161,18 +160,18 @@ with open(outfile, 'w') as f:
                         f.write('VARS\tjob{0}\tbinning_1="{1}"\n'.format(job_number, binning[1]))
                         f.write('VARS\tjob{0}\tbinning_2="{1}"\n'.format(job_number, binning[2]))
                         f.write('VARS\tjob{0}\tfix_mixing_almost="{1}"\n'.format(job_number, fix_mixing_almost))
-                        f.write('VARS\tjob{0}\trun_bayes_factor="{1}"\n'.format(job_number, run_bayes_factor))
-                        f.write('VARS\tjob{0}\tbayes_bins="{1}"\n'.format(job_number, bayes_bins))
-                        f.write('VARS\tjob{0}\tbayes_output="{1}"\n'.format(job_number, bayes_output))
-                        f.write('VARS\tjob{0}\tbayes_live_points="{1}"\n'.format(job_number, bayes_live_points))
-                        f.write('VARS\tjob{0}\tbayes_tolerance="{1}"\n'.format(job_number, bayes_tolerance))
-                        f.write('VARS\tjob{0}\tplot_bayes="{1}"\n'.format(job_number, plot_bayes))
-                        f.write('VARS\tjob{0}\tbayes_eval_bin="{1}"\n'.format(job_number, r))
-                        f.write('VARS\tjob{0}\trun_angles_limit="{1}"\n'.format(job_number, run_angles_limit))
-                        f.write('VARS\tjob{0}\tangles_lim_output="{1}"\n'.format(job_number, angles_lim_output))
-                        f.write('VARS\tjob{0}\tplot_angles_limit="{1}"\n'.format(job_number, plot_angles_limit))
-                        f.write('VARS\tjob{0}\trun_angles_correlation="{1}"\n'.format(job_number, run_angles_correlation))
-                        f.write('VARS\tjob{0}\tangles_corr_output="{1}"\n'.format(job_number, angles_corr_output))
+                        # f.write('VARS\tjob{0}\trun_bayes_factor="{1}"\n'.format(job_number, run_bayes_factor))
+                        # f.write('VARS\tjob{0}\tbayes_bins="{1}"\n'.format(job_number, bayes_bins))
+                        # f.write('VARS\tjob{0}\tbayes_output="{1}"\n'.format(job_number, bayes_output))
+                        # f.write('VARS\tjob{0}\tbayes_live_points="{1}"\n'.format(job_number, bayes_live_points))
+                        # f.write('VARS\tjob{0}\tbayes_tolerance="{1}"\n'.format(job_number, bayes_tolerance))
+                        # f.write('VARS\tjob{0}\tplot_bayes="{1}"\n'.format(job_number, plot_bayes))
+                        # f.write('VARS\tjob{0}\tbayes_eval_bin="{1}"\n'.format(job_number, r))
+                        # f.write('VARS\tjob{0}\trun_angles_limit="{1}"\n'.format(job_number, run_angles_limit))
+                        # f.write('VARS\tjob{0}\tangles_lim_output="{1}"\n'.format(job_number, angles_lim_output))
+                        # f.write('VARS\tjob{0}\tplot_angles_limit="{1}"\n'.format(job_number, plot_angles_limit))
+                        # f.write('VARS\tjob{0}\trun_angles_correlation="{1}"\n'.format(job_number, run_angles_correlation))
+                        # f.write('VARS\tjob{0}\tangles_corr_output="{1}"\n'.format(job_number, angles_corr_output))
                         job_number += 1
 
                 for frs in full_scan_mfr:

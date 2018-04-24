@@ -18,6 +18,37 @@ from utils.enums import DataType, SteeringCateg
 from utils.misc import enum_parse, thread_factors
 
 
+def fit_flags(llh_paramset):
+    default_flags = {
+        # False means it's not fixed in minimization
+        'astroFlavorAngle1'         : True,
+        'astroFlavorAngle2'         : True,
+        'astroENorm'                : True,
+        'astroMuNorm'               : True,
+        'astroTauNorm'              : True,
+        'convNorm'                  : True,
+        'promptNorm'                : True,
+        'muonNorm'                  : True,
+        'astroNorm'                 : True,
+        'astroParticleBalance'      : True,
+        'astroDeltaGamma'           : True,
+        'cutoffEnergy'              : True,
+        'CRDeltaGamma'              : True,
+        'piKRatio'                  : True,
+        'NeutrinoAntineutrinoRatio' : True,
+        'darkNorm'                  : True,
+        'domEfficiency'             : True,
+        'holeiceForward'            : True,
+        'anisotropyScale'           : True,
+        'astroNormSec'              : True,
+        'astroDeltaGammaSec'        : True
+    }
+    flags = gf.FitParametersFlag()
+    for param in llh_paramset:
+        flags.__setattr__(param.name, False)
+    return flags
+
+
 def steering_params(args):
     steering_categ = args.ast
     params = gf.SteeringParams()

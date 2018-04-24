@@ -12,17 +12,20 @@ from __future__ import absolute_import, division
 import sys
 
 from collections import Sequence
+from copy import deepcopy
 
 import numpy as np
 
 from utils.plot import get_units
 from utils.fr import fr_to_angles
-from utils.enums import Likelihood, ParamTag
+from utils.enums import Likelihood, ParamTag, PriorsCateg
 
 
 class Param(object):
     """Parameter class to store parameters."""
-    def __init__(self, name, value, ranges, seed=None, std=None, tex=None, tag=None):
+    def __init__(self, name, value, ranges, prior=None, seed=None, std=None,
+                 tex=None, tag=None):
+        self._prior = None
         self._seed = None
         self._ranges = None
         self._tex = None
@@ -30,8 +33,10 @@ class Param(object):
 
         self.name = name
         self.value = value
-        self.seed = seed
+        self.nominal_value = deepcopy(value)
+        self.prior = prior
         self.ranges = ranges
+        self.seed = seed
         self.std = std
         self.tex = tex
         self.tag = tag
@@ -43,6 +48,18 @@ class Param(object):
     @ranges.setter
     def ranges(self, values):
         self._ranges = [val for val in values]
+
+    @property
+    def prior(self):
+        return self._prior
+
+    @prior.setter
+    def prior(self, value):
+        if value is None:
+            self._prior = PriorsCateg.UNIFORM
+        else:
+            assert value in PriorsCateg
+            self._prior = value
 
     @property
     def seed(self):
@@ -146,6 +163,10 @@ class ParamSet(Sequence):
         return tuple([obj.value for obj in self._params])
 
     @property
+    def nominal_values(self):
+        return tuple([obj.nominal_value for obj in self._params])
+
+    @property
     def seeds(self):
         return tuple([obj.seed for obj in self._params])
 
@@ -185,18 +206,22 @@ class ParamSet(Sequence):
             return ParamSet([io[1] for io in ps])
 
 
-def get_paramsets(args):
+def get_paramsets(args, nuisance_paramset):
     """Make the paramsets for generating the Asmimov MC sample and also running
     the MCMC.
     """
     asimov_paramset = []
     llh_paramset = []
-    if args.likelihood == Likelihood.GOLEMFIT:
-        nuisance_paramset = define_nuisance()
-        asimov_paramset.extend(nuisance_paramset.params)
-        llh_paramset.extend(nuisance_paramset.params)
-        for parm in nuisance_paramset:
-            parm.value = args.__getattribute__(parm.name)
+
+    llh_paramset.extend(
+        [x for x in nuisance_paramset.from_tag(ParamTag.SM_ANGLES)]
+    )
+    if args.likelihood is Likelihood.GOLEMFIT:
+        gf_nuisance = [x for x in nuisance_paramset.from_tag(ParamTag.NUISANCE)]
+        asimov_paramset.extend(gf_nuisance)
+        llh_paramset.extend(gf_nuisance)
+    for parm in llh_paramset:
+        parm.value = args.__getattribute__(parm.name)
     tag = ParamTag.BESTFIT
     flavour_angles = fr_to_angles(args.measured_ratio)
     asimov_paramset.extend([
@@ -207,17 +232,16 @@ def get_paramsets(args):
 
     if not args.fix_mixing and not args.fix_mixing_almost:
         tag = ParamTag.MMANGLES
-        e = 1e-10
         llh_paramset.extend([
-            Param(name='s_12^2', value=0.5, ranges=[0.+e, 1.-e], std=0.2, tex=r'\tilde{s}_{12}^2', tag=tag),
-            Param(name='c_13^4', value=0.5, ranges=[0.+e, 1.-e], std=0.2, tex=r'\tilde{c}_{13}^4', tag=tag),
-            Param(name='s_23^2', value=0.5, ranges=[0.+e, 1.-e], std=0.2, tex=r'\tilde{s}_{23}^4', tag=tag),
-            Param(name='dcp', value=np.pi, ranges=[0.+e, 2*np.pi-e], std=0.2, tex=r'\tilde{\delta_{CP}}', tag=tag)
+            Param(name='np_s_12^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{12}^2', tag=tag),
+            Param(name='np_c_13^4', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{c}_{13}^4', tag=tag),
+            Param(name='np_s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^4', tag=tag),
+            Param(name='np_dcp', value=np.pi, ranges=[0., 2*np.pi], std=0.2, tex=r'\tilde{\delta_{CP}}', tag=tag)
         ])
     if args.fix_mixing_almost:
         tag = ParamTag.MMANGLES
         llh_paramset.extend([
-            Param(name='s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^4', tag=tag)
+            Param(name='np_s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^4', tag=tag)
         ])
     if not args.fix_scale:
         tag = ParamTag.SCALE

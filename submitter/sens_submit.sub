@@ -1,0 +1,39 @@
+Executable = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/fr.py
+Arguments = "--ast $(ast) --data $(data) --dimension $(dimension) --fix-mixing $(fix_mixing) --fix-source-ratio $(fix_source_ratio) --likelihood $(likelihood) --measured-ratio $(mr0) $(mr1) $(mr2) --no-bsm $(no_bsm) --outfile $(outfile) --scale-region $(scale_region) --seed $(seed) --sigma-ratio $(sigma_ratio) --source-ratio $(sr0) $(sr1) $(sr2) --threads $(threads) --energy-dependance $(energy_dependance) --spectral-index $(spectral_index) --binning $(binning) --fix-mixing-almost $(fix_mixing_almost) --sens-run $(sens_run) --run-method $(run_method) --stat-method $(stat_method) --sens-bins $(sens_bins) --sens-eval-bin $(sens_eval_bin) --mn-live-points $(mn_live_points) --mn-tolerance $(mn_tolerance) --mn-output $(mn_output) --plot-statistic $(plot_statistic)"
+
+# All logs will go to a single file 
+log    = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/logs/job_$(Cluster).log
+output = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/logs/job_$(Cluster).out
+error  = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/logs/job_$(Cluster).err
+
+getenv = True
+# environment = "X509_USER_PROXY=x509up_u14830" 
+
+# Stage user cert to the node (Gridftp-Users is already on CVMFS)
+# transfer_input_files = /tmp/x509up_u14830
+
+# but do not try to copy outputs back (see: https://htcondor-wiki.cs.wisc.edu/index.cgi/tktview?tn=3081) 
+# +TransferOutput="" 
+Transfer_output_files = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/metaouts/
+
+request_memory = 1GB
+request_cpus = 1
+
+Universe        = vanilla 
+Notification    = never 
+
+# run on both SL5 and 6
+# +WantRHEL6 = True
+# +WantSLC6 = False
+
+# # run on OSG
+# +WantGlidein = True
+
+# +TransferOutput=""
+
+# Requirements = IS_GLIDEIN && HAS_CVMFS_icecube_opensciencegrid_org && (OpSysAndVer =?= "CentOS6" || OpSysAndVer =?= "RedHat6" || OpSysAndVer =?= "SL6")
+# Requirements = IS_GLIDEIN
+# Requirements = (OpSysMajorVer =?= 6)
+
+# GO! 
+queue

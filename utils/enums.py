@@ -39,8 +39,9 @@ class ParamTag(Enum):
 
 
 class PriorsCateg(Enum):
-    UNIFORM  = 1
-    GAUSSIAN = 2
+    UNIFORM   = 1
+    GAUSSIAN  = 2
+    HALFGAUSS = 3
 
 
 class MCMCSeedType(Enum):
@@ -49,9 +50,11 @@ class MCMCSeedType(Enum):
 
 
 class SensitivityCateg(Enum):
-    FULL        = 1
-    FIXED_ANGLE = 2
-    CORR_ANGLE  = 3
+    FULL            = 1
+    FIXED_ANGLE     = 2
+    CORR_ANGLE      = 3
+    FIXED_ONE_ANGLE = 4
+    CORR_ONE_ANGLE  = 5
 
 
 class StatCateg(Enum):

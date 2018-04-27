@@ -13,9 +13,9 @@ import argparse
 from functools import partial
 
 import numpy as np
-from scipy import linalg
 
 from utils.enums import EnergyDependance
+from utils.misc import DTYPE, CDTYPE, PI
 from utils.misc import enum_parse, parse_bool
 
 
@@ -44,11 +44,11 @@ def angles_to_fr(src_angles):
     """
     sphi4, c2psi = src_angles
 
-    psi = (0.5)*np.arccos(c2psi)
+    psi = (0.5)*np.arccos(c2psi, dtype=DTYPE)
 
-    sphi2 = np.sqrt(sphi4)
+    sphi2 = np.sqrt(sphi4, dtype=DTYPE)
     cphi2 = 1. - sphi2
-    spsi2 = np.sin(psi)**2
+    spsi2 = np.sin(psi, dtype=DTYPE)**2
     cspi2 = 1. - spsi2
 
     x = sphi2*cspi2
@@ -80,16 +80,16 @@ def angles_to_u(bsm_angles):
 
     """
     s12_2, c13_4, s23_2, dcp = bsm_angles
-    dcp = np.complex128(dcp)
+    dcp = CDTYPE(dcp)
 
     c12_2 = 1. - s12_2
-    c13_2 = np.sqrt(c13_4)
+    c13_2 = np.sqrt(c13_4, dtype=DTYPE)
     s13_2 = 1. - c13_2
     c23_2 = 1. - s23_2
 
-    t12 = np.arcsin(np.sqrt(s12_2))
-    t13 = np.arccos(np.sqrt(c13_2))
-    t23 = np.arcsin(np.sqrt(s23_2))
+    t12 = np.arcsin(np.sqrt(s12_2, dtype=DTYPE))
+    t13 = np.arccos(np.sqrt(c13_2, dtype=DTYPE))
+    t23 = np.arcsin(np.sqrt(s23_2, dtype=DTYPE))
 
     c12 = np.cos(t12)
     s12 = np.sin(t12)
@@ -98,9 +98,9 @@ def angles_to_u(bsm_angles):
     c23 = np.cos(t23)
     s23 = np.sin(t23)
 
-    p1 = np.array([[1   , 0   , 0]                   , [0    , c23 , s23] , [0                   , -s23 , c23]] , dtype=np.complex128)
-    p2 = np.array([[c13 , 0   , s13*np.exp(-1j*dcp)] , [0    , 1   , 0]   , [-s13*np.exp(1j*dcp) , 0    , c13]] , dtype=np.complex128)
-    p3 = np.array([[c12 , s12 , 0]                   , [-s12 , c12 , 0]   , [0                   , 0    , 1]]   , dtype=np.complex128)
+    p1 = np.array([[1   , 0   , 0]                   , [0    , c23 , s23] , [0                   , -s23 , c23]] , dtype=CDTYPE)
+    p2 = np.array([[c13 , 0   , s13*np.exp(-1j*dcp)] , [0    , 1   , 0]   , [-s13*np.exp(1j*dcp) , 0    , c13]] , dtype=CDTYPE)
+    p3 = np.array([[c12 , s12 , 0]                   , [-s12 , c12 , 0]   , [0                   , 0    , 1]]   , dtype=CDTYPE)
 
     u = np.dot(np.dot(p1, p2), p3)
     return u
@@ -142,15 +142,15 @@ def cardano_eqn(ham):
 
     a = -np.trace(ham)
     b = (0.5) * ((np.trace(ham))**2 - np.trace(np.dot(ham, ham)))
-    c = -linalg.det(ham)
+    c = -np.linalg.det(ham)
 
     Q = (1/9.) * (a**2 - 3*b)
     R = (1/54.) * (2*a**3 - 9*a*b + 27*c)
     theta = np.arccos(R / np.sqrt(Q**3))
 
     E1 = -2 * np.sqrt(Q) * np.cos(theta/3.) - (1/3.)*a
-    E2 = -2 * np.sqrt(Q) * np.cos((theta - 2.*np.pi)/3.) - (1/3.)*a
-    E3 = -2 * np.sqrt(Q) * np.cos((theta + 2.*np.pi)/3.) - (1/3.)*a
+    E2 = -2 * np.sqrt(Q) * np.cos((theta - 2.*PI)/3.) - (1/3.)*a
+    E3 = -2 * np.sqrt(Q) * np.cos((theta + 2.*PI)/3.) - (1/3.)*a
 
     A1 = ham[1][2] * (ham[0][0] - E1) - ham[1][0]*ham[0][2]
     A2 = ham[1][2] * (ham[0][0] - E2) - ham[1][0]*ham[0][2]
@@ -164,9 +164,9 @@ def cardano_eqn(ham):
     C2 = ham[1][0] * (ham[2][2] - E2) - ham[1][2]*ham[2][0]
     C3 = ham[1][0] * (ham[2][2] - E3) - ham[1][2]*ham[2][0]
 
-    N1 = np.sqrt(abs(A1*B1)**2 + abs(A1*C1)**2 + abs(B1*C1)**2)
-    N2 = np.sqrt(abs(A2*B2)**2 + abs(A2*C2)**2 + abs(B2*C2)**2)
-    N3 = np.sqrt(abs(A3*B3)**2 + abs(A3*C3)**2 + abs(B3*C3)**2)
+    N1 = np.sqrt(np.abs(A1*B1, dtype=DTYPE)**2 + np.abs(A1*C1, dtype=DTYPE)**2 + np.abs(B1*C1, dtype=DTYPE)**2)
+    N2 = np.sqrt(np.abs(A2*B2, dtype=DTYPE)**2 + np.abs(A2*C2, dtype=DTYPE)**2 + np.abs(B2*C2, dtype=DTYPE)**2)
+    N3 = np.sqrt(np.abs(A3*B3, dtype=DTYPE)**2 + np.abs(A3*C3, dtype=DTYPE)**2 + np.abs(B3*C3, dtype=DTYPE)**2)
 
     mm = np.array([
         [np.conjugate(B1)*C1 / N1, np.conjugate(B2)*C2 / N2, np.conjugate(B3)*C3 / N3],
@@ -195,7 +195,7 @@ def normalise_fr(fr):
     array([ 0.16666667,  0.33333333,  0.5       ])
 
     """
-    return np.array(fr) / float(np.sum(fr))
+    return np.array(fr) / np.sum(fr)
 
 
 def estimate_scale(args):
@@ -300,7 +300,7 @@ NUFIT_U = angles_to_u((0.307, (1-0.02195)**2, 0.565, 3.97935))
 def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
                    sm_u=NUFIT_U, no_bsm=False, fix_mixing=False,
                    fix_mixing_almost=False, fix_scale=False, scale=None,
-                   check_uni=True, epsilon=1e-9):
+                   check_uni=True, epsilon=1e-7):
     """Construct the BSM mixing matrix from the BSM parameters.
 
     Parameters
@@ -393,8 +393,8 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
 
     if check_uni:
         tu = test_unitarity(eg_vector)
-        if not abs(np.trace(tu) - 3.) < epsilon or \
-           not abs(np.sum(tu) - 3.) < epsilon:
+        if not np.abs(np.trace(tu) - 3.) < epsilon or \
+           not np.abs(np.sum(tu) - 3.) < epsilon:
             raise AssertionError(
                 'Matrix is not unitary!\neg_vector\n{0}\ntest '
                 'u\n{1}'.format(eg_vector, tu)
@@ -427,7 +427,7 @@ def test_unitarity(x, prnt=False):
            [ 0.,  0.,  1.]])
 
     """
-    f = abs(np.dot(x, x.conj().T))
+    f = np.abs(np.dot(x, x.conj().T), dtype=DTYPE)
     if prnt:
         print 'Unitarity test:\n{0}'.format(f)
     return f
@@ -456,7 +456,8 @@ def u_to_fr(source_fr, matrix):
 
     """
     composition = np.einsum(
-        'ai, bi, a -> b', abs(matrix)**2, abs(matrix)**2, source_fr
+        'ai, bi, a -> b',
+        np.abs(matrix)**2, np.abs(matrix)**2, source_fr,
     )
     ratio = composition / np.sum(source_fr)
     return ratio

@@ -12,7 +12,7 @@ from __future__ import absolute_import, division
 from functools import partial
 
 import numpy as np
-from scipy.stats import multivariate_normal
+from scipy.stats import multivariate_normal, rv_continuous
 
 import GolemFitPy as gf
 
@@ -22,15 +22,16 @@ from utils.enums import EnergyDependance, Likelihood, ParamTag, PriorsCateg
 from utils.misc import enum_parse
 
 
-def multi_gaussian(fr, fr_bf, sigma):
+class Gaussian(rv_continuous):
+    """Gaussian for one dimension."""
+    def _pdf(self, x, mu, sig):
+        return (1./np.sqrt(2*np.pi*sig**2))*np.exp(-((x-mu)**2)/(2*sig**2))
+
+
+def multi_gaussian(fr, fr_bf, sigma, offset=-320):
     """Multivariate gaussian likelihood."""
     cov_fr = np.identity(3) * sigma
-    return np.log(multivariate_normal.pdf(fr, mean=fr_bf, cov=cov_fr))
-
-
-def log_gaussian(x, mu, sig):
-    """Log gaussian for one dimension."""
-    return np.log((1./np.sqrt(2*np.pi*sig**2))*np.exp(-((x-mu)**2)/(2*sig**2)))
+    return np.log(multivariate_normal.pdf(fr, mean=fr_bf, cov=cov_fr)) + offset
 
 
 def likelihood_argparse(parser):
@@ -46,6 +47,11 @@ def likelihood_argparse(parser):
 
 def lnprior(theta, paramset):
     """Priors on theta."""
+    if len(theta) != len(paramset):
+        raise AssertionError(
+            'Length of MCMC scan is not the same as the input '
+            'params\ntheta={0}\nparamset={1}'.format(theta, paramset)
+        )
     for idx, param in enumerate(paramset):
         param.value = theta[idx]
     ranges = paramset.ranges
@@ -57,9 +63,13 @@ def lnprior(theta, paramset):
     prior = 0
     for param in paramset:
         if param.prior is PriorsCateg.GAUSSIAN:
-            prior += log_gaussian(
+            prior += Gaussian().logpdf(
                 param.nominal_value, param.value, param.std
             )
+        elif param.prior is PriorsCateg.HALFGAUSS:
+            prior += Gaussian().logpdf(
+                param.nominal_value, param.value, param.std
+            ) + Gaussian().logcdf(1, param.value, param.std)
     return prior
 
 
@@ -68,7 +78,7 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
     if len(theta) != len(llh_paramset):
         raise AssertionError(
             'Length of MCMC scan is not the same as the input '
-            'params\ntheta={0}\nmcmc_paramset]{1}'.format(theta, llh_paramset)
+            'params\ntheta={0}\nparamset]{1}'.format(theta, llh_paramset)
         )
     for idx, param in enumerate(llh_paramset):
         param.value = theta[idx]

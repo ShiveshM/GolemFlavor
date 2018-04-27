@@ -22,6 +22,11 @@ import numpy as np
 from utils.enums import Likelihood
 
 
+DTYPE  = np.float128
+CDTYPE = np.complex128
+PI     = np.arccos(DTYPE(-1))
+
+
 class SortingHelpFormatter(argparse.HelpFormatter):
     """Sort argparse help options alphabetically."""
     def add_arguments(self, actions):

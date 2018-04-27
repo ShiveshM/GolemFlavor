@@ -233,10 +233,11 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset):
 
 def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     """Make MultiNest factor or LLH value plot."""
-    print "Making MultiNest Factor plot"
+    print "Making Statistic plot"
     fig_text = gen_figtext(args)
     if label is not None: fig_text += '\n' + label
 
+    print 'data', data
     print 'data.shape', data.shape
     scales, statistic = data.T
     if args.stat_method is StatCateg.BAYESIAN:
@@ -244,9 +245,9 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
         null = statistic[min_idx]
         reduced_ev = -(statistic - null)
     elif args.stat_method is StatCateg.FREQUENTIST:
-        min_idx = np.argmin(statistic)
+        min_idx = np.argmin(scales)
         null = statistic[min_idx]
-        reduced_ev = 2*(statistic - null)
+        reduced_ev = -2*(statistic - null)
 
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
@@ -256,7 +257,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     if args.stat_method is StatCateg.BAYESIAN:
         ax.set_ylabel(r'Bayes Factor')
     elif args.stat_method is StatCateg.FREQUENTIST:
-        ax.set_ylabel(r'$\Delta {\rm LLH}$')
+        ax.set_ylabel(r'$-2\Delta {\rm LLH}$')
 
     ax.plot(scales, reduced_ev)
 

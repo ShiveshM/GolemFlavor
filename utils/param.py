@@ -205,6 +205,13 @@ class ParamSet(Sequence):
         else:
             return ParamSet([io[1] for io in ps])
 
+    def remove_params(self, params):
+        rm_paramset = []
+        for parm in self.params:
+            if parm.name not in params.names:
+                rm_paramset.append(parm)
+        return ParamSet(rm_paramset)
+
 
 def get_paramsets(args, nuisance_paramset):
     """Make the paramsets for generating the Asmimov MC sample and also running
@@ -216,7 +223,7 @@ def get_paramsets(args, nuisance_paramset):
     llh_paramset.extend(
         [x for x in nuisance_paramset.from_tag(ParamTag.SM_ANGLES)]
     )
-    if args.likelihood is Likelihood.GOLEMFIT:
+    if args.likelihood in [Likelihood.GOLEMFIT, Likelihood.GF_FREQ]:
         gf_nuisance = [x for x in nuisance_paramset.from_tag(ParamTag.NUISANCE)]
         asimov_paramset.extend(gf_nuisance)
         llh_paramset.extend(gf_nuisance)

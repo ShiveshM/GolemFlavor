@@ -16,26 +16,11 @@ import numpy as np
 from pymultinest import analyse, run
 
 from utils import likelihood
-from utils.misc import make_dir, parse_bool
+from utils.misc import gen_outfile_name, make_dir, parse_bool
 
 
-def CubePrior(cube, ndim, n_params, mn_paramset):
-    if ndim != len(mn_paramset):
-        raise AssertionError(
-            'Length of MultiNest scan paramset is not the same as the input '
-            'params\ncube={0}\nmn_paramset]{1}'.format(cube, mn_paramset)
-        )
-    pranges = mn_paramset.seeds
-    for i in xrange(ndim):
-        mn_paramset[i].value = (pranges[i][1]-pranges[i][0])*cube[i] + pranges[i][0]
-    prior = 0
-    for parm in mn_paramset:
-        if parm.prior is PriorsCateg.GAUSSIAN:
-            prior_penatly += multivariate_normal(
-                parm.nominal_value, mean=parm.value, cov=parm.std
-            )
-    print 'prior', prior
-    return prior
+def CubePrior(cube, ndim, n_params):
+    pass
 
 
 def lnProb(cube, ndim, n_params, mn_paramset, llh_paramset, asimov_paramset,
@@ -62,18 +47,6 @@ def lnProb(cube, ndim, n_params, mn_paramset, llh_paramset, asimov_paramset,
 
 
 def mn_argparse(parser):
-    parser.add_argument(
-        '--mn-run', type=parse_bool, default='True',
-        help='Run MultiNest'
-    )
-    parser.add_argument(
-        '--mn-bins', type=int, default=10,
-        help='Number of bins for the Bayes factor plot'
-    )
-    parser.add_argument(
-        '--mn-eval-bin', type=str, default='all',
-        help='Which bin to evalaute for Bayes factor plot'
-    )
     parser.add_argument(
         '--mn-live-points', type=int, default=3000,
         help='Number of live points for MultiNest evaluations'
@@ -104,8 +77,8 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, fitter):
         fitter          = fitter
     )
 
-    prefix = './mnrun/DIM{0}/{1:>019}_'.format(
-        args.dimension, np.random.randint(0, 2**63)
+    prefix = './mnrun/DIM{0}/{1}_{2:>019}_'.format(
+        args.dimension, gen_outfile_name(args), np.random.randint(0, 2**63)
     )
     make_dir(prefix)
     print 'Running evidence calculation for {0}'.format(prefix)

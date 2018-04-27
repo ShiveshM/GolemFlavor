@@ -16,6 +16,7 @@ import GolemFitPy as gf
 
 from utils.enums import DataType, SteeringCateg
 from utils.misc import enum_parse, thread_factors
+from utils.param import ParamSet
 
 
 def fit_flags(llh_paramset):
@@ -23,9 +24,6 @@ def fit_flags(llh_paramset):
         # False means it's not fixed in minimization
         'astroFlavorAngle1'         : True,
         'astroFlavorAngle2'         : True,
-        'astroENorm'                : True,
-        'astroMuNorm'               : True,
-        'astroTauNorm'              : True,
         'convNorm'                  : True,
         'promptNorm'                : True,
         'muonNorm'                  : True,
@@ -44,9 +42,14 @@ def fit_flags(llh_paramset):
         'astroDeltaGammaSec'        : True
     }
     flags = gf.FitParametersFlag()
+    gf_nuisance = []
     for param in llh_paramset:
-        flags.__setattr__(param.name, False)
-    return flags
+        if param.name in default_flags:
+            print 'Setting param {0:<15} to float in the ' \
+                'minimisation'.format(param.name)
+            flags.__setattr__(param.name, False)
+            gf_nuisance.append(param)
+    return flags, ParamSet(gf_nuisance)
 
 
 def steering_params(args):
@@ -68,7 +71,7 @@ def set_up_as(fitter, params):
     print 'Injecting the model', params
     asimov_params = gf.FitParameters(gf.sampleTag.HESE)
     for parm in params:
-        asimov_params.__setattr__(parm.name, parm.value)
+        asimov_params.__setattr__(parm.name, float(parm.value))
     fitter.SetupAsimov(asimov_params)
 
 
@@ -84,7 +87,7 @@ def setup_fitter(args, asimov_paramset):
 def get_llh(fitter, params):
     fitparams = gf.FitParameters(gf.sampleTag.HESE)
     for parm in params:
-        fitparams.__setattr__(parm.name, parm.value)
+        fitparams.__setattr__(parm.name, float(parm.value))
     llh = -fitter.EvalLLH(fitparams)
     return llh
 
@@ -93,9 +96,10 @@ def get_llh_freq(fitter, params):
     print 'setting to {0}'.format(params)
     fitparams = gf.FitParameters(gf.sampleTag.HESE)
     for parm in params:
-        fitparams.__setattr__(parm.name, parm.value)
+        fitparams.__setattr__(parm.name, float(parm.value))
     fitter.SetFitParametersSeed(fitparams)
-    return -fitter.MinLLH().likelihood
+    llh = -fitter.MinLLH().likelihood
+    return llh
 
 
 def data_distributions(fitter):

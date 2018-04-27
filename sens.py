@@ -25,6 +25,7 @@ from utils import misc as misc_utils
 from utils import plot as plot_utils
 from utils.enums import EnergyDependance, Likelihood, ParamTag
 from utils.enums import PriorsCateg, SensitivityCateg, StatCateg
+from utils.misc import DTYPE
 from utils.param import Param, ParamSet, get_paramsets
 
 from utils import multinest as mn_utils
@@ -34,11 +35,13 @@ def define_nuisance():
     """Define the nuisance parameters."""
     tag = ParamTag.SM_ANGLES
     g_prior = PriorsCateg.GAUSSIAN
+    hg_prior = PriorsCateg.HALFGAUSS
+    e = 1e-9
     nuisance = [
-        Param(name='s_12_2', value=0.307,          seed=[0.29, 0.31], ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2', prior=g_prior, tag=tag),
-        Param(name='c_13_4', value=1-(0.02206)**2, seed=[0.998, 1.0], ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=g_prior, tag=tag),
-        Param(name='s_23_2', value=0.538,          seed=[0.46, 0.61], ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2', prior=g_prior, tag=tag),
-        Param(name='dcp',    value=4.08404,        seed=[0, 2*np.pi], ranges=[0., 2*np.pi], std=2.0,     tex=r'\delta_{CP}', tag=tag),
+        Param(name='s_12_2', value=0.307,          seed=[0.26, 0.35],     ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2', prior=g_prior,  tag=tag),
+        Param(name='c_13_4', value=1-(0.02206)**2, seed=[0.995, 1-e],     ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=hg_prior, tag=tag),
+        Param(name='s_23_2', value=0.538,          seed=[0.31, 0.75],     ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2', prior=g_prior,  tag=tag),
+        Param(name='dcp',    value=4.08404,        seed=[0+e, 2*np.pi-e], ranges=[0., 2*np.pi], std=2.0,     tex=r'\delta_{CP}', tag=tag),
         Param(
             name='m21_2', value=7.40E-23, seed=[7.2E-23, 7.6E-23], ranges=[6.80E-23, 8.02E-23],
             std=2.1E-24, tex=r'\Delta m_{21}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag
@@ -76,9 +79,9 @@ def process_args(args):
         raise NotImplementedError(
             '--fix-mixing and --fix-mixing-almost cannot be used together'
         )
-    if args.mn_run and args.fix_scale:
+    if args.sens_run and args.fix_scale:
         raise NotImplementedError(
-            '--mn-run and --fix-scale cannot be used together'
+            '--sens-run and --fix-scale cannot be used together'
         )
 
     args.measured_ratio = fr_utils.normalise_fr(args.measured_ratio)
@@ -94,13 +97,13 @@ def process_args(args):
         args.scale = fr_utils.estimate_scale(args)
         args.scale_region = (args.scale/args.scale_region, args.scale*args.scale_region)
 
-    if args.mn_eval_bin.lower() == 'all':
-        args.mn_eval_bin = None
+    if args.sens_eval_bin.lower() == 'all':
+        args.sens_eval_bin = None
     else:
-        args.mn_eval_bin = int(args.mn_eval_bin)
+        args.sens_eval_bin = int(args.sens_eval_bin)
 
     if args.stat_method is StatCateg.FREQUENTIST and \
-       args.likelihood is Likelihood.GOLEMFIT::
+       args.likelihood is Likelihood.GOLEMFIT:
         args.likelihood = Likelihood.GF_FREQ
 
 
@@ -123,6 +126,10 @@ def parse_args(args=None):
         help='Path to output chains'
     )
     parser.add_argument(
+        '--sens-run', type=misc_utils.parse_bool, default='True',
+        help='Generate sensitivities'
+    )
+    parser.add_argument(
         '--run-method', default='full',
         type=partial(misc_utils.enum_parse, c=SensitivityCateg),
         choices=SensitivityCateg,
@@ -134,7 +141,15 @@ def parse_args(args=None):
         help='Statistical method to employ'
     )
     parser.add_argument(
-        '--plot-statistic', type=parse_bool, default='False',
+        '--sens-bins', type=int, default=10,
+        help='Number of bins for the Bayes factor plot'
+    )
+    parser.add_argument(
+        '--sens-eval-bin', type=str, default='all',
+        help='Which bin to evalaute for Bayes factor plot'
+    )
+    parser.add_argument(
+        '--plot-statistic', type=misc_utils.parse_bool, default='False',
         help='Plot MultiNest evidence or LLH value'
     )
     fr_utils.fr_argparse(parser)
@@ -161,8 +176,10 @@ def main():
     mmangles = llh_paramset.from_tag(ParamTag.MMANGLES)
     if args.run_method is SensitivityCateg.FULL:
         st_paramset_arr = [llh_paramset.from_tag(ParamTag.SCALE, invert=True)]
-    elif args.run_method is SensitivityCateg.FIXED_ANGLE or \
-            args.run_method is SensitivityCateg.CORR_ANGLE:
+    elif args.run_method in [SensitivityCateg.FIXED_ANGLE, SensitivityCateg.CORR_ANGLE]:
+        nscale_pmset = llh_paramset.from_tag([ParamTag.SCALE, ParamTag.MMANGLES], invert=True)
+        st_paramset_arr = [nscale_pmset] * 3
+    elif args.run_method in [SensitivityCateg.FIXED_ONE_ANGLE, SensitivityCateg.CORR_ONE_ANGLE]:
         nscale_pmset = llh_paramset.from_tag(ParamTag.SCALE, invert=True)
         st_paramset_arr = []
         for x in xrange(3):
@@ -171,55 +188,66 @@ def main():
                           if mmangles[x].name != prms.name])
             )
 
+    scan_scales = np.linspace(
+        np.log10(args.scale_region[0]), np.log10(args.scale_region[1]), args.sens_bins
+    )
+
+    if args.sens_eval_bin is None:
+        eval_dim = args.sens_bins
+    else: eval_dim = 1
+
+    if args.run_method is SensitivityCateg.CORR_ANGLE:
+        scan_angles = np.linspace(0+1e-9, 1-1e-9, eval_dim)
+    else: scan_angles = np.array([0])
+    print 'scan_scales', scan_scales
+    print 'scan_angles', scan_angles
+
     out = args.outfile+'/{0}/{1}/fr_stat'.format(args.stat_method, args.run_method) \
         + misc_utils.gen_identifier(args)
-    if args.mn_run:
-        if args.likelihood is Likelihood.GOLEMFIT:
+    if args.sens_run:
+        if args.likelihood in [Likelihood.GOLEMFIT, Likelihood.GF_FREQ]:
             fitter = gf_utils.setup_fitter(args, asimov_paramset)
-            if args.StatCateg is StatCateg.FREQUENTIST:
-                fitter.SetFitParametersFlag(gf_utils.fit_flags(llh_paramset)
+            if args.stat_method is StatCateg.FREQUENTIST:
+                flags, gf_nuisance = gf_utils.fit_flags(llh_paramset)
+                llh_paramset = llh_paramset.remove_params(gf_nuisance)
+                asimov_paramset = asimov_paramset.remove_params(gf_nuisance)
+                st_paramset_arr = [x.remove_params(gf_nuisance)
+                                   for x in st_paramset_arr]
+                fitter.SetFitParametersFlag(flags)
         else: fitter = None
-
-        scan_scales = np.linspace(
-            np.log10(args.scale_region[0]), np.log10(args.scale_region[1]), args.mn_bins
-        )
-        if args.run_method is SensitivityCateg.CORR_ANGLE:
-            scan_angles = np.linspace(0, 1, eval_dim)
-        else: scan_angles = np.array([0])
-        print 'scan_scales', scan_scales
-        print 'scan_angles', scan_angles
-
-        if args.mn_eval_bin is None:
-            eval_dim = args.mn_bins
-        else: eval_dim = 1
 
         if args.run_method is SensitivityCateg.FULL:
             statistic_arr = np.full((eval_dim, 2), np.nan)
         elif args.run_method is SensitivityCateg.FIXED_ANGLE:
             statistic_arr = np.full((len(st_paramset_arr), eval_dim, 2), np.nan)
         elif args.run_method is SensitivityCateg.CORR_ANGLE:
-            statistic_arr = np.full((len(st_paramset_arr), eval_dim, eval_dim, 3), np.nan)
+            statistic_arr = np.full(
+                (len(st_paramset_arr), eval_dim, eval_dim, 3), np.nan
+            )
 
-
-        for idx_scen, mn_paramset in enumerate(st_paramset_arr):
+        for idx_scen, sens_paramset in enumerate(st_paramset_arr):
             print '|||| SCENARIO = {0}'.format(idx_scen)
-            for x in mmangles: x.value = 0.
-            if args.run_method is SensitivityCateg.FIXED_ANGLE:
+            if args.run_method in [SensitivityCateg.FIXED_ONE_ANGLE, SensitivityCateg.FIXED_ANGLE]:
+                if SensitivityCateg.FIXED_ANGLE:
+                    for x in mmangles: x.value = 0.+1e-9
                 if idx_scen == 0 or idx_scen == 2:
-                    mmangles[idx_scen].value = np.sin(np.pi/2.)**2
+                    mmangles[idx_scen].value = np.sin(np.pi/4., dtype=DTYPE)**2
                     """s_12^2 or s_23^2"""
                 elif idx_scen == 1:
-                    mmangles[idx_scen].value = np.cos(np.pi/2.)**4
+                    mmangles[idx_scen].value = np.cos(np.pi/4., dtype=DTYPE)**4
                     """c_13^4"""
 
             for idx_an, an in enumerate(scan_angles):
-                if args.run_method is SensitivityCateg.CORR_ANGLE:
+                if args.run_method in [SensitivityCateg.CORR_ANGLE,
+                                       SensitivityCateg.CORR_ONE_ANGLE]:
                     print '|||| ANGLE = {0:<04.2}'.format(an)
-                    mmangles[idx_an].value = an
+                    if SensitivityCateg.CORR_ANGLE:
+                        for x in mmangles: x.value = 0.+1e-9
+                    mmangles[idx_scen].value = an
 
                 for idx_sc, sc in enumerate(scan_scales):
-                    if args.mn_eval_bin is not None:
-                        if idx_sc == args.mn_eval_bin:
+                    if args.sens_eval_bin is not None:
+                        if idx_sc == args.sens_eval_bin:
                             out += '_scale_{0:.0E}'.format(np.power(10, sc))
                             if args.run_method is SensitivityCateg.CORR_ANGLE:
                                 out += '_angle_{0:>03}'.format(int(an*100))
@@ -231,7 +259,7 @@ def main():
                     if args.stat_method is StatCateg.BAYESIAN:
                         try:
                             stat = mn_utils.mn_evidence(
-                                mn_paramset     = mn_paramset,
+                                mn_paramset     = sens_paramset,
                                 llh_paramset    = llh_paramset,
                                 asimov_paramset = asimov_paramset,
                                 args            = args,
@@ -242,26 +270,30 @@ def main():
                             continue
                         print '## Evidence = {0}'.format(stat)
                     elif args.stat_method is StatCateg.FREQUENTIST:
-                        llh_paramset_freq = [x for parm in llh_paramset if
-                                             x.name not in asimov_paramset.names]
                         def fn(x):
-                            for idx, parm in enumerate(llh_paramset_freq):
-                                parm.value = x[idx]
-                            theta = llh_paramset_freq.values
-                            try:
-                                llh = llh_utils.ln_prob(
-                                    theta=theta, args=args, asimov_paramset=asimov_paramset,
-                                    mcmc_paramset=mcmc_paramset_freq, fitter=fitter
-                                )
-                            except:
-                                print 'Failed run, continuing'
-                                return np.inf
+                            pranges = sens_paramset.seeds
+                            for i, name in enumerate(sens_paramset.names):
+                                llh_paramset[name].value = \
+                                    (pranges[i][1]-pranges[i][0])*x[i] + pranges[i][0]
+                            theta = llh_paramset.values
+                            print 'llh_paramset', llh_paramset
+                            llh = llh_utils.ln_prob(
+                                theta=theta, args=args, asimov_paramset=asimov_paramset,
+                                llh_paramset=llh_paramset, fitter=fitter
+                            )
+                            print 'llh', llh
                             return -llh
-                        
-                        x0 = np.average(llh_paramset_freq.values, axis=1)
-                        res = minimize(fun=fn, x0=x0, method='L-BFGS-B',
-                                       bounds=llh_paramset.seed, fitter=fitter)
+
+                        n_params = len(sens_paramset)
+                        x0 = np.full(n_params, 0.7)
+                        bounds = np.dstack([np.zeros(n_params), np.ones(n_params)])[0]
+                        try:
+                            res = minimize(fun=fn, x0=x0, method='L-BFGS-B', bounds=bounds)
+                        except AssertionError:
+                            print 'Failed run, continuing'
+                            continue
                         stat = -fn(res.x)
+                        print '=== final llh', stat
                     if args.run_method is SensitivityCateg.FULL:
                         statistic_arr[idx_sc] = np.array([sc, stat])
                     elif args.run_method is SensitivityCateg.FIXED_ANGLE:
@@ -271,10 +303,10 @@ def main():
 
         misc_utils.make_dir(out)
         print 'Saving to {0}'.format(out+'.npy')
-        np.save(out+'.npy', np.array(statistic_arr))
+        np.save(out+'.npy', statistic_arr)
 
     if args.plot_statistic:
-        if args.mn_run: raw = statistic_arr
+        if args.sens_run: raw = statistic_arr
         else: raw = np.load(out+'.npy')
         data = ma.masked_invalid(raw, 0)
 
@@ -292,9 +324,9 @@ def main():
             for idx_scen in xrange(len(st_paramset_arr)):
                 print '|||| SCENARIO = {0}'.format(idx_scen)
                 outfile = baseoutfile + '_SCEN{0}'.format(idx_scen)
-                if idx_scen == 0: label = r'$\mathcal{O}_{12}=\frac{1}{2}$'
-                elif idx_scen == 1: label = r'$\mathcal{O}_{13}=\frac{1}{2}$'
-                elif idx_scen == 2: label = r'$\mathcal{O}_{23}=\frac{1}{2}$'
+                if idx_scen == 0: label = r'$\mathcal{O}_{12}=\frac{\pi}{4}$'
+                elif idx_scen == 1: label = r'$\mathcal{O}_{13}=\frac{\pi}{4}$'
+                elif idx_scen == 2: label = r'$\mathcal{O}_{23}=\frac{\pi}{4}$'
                 plot_utils.plot_statistic(
                     data        = data[idx_scen],
                     outfile     = outfile,
@@ -313,14 +345,14 @@ def main():
                 for idx_an, an in enumerate(scan_angles):
                     print '|||| ANGLE = {0:<04.2}'.format(an)
                     outfile = basescenoutfile + '_ANGLE{0}'.format(idx_an)
-                    label += r'{0:<04.2}$'.format(an)
+                    _label = label + r'{0:<04.2}$'.format(an)
                     plot_utils.plot_statistic(
                         data        = data[idx_scen][idx_an][:,1:],
                         outfile     = outfile,
                         outformat   = ['png'],
                         args        = args,
                         scale_param = scale,
-                        label       = label
+                        label       = _label
                     )
 
 

@@ -14,7 +14,6 @@ import errno
 import multiprocessing
 
 import argparse
-from collections import Sequence
 from operator import attrgetter
 
 import numpy as np

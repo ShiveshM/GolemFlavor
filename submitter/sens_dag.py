@@ -9,9 +9,9 @@ full_scan_mfr = [
 
 fix_sfr_mfr = [
     (1, 1, 1, 1, 2, 0),
-    (1, 1, 1, 1, 0, 0),
-    (1, 1, 1, 0, 1, 0),
-    (1, 1, 1, 0, 0, 1),
+    # (1, 1, 1, 1, 0, 0),
+    # (1, 1, 1, 0, 1, 0),
+    # (1, 1, 1, 0, 0, 1),
     # (1, 1, 0, 1, 2, 0),
     # (1, 1, 0, 1, 0, 0),
     # (1, 1, 0, 0, 1, 0),
@@ -24,12 +24,13 @@ fix_sfr_mfr = [
 GLOBAL_PARAMS = {}
 
 # Bayes Factor
+sens_eval_bin = 'all' # set to 'all' to run normally
 GLOBAL_PARAMS.update(dict(
     sens_run      = 'True',
-    run_method    = 'full',
-    stat_method   = 'bayesian',
+    run_method    = 'corr_angle',
+    stat_method   = 'frequentist',
     sens_bins     = 10,
-    sens_eval_bin = 'all' # set to 'all' to run normally
+    seed          = 'None'
 ))
 
 # MultiNest
@@ -69,11 +70,13 @@ GLOBAL_PARAMS.update(dict(
     plot_statistic = 'True'
 ))
 
-outfile = 'dagman_FR_SENS.submit'
+outfile = 'dagman_FR_SENS_{0}_{1}.submit'.format(
+    GLOBAL_PARAMS['stat_method'], GLOBAL_PARAMS['run_method']
+)
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/sens_submit.sub'
 
-if GLOBAL_PARAMS['sens_eval_bin'].lower() != 'all':
+if sens_eval_bin.lower() != 'all':
     if GLOBAL_PARAMS['run_method'].lower() == 'corr_angle':
         sens_runs = GLOBAL_PARAMS['sens_bins']**2
     else:
@@ -105,9 +108,9 @@ with open(outfile, 'w') as f:
                 f.write('VARS\tjob{0}\tsr1="{1}"\n'.format(job_number, frs[4]))
                 f.write('VARS\tjob{0}\tsr2="{1}"\n'.format(job_number, frs[5]))
                 f.write('VARS\tjob{0}\tsens_eval_bin="{1}"\n'.format(job_number, r))
-                for key in GLOBAL_PARAMS.keys():
-                    f.write('VARS\tjob{0}\tmr0="{1}"\n'.format(job_number, GLOBAL_PARAMS[key]))
-                f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outfile))
+                for key in GLOBAL_PARAMS.iterkeys():
+                    f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
+                f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, output))
                 job_number += 1
 
         for frs in full_scan_mfr:
@@ -128,7 +131,7 @@ with open(outfile, 'w') as f:
                 f.write('VARS\tjob{0}\tsr1="{1}"\n'.format(job_number, 0))
                 f.write('VARS\tjob{0}\tsr2="{1}"\n'.format(job_number, 0))
                 f.write('VARS\tjob{0}\tsens_eval_bin="{1}"\n'.format(job_number, r))
-                for key in GLOBAL_PARAMS.keys():
-                    f.write('VARS\tjob{0}\tmr0="{1}"\n'.format(job_number, GLOBAL_PARAMS[key]))
-                f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outfile))
+                for key in GLOBAL_PARAMS.iterkeys():
+                    f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
+                f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, output))
                 job_number += 1

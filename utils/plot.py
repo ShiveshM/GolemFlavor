@@ -10,7 +10,6 @@ Plotting functions for the BSM flavour ratio analysis
 from __future__ import absolute_import, division
 
 import os
-import argparse
 
 import numpy as np
 import matplotlib as mpl
@@ -19,9 +18,7 @@ from matplotlib import rc
 from matplotlib import pyplot as plt
 from matplotlib.offsetbox import AnchoredText
 
-import getdist
-from getdist import plots
-from getdist import mcsamples
+from getdist import plots, mcsamples
 
 from utils import misc as misc_utils
 from utils.enums import EnergyDependance, Likelihood, ParamTag, StatCateg

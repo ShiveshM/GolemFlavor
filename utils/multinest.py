@@ -16,7 +16,7 @@ import numpy as np
 from pymultinest import analyse, run
 
 from utils import likelihood
-from utils.misc import gen_outfile_name, make_dir, parse_bool
+from utils.misc import gen_outfile_name, make_dir
 
 
 def CubePrior(cube, ndim, n_params):

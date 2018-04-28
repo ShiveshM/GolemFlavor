@@ -9,9 +9,9 @@ full_scan_mfr = [
 
 fix_sfr_mfr = [
     (1, 1, 1, 1, 2, 0),
-    (1, 1, 1, 1, 0, 0),
-    (1, 1, 1, 0, 1, 0),
-    (1, 1, 1, 0, 0, 1),
+    # (1, 1, 1, 1, 0, 0),
+    # (1, 1, 1, 0, 1, 0),
+    # (1, 1, 1, 0, 0, 1),
     # (1, 1, 0, 1, 2, 0),
     # (1, 1, 0, 1, 0, 0),
     # (1, 1, 0, 0, 1, 0),
@@ -26,10 +26,10 @@ GLOBAL_PARAMS = {}
 # MCMC
 GLOBAL_PARAMS.update(dict(
     run_mcmc = 'True',
-    burnin   = 2500,
-    nsteps   = 10000,
+    burnin   = 250,
+    nsteps   = 1000,
     nwalkers = 60,
-    seed     = 'None',
+    seed     = 25,
     mcmc_seed_type = 'uniform'
 ))
 
@@ -90,9 +90,9 @@ with open(outfile, 'w') as f:
             f.write('VARS\tjob{0}\tsr0="{1}"\n'.format(job_number, frs[3]))
             f.write('VARS\tjob{0}\tsr1="{1}"\n'.format(job_number, frs[4]))
             f.write('VARS\tjob{0}\tsr2="{1}"\n'.format(job_number, frs[5]))
-            for key in GLOBAL_PARAMS.keys():
-                f.write('VARS\tjob{0}\tmr0="{1}"\n'.format(job_number, GLOBAL_PARAMS[key]))
-            f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outfile))
+            for key in GLOBAL_PARAMS.iterkeys():
+                f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
+            f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outchains))
             job_number += 1
 
         for frs in full_scan_mfr:
@@ -110,7 +110,7 @@ with open(outfile, 'w') as f:
             f.write('VARS\tjob{0}\tsr0="{1}"\n'.format(job_number, 0))
             f.write('VARS\tjob{0}\tsr1="{1}"\n'.format(job_number, 0))
             f.write('VARS\tjob{0}\tsr2="{1}"\n'.format(job_number, 0))
-            for key in GLOBAL_PARAMS.keys():
-                f.write('VARS\tjob{0}\tmr0="{1}"\n'.format(job_number, GLOBAL_PARAMS[key]))
-            f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outfile))
+            for key in GLOBAL_PARAMS.iterkeys():
+                f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
+            f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outchains))
             job_number += 1

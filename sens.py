@@ -84,6 +84,10 @@ def process_args(args):
             '--sens-run and --fix-scale cannot be used together'
         )
 
+    if args.sens_eval_bin is not None and args.plot_statistic:
+        print 'Cannot make plot when specific scale bin is chosen'
+        args.plot_statistic = False
+
     args.measured_ratio = fr_utils.normalise_fr(args.measured_ratio)
     if args.fix_source_ratio:
         args.source_ratio = fr_utils.normalise_fr(args.source_ratio)
@@ -160,6 +164,7 @@ def parse_args(args=None):
     if args is None: return parser.parse_args()
     else: return parser.parse_args(args.split())
 
+
 def main():
     args = parse_args()
     process_args(args)
@@ -192,15 +197,18 @@ def main():
         np.log10(args.scale_region[0]), np.log10(args.scale_region[1]), args.sens_bins
     )
 
-    if args.sens_eval_bin is None:
-        eval_dim = args.sens_bins
-    else: eval_dim = 1
+    corr_angles_categ = [SensitivityCateg.CORR_ANGLE, SensitivityCateg.CORR_ONE_ANGLE]
+    fixed_angle_categ = [SensitivityCateg.FIXED_ANGLE, SensitivityCateg.FIXED_ONE_ANGLE]
 
-    if args.run_method is SensitivityCateg.CORR_ANGLE:
-        scan_angles = np.linspace(0+1e-9, 1-1e-9, eval_dim)
+    if args.run_method in corr_angles_categ:
+        scan_angles = np.linspace(0+1e-9, 1-1e-9, args.sens_bins)
     else: scan_angles = np.array([0])
     print 'scan_scales', scan_scales
     print 'scan_angles', scan_angles
+
+    if args.sens_eval_bin is None:
+        eval_dim = args.sens_bins
+    else: eval_dim = 1
 
     out = args.outfile+'/{0}/{1}/fr_stat'.format(args.stat_method, args.run_method) \
         + misc_utils.gen_identifier(args)
@@ -218,18 +226,17 @@ def main():
 
         if args.run_method is SensitivityCateg.FULL:
             statistic_arr = np.full((eval_dim, 2), np.nan)
-        elif args.run_method is SensitivityCateg.FIXED_ANGLE:
+        elif args.run_method in fixed_angle_categ:
             statistic_arr = np.full((len(st_paramset_arr), eval_dim, 2), np.nan)
-        elif args.run_method is SensitivityCateg.CORR_ANGLE:
+        elif args.run_method in corr_angles_categ:
             statistic_arr = np.full(
                 (len(st_paramset_arr), eval_dim, eval_dim, 3), np.nan
             )
 
         for idx_scen, sens_paramset in enumerate(st_paramset_arr):
             print '|||| SCENARIO = {0}'.format(idx_scen)
-            if args.run_method in [SensitivityCateg.FIXED_ONE_ANGLE, SensitivityCateg.FIXED_ANGLE]:
-                if SensitivityCateg.FIXED_ANGLE:
-                    for x in mmangles: x.value = 0.+1e-9
+            if args.run_method in fixed_angle_categ:
+                for x in mmangles: x.value = 0.+1e-9
                 if idx_scen == 0 or idx_scen == 2:
                     mmangles[idx_scen].value = np.sin(np.pi/4., dtype=DTYPE)**2
                     """s_12^2 or s_23^2"""
@@ -238,22 +245,24 @@ def main():
                     """c_13^4"""
 
             for idx_an, an in enumerate(scan_angles):
-                if args.run_method in [SensitivityCateg.CORR_ANGLE,
-                                       SensitivityCateg.CORR_ONE_ANGLE]:
-                    print '|||| ANGLE = {0:<04.2}'.format(an)
-                    if SensitivityCateg.CORR_ANGLE:
-                        for x in mmangles: x.value = 0.+1e-9
+                if args.run_method in corr_angles_categ:
+                    for x in mmangles: x.value = 0.+1e-9
                     mmangles[idx_scen].value = an
 
                 for idx_sc, sc in enumerate(scan_scales):
                     if args.sens_eval_bin is not None:
-                        if idx_sc == args.sens_eval_bin:
-                            out += '_scale_{0:.0E}'.format(np.power(10, sc))
-                            if args.run_method is SensitivityCateg.CORR_ANGLE:
-                                out += '_angle_{0:>03}'.format(int(an*100))
-                            break
+                        if args.run_method in corr_angles_categ:
+                            index = idx_an*args.sens_bins + idx_sc
+                        else: index = idx_sc
+                        if index == args.sens_eval_bin:
+                            if idx_scen == 0:
+                                out += '_scale_{0:.0E}'.format(np.power(10, sc))
+                                if args.run_method in corr_angles_categ:
+                                    out += '_angle_{0:<04.2}'.format(an)
                         else: continue
 
+                    if idx_sc == 0 or args.sens_eval_bin is not None:
+                        print '|||| ANGLE = {0:<04.2}'.format(float(an))
                     print '|||| SCALE = {0:.0E}'.format(np.power(10, sc))
                     scale.value = sc
                     if args.stat_method is StatCateg.BAYESIAN:
@@ -296,10 +305,16 @@ def main():
                         print '=== final llh', stat
                     if args.run_method is SensitivityCateg.FULL:
                         statistic_arr[idx_sc] = np.array([sc, stat])
-                    elif args.run_method is SensitivityCateg.FIXED_ANGLE:
-                        statistic_arr[idx_scen][idx_sc] = np.array([sc, stat])
-                    elif args.run_method is SensitivityCateg.CORR_ANGLE:
-                        statistic_arr[idx_scen][idx_an][idx_sc] = np.array([an, sc, stat])
+                    elif args.run_method in fixed_angle_categ:
+                        if args.sens_eval_bin is not None:
+                            statistic_arr[idx_scen][0] = np.array([sc, stat])
+                        else:
+                            statistic_arr[idx_scen][idx_sc] = np.array([sc, stat])
+                    elif args.run_method in corr_angles_categ:
+                        if args.sens_eval_bin is not None:
+                            statistic_arr[idx_scen][0][0] = np.array([an, sc, stat])
+                        else:
+                            statistic_arr[idx_scen][idx_an][idx_sc] = np.array([an, sc, stat])
 
         misc_utils.make_dir(out)
         print 'Saving to {0}'.format(out+'.npy')
@@ -310,7 +325,7 @@ def main():
         else: raw = np.load(out+'.npy')
         data = ma.masked_invalid(raw, 0)
 
-        basename = os.path.dirname(out) + '/mnrun/' + os.path.basename(out)
+        basename = os.path.dirname(out) + '/statrun/' + os.path.basename(out)
         baseoutfile = basename[:5]+basename[5:].replace('data', 'plots')
         if args.run_method is SensitivityCateg.FULL:
             plot_utils.plot_statistic(
@@ -320,7 +335,7 @@ def main():
                 args        = args,
                 scale_param = scale
             )
-        elif args.run_method is SensitivityCateg.FIXED_ANGLE:
+        elif args.run_method in fixed_angle_categ:
             for idx_scen in xrange(len(st_paramset_arr)):
                 print '|||| SCENARIO = {0}'.format(idx_scen)
                 outfile = baseoutfile + '_SCEN{0}'.format(idx_scen)
@@ -335,7 +350,7 @@ def main():
                     scale_param = scale,
                     label       = label
                 )
-        elif args.run_method is SensitivityCateg.CORR_ANGLE:
+        elif args.run_method in corr_angles_categ:
             for idx_scen in xrange(len(st_paramset_arr)):
                 print '|||| SCENARIO = {0}'.format(idx_scen)
                 basescenoutfile = baseoutfile + '_SCEN{0}'.format(idx_scen)
@@ -343,11 +358,11 @@ def main():
                 elif idx_scen == 1: label = r'$\mathcal{O}_{13}='
                 elif idx_scen == 2: label = r'$\mathcal{O}_{23}='
                 for idx_an, an in enumerate(scan_angles):
-                    print '|||| ANGLE = {0:<04.2}'.format(an)
+                    print '|||| ANGLE = {0:<04.2}'.format(float(an))
                     outfile = basescenoutfile + '_ANGLE{0}'.format(idx_an)
                     _label = label + r'{0:<04.2}$'.format(an)
                     plot_utils.plot_statistic(
-                        data        = data[idx_scen][idx_an][:,1:],
+                        data        = data[idx_scen][index][:,1:],
                         outfile     = outfile,
                         outformat   = ['png'],
                         args        = args,
@@ -361,4 +376,3 @@ main.__doc__ = __doc__
 
 if __name__ == '__main__':
     main()
-

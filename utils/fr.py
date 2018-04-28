@@ -9,7 +9,6 @@ Useful functions for the BSM flavour ratio analysis
 
 from __future__ import absolute_import, division
 
-import argparse
 from functools import partial
 
 import numpy as np
@@ -354,7 +353,7 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
     if np.shape(sm_u) != (3, 3):
         raise ValueError(
             'Input matrix should be a square and dimension 3, '
-            'got\n{0}'.format(ham)
+            'got\n{0}'.format(sm_u)
         )
 
     if fix_mixing and fix_mixing_almost:

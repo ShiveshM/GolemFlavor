@@ -14,8 +14,6 @@ from functools import partial
 import numpy as np
 from scipy.stats import multivariate_normal, rv_continuous
 
-import GolemFitPy as gf
-
 from utils import fr as fr_utils
 from utils import gf as gf_utils
 from utils.enums import EnergyDependance, Likelihood, ParamTag, PriorsCateg
@@ -89,6 +87,10 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
     if args.energy_dependance is EnergyDependance.SPECTRAL:
         bin_centers = np.sqrt(args.binning[:-1]*args.binning[1:])
         bin_width = np.abs(np.diff(args.binning))
+        if args.likelihood in [Likelihood.GOLEMFIT, Likelihood.GF_FREQ]:
+            if 'astroDeltaGamma' in hypo_paramset.names:
+                args.spectral_index = hypo_paramset['astroDeltaGamma'].value
+                print 'args.spectral_index', args.spectral_index
 
     if args.fix_source_ratio:
         if args.energy_dependance is EnergyDependance.MONO:

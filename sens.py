@@ -84,10 +84,6 @@ def process_args(args):
             '--sens-run and --fix-scale cannot be used together'
         )
 
-    if args.sens_eval_bin is not None and args.plot_statistic:
-        print 'Cannot make plot when specific scale bin is chosen'
-        args.plot_statistic = False
-
     args.measured_ratio = fr_utils.normalise_fr(args.measured_ratio)
     if args.fix_source_ratio:
         args.source_ratio = fr_utils.normalise_fr(args.source_ratio)
@@ -96,6 +92,10 @@ def process_args(args):
         args.binning = np.logspace(
             np.log10(args.binning[0]), np.log10(args.binning[1]), args.binning[2]+1
         )
+        if args.likelihood is Likelihood.GOLEMFIT:
+            print 'GolemFit selected with spectral index energy dependance, ' \
+                'will attempt to use the astroDeltaGamma systematic to fold ' \
+                'in the spectral index.'
 
     if not args.fix_scale:
         args.scale = fr_utils.estimate_scale(args)
@@ -105,6 +105,10 @@ def process_args(args):
         args.sens_eval_bin = None
     else:
         args.sens_eval_bin = int(args.sens_eval_bin)
+
+    if args.sens_eval_bin is not None and args.plot_statistic:
+        print 'Cannot make plot when specific scale bin is chosen'
+        args.plot_statistic = False
 
     if args.stat_method is StatCateg.FREQUENTIST and \
        args.likelihood is Likelihood.GOLEMFIT:
@@ -285,12 +289,12 @@ def main():
                                 llh_paramset[name].value = \
                                     (pranges[i][1]-pranges[i][0])*x[i] + pranges[i][0]
                             theta = llh_paramset.values
-                            print 'llh_paramset', llh_paramset
                             llh = llh_utils.ln_prob(
                                 theta=theta, args=args, asimov_paramset=asimov_paramset,
                                 llh_paramset=llh_paramset, fitter=fitter
                             )
-                            print 'llh', llh
+                            # print 'llh_paramset', llh_paramset
+                            # print 'llh', llh
                             return -llh
 
                         n_params = len(sens_paramset)
@@ -321,6 +325,7 @@ def main():
         np.save(out+'.npy', statistic_arr)
 
     if args.plot_statistic:
+        print 'Plotting statistic'
         if args.sens_run: raw = statistic_arr
         else: raw = np.load(out+'.npy')
         data = ma.masked_invalid(raw, 0)

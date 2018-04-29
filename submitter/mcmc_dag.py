@@ -9,9 +9,9 @@ full_scan_mfr = [
 
 fix_sfr_mfr = [
     (1, 1, 1, 1, 2, 0),
-    # (1, 1, 1, 1, 0, 0),
-    # (1, 1, 1, 0, 1, 0),
-    # (1, 1, 1, 0, 0, 1),
+    (1, 1, 1, 1, 0, 0),
+    (1, 1, 1, 0, 1, 0),
+    (1, 1, 1, 0, 0, 1),
     # (1, 1, 0, 1, 2, 0),
     # (1, 1, 0, 1, 0, 0),
     # (1, 1, 0, 0, 1, 0),
@@ -48,7 +48,7 @@ GLOBAL_PARAMS.update(dict(
 
 # Likelihood
 GLOBAL_PARAMS.update(dict(
-    likelihood  = 'gaussian',
+    likelihood  = 'golemfit',
     sigma_ratio = '0.01'
 ))
 
@@ -72,8 +72,8 @@ with open(outfile, 'w') as f:
     job_number = 1
     for dim in dimension:
         print 'dimension', dim
-        outchain_head = '/data/user/smandalia/flavour_ratio/data/{0}/DIM{1}/SI_{2}'.format(
-            GLOBAL_PARAMS['likelihood'], dim, GLOBAL_PARAMS['spectral_index']
+        outchain_head = '/data/user/smandalia/flavour_ratio/data/{0}/DIM{1}/'.format(
+            GLOBAL_PARAMS['likelihood'], dim
         )
         for frs in fix_sfr_mfr:
             print 'frs', frs

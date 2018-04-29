@@ -89,8 +89,7 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
         bin_width = np.abs(np.diff(args.binning))
         if args.likelihood in [Likelihood.GOLEMFIT, Likelihood.GF_FREQ]:
             if 'astroDeltaGamma' in hypo_paramset.names:
-                args.spectral_index = hypo_paramset['astroDeltaGamma'].value
-                print 'args.spectral_index', args.spectral_index
+                args.spectral_index = -hypo_paramset['astroDeltaGamma'].value
 
     if args.fix_source_ratio:
         if args.energy_dependance is EnergyDependance.MONO:

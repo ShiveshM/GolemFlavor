@@ -30,11 +30,13 @@ def define_nuisance():
     """Define the nuisance parameters."""
     tag = ParamTag.SM_ANGLES
     g_prior = PriorsCateg.GAUSSIAN
+    hg_prior = PriorsCateg.HALFGAUSS
+    e = 1e-9
     nuisance = [
-        Param(name='s_12_2', value=0.307,          seed=[0.29, 0.31], ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2', prior=g_prior, tag=tag),
-        Param(name='c_13_4', value=1-(0.02206)**2, seed=[0.998, 1.0], ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=g_prior, tag=tag),
-        Param(name='s_23_2', value=0.538,          seed=[0.46, 0.61], ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2', prior=g_prior, tag=tag),
-        Param(name='dcp',    value=4.08404,        seed=[0, 2*np.pi], ranges=[0., 2*np.pi], std=2.0,     tex=r'\delta_{CP}', tag=tag),
+        Param(name='s_12_2', value=0.307,          seed=[0.26, 0.35],     ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2', prior=g_prior,  tag=tag),
+        Param(name='c_13_4', value=1-(0.02206)**2, seed=[0.995, 1-e],     ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=hg_prior, tag=tag),
+        Param(name='s_23_2', value=0.538,          seed=[0.31, 0.75],     ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2', prior=g_prior,  tag=tag),
+        Param(name='dcp',    value=4.08404,        seed=[0+e, 2*np.pi-e], ranges=[0., 2*np.pi], std=2.0,     tex=r'\delta_{CP}', tag=tag),
         Param(
             name='m21_2', value=7.40E-23, seed=[7.2E-23, 7.6E-23], ranges=[6.80E-23, 8.02E-23],
             std=2.1E-24, tex=r'\Delta m_{21}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag

@@ -9,8 +9,8 @@ full_scan_mfr = [
 
 fix_sfr_mfr = [
     (1, 1, 1, 1, 2, 0),
-    # (1, 1, 1, 1, 0, 0),
-    # (1, 1, 1, 0, 1, 0),
+    (1, 1, 1, 1, 0, 0),
+    (1, 1, 1, 0, 1, 0),
     # (1, 1, 1, 0, 0, 1),
     # (1, 1, 0, 1, 2, 0),
     # (1, 1, 0, 1, 0, 0),
@@ -27,7 +27,7 @@ GLOBAL_PARAMS = {}
 sens_eval_bin = 'all' # set to 'all' to run normally
 GLOBAL_PARAMS.update(dict(
     sens_run      = 'True',
-    run_method    = 'corr_angle',
+    run_method    = 'fixed_angle', # full, fixed_angle, corr_angle
     stat_method   = 'frequentist',
     sens_bins     = 10,
     seed          = 'None'
@@ -55,7 +55,7 @@ GLOBAL_PARAMS.update(dict(
 
 # Likelihood
 GLOBAL_PARAMS.update(dict(
-    likelihood  = 'gaussian',
+    likelihood  = 'golemfit',
     sigma_ratio = '0.01'
 ))
 
@@ -87,8 +87,8 @@ with open(outfile, 'w') as f:
     job_number = 1
     for dim in dimension:
         print 'dimension', dim
-        outchain_head = '/data/user/smandalia/flavour_ratio/data/{0}/DIM{1}/SI_{2}'.format(
-            GLOBAL_PARAMS['likelihood'], dim, GLOBAL_PARAMS['spectral_index']
+        outchain_head = '/data/user/smandalia/flavour_ratio/data/{0}/DIM{1}'.format(
+            GLOBAL_PARAMS['likelihood'], dim
         )
         for frs in fix_sfr_mfr:
             print 'frs', frs
@@ -107,7 +107,10 @@ with open(outfile, 'w') as f:
                 f.write('VARS\tjob{0}\tsr0="{1}"\n'.format(job_number, frs[3]))
                 f.write('VARS\tjob{0}\tsr1="{1}"\n'.format(job_number, frs[4]))
                 f.write('VARS\tjob{0}\tsr2="{1}"\n'.format(job_number, frs[5]))
-                f.write('VARS\tjob{0}\tsens_eval_bin="{1}"\n'.format(job_number, r))
+                if sens_eval_bin.lower() != 'all':
+                    f.write('VARS\tjob{0}\tsens_eval_bin="{1}"\n'.format(job_number, r))
+                else:
+                    f.write('VARS\tjob{0}\tsens_eval_bin="{1}"\n'.format(job_number, 'all'))
                 for key in GLOBAL_PARAMS.iterkeys():
                     f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
                 f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, output))
@@ -130,7 +133,10 @@ with open(outfile, 'w') as f:
                 f.write('VARS\tjob{0}\tsr0="{1}"\n'.format(job_number, 0))
                 f.write('VARS\tjob{0}\tsr1="{1}"\n'.format(job_number, 0))
                 f.write('VARS\tjob{0}\tsr2="{1}"\n'.format(job_number, 0))
-                f.write('VARS\tjob{0}\tsens_eval_bin="{1}"\n'.format(job_number, r))
+                if sens_eval_bin.lower() != 'all':
+                    f.write('VARS\tjob{0}\tsens_eval_bin="{1}"\n'.format(job_number, r))
+                else:
+                    f.write('VARS\tjob{0}\tsens_eval_bin="{1}"\n'.format(job_number, 'all'))
                 for key in GLOBAL_PARAMS.iterkeys():
                     f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
                 f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, output))

@@ -87,9 +87,9 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
     if args.energy_dependance is EnergyDependance.SPECTRAL:
         bin_centers = np.sqrt(args.binning[:-1]*args.binning[1:])
         bin_width = np.abs(np.diff(args.binning))
-        if args.likelihood in [Likelihood.GOLEMFIT, Likelihood.GF_FREQ]:
-            if 'astroDeltaGamma' in hypo_paramset.names:
-                args.spectral_index = -hypo_paramset['astroDeltaGamma'].value
+        if args.likelihood in [Likelihood.GOLEMFIT, Likelihood.GF_FREQ] \
+           and args.fold_index:
+            args.spectral_index = -hypo_paramset['astroDeltaGamma'].value
 
     if args.fix_source_ratio:
         if args.energy_dependance is EnergyDependance.MONO:
@@ -163,15 +163,18 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
     for idx, param in enumerate(hypo_paramset.from_tag(ParamTag.BESTFIT)):
         param.value = flavour_angles[idx]
 
+    print 'llh_paramset', llh_paramset
     if args.likelihood is Likelihood.FLAT:
-        return 1.
+        llh = 1.
     elif args.likelihood is Likelihood.GAUSSIAN:
         fr_bf = args.measured_ratio
-        return multi_gaussian(fr, fr_bf, args.sigma_ratio)
+        llh = multi_gaussian(fr, fr_bf, args.sigma_ratio)
     elif args.likelihood is Likelihood.GOLEMFIT:
-        return gf_utils.get_llh(fitter, hypo_paramset)
+        llh = gf_utils.get_llh(fitter, hypo_paramset)
     elif args.likelihood is Likelihood.GF_FREQ:
-        return gf_utils.get_llh_freq(fitter, hypo_paramset)
+        lhh = gf_utils.get_llh_freq(fitter, hypo_paramset)
+    print 'llh', llh
+    return llh
 
 
 def ln_prob(theta, args, asimov_paramset, llh_paramset, fitter):

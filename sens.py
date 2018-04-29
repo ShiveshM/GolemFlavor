@@ -92,10 +92,6 @@ def process_args(args):
         args.binning = np.logspace(
             np.log10(args.binning[0]), np.log10(args.binning[1]), args.binning[2]+1
         )
-        if args.likelihood is Likelihood.GOLEMFIT:
-            print 'GolemFit selected with spectral index energy dependance, ' \
-                'will attempt to use the astroDeltaGamma systematic to fold ' \
-                'in the spectral index.'
 
     if not args.fix_scale:
         args.scale = fr_utils.estimate_scale(args)

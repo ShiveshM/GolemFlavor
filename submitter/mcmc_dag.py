@@ -11,7 +11,7 @@ fix_sfr_mfr = [
     (1, 1, 1, 1, 2, 0),
     (1, 1, 1, 1, 0, 0),
     (1, 1, 1, 0, 1, 0),
-    (1, 1, 1, 0, 0, 1),
+    # (1, 1, 1, 0, 0, 1),
     # (1, 1, 0, 1, 2, 0),
     # (1, 1, 0, 1, 0, 0),
     # (1, 1, 0, 0, 1, 0),
@@ -43,7 +43,8 @@ GLOBAL_PARAMS.update(dict(
     energy_dependance = 'spectral',
     spectral_index    = -2,
     fix_mixing        = 'False',
-    fix_mixing_almost = 'False'
+    fix_mixing_almost = 'False',
+    fold_index        = 'False'
 ))
 
 # Likelihood

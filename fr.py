@@ -29,31 +29,32 @@ from utils.param import Param, ParamSet, get_paramsets
 def define_nuisance():
     """Define the nuisance parameters."""
     tag = ParamTag.SM_ANGLES
+    nuisance = []
     g_prior = PriorsCateg.GAUSSIAN
     hg_prior = PriorsCateg.HALFGAUSS
     e = 1e-9
-    nuisance = [
-        Param(name='s_12_2', value=0.307,          seed=[0.26, 0.35],     ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2', prior=g_prior,  tag=tag),
-        Param(name='c_13_4', value=1-(0.02206)**2, seed=[0.995, 1-e],     ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=hg_prior, tag=tag),
-        Param(name='s_23_2', value=0.538,          seed=[0.31, 0.75],     ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2', prior=g_prior,  tag=tag),
-        Param(name='dcp',    value=4.08404,        seed=[0+e, 2*np.pi-e], ranges=[0., 2*np.pi], std=2.0,     tex=r'\delta_{CP}', tag=tag),
-        Param(
-            name='m21_2', value=7.40E-23, seed=[7.2E-23, 7.6E-23], ranges=[6.80E-23, 8.02E-23],
-            std=2.1E-24, tex=r'\Delta m_{21}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag
-        ),
-        Param(
-            name='m3x_2', value=2.494E-21, seed=[2.46E-21, 2.53E-21], ranges=[2.399E-21, 2.593E-21],
-            std=3.3E-23, tex=r'\Delta m_{3x}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag
-        )
-    ]
+    # nuisance.extend([
+    #     Param(name='s_12_2', value=0.307,          seed=[0.26, 0.35],     ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2', prior=g_prior,  tag=tag),
+    #     Param(name='c_13_4', value=1-(0.02206)**2, seed=[0.995, 1-e],     ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=hg_prior, tag=tag),
+    #     Param(name='s_23_2', value=0.538,          seed=[0.31, 0.75],     ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2', prior=g_prior,  tag=tag),
+    #     Param(name='dcp',    value=4.08404,        seed=[0+e, 2*np.pi-e], ranges=[0., 2*np.pi], std=2.0,     tex=r'\delta_{CP}', tag=tag),
+    #     Param(
+    #         name='m21_2', value=7.40E-23, seed=[7.2E-23, 7.6E-23], ranges=[6.80E-23, 8.02E-23],
+    #         std=2.1E-24, tex=r'\Delta m_{21}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag
+    #     ),
+    #     Param(
+    #         name='m3x_2', value=2.494E-21, seed=[2.46E-21, 2.53E-21], ranges=[2.399E-21, 2.593E-21],
+    #         std=3.3E-23, tex=r'\Delta m_{3x}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag
+    #     )
+    # ])
     tag = ParamTag.NUISANCE
-    nuisance.extend([
-        Param(name='convNorm',        value=1.,  seed=[0.5, 2. ], ranges=[0. , 50.], std=0.3,  tag=tag),
-        Param(name='promptNorm',      value=0.,  seed=[0. , 6. ], ranges=[0. , 50.], std=0.05, tag=tag),
-        Param(name='muonNorm',        value=1.,  seed=[0.1, 2. ], ranges=[0. , 50.], std=0.1,  tag=tag),
-        Param(name='astroNorm',       value=6.9, seed=[0.1, 10.], ranges=[0. , 50.], std=0.1,  tag=tag),
-        Param(name='astroDeltaGamma', value=2.5, seed=[1. , 3. ], ranges=[-5., 5. ], std=0.1,  tag=tag)
-    ])
+    # nuisance.extend([
+    #     Param(name='convNorm',        value=1.,  seed=[0.5, 2. ], ranges=[0. , 50.], std=0.3,  tag=tag),
+    #     Param(name='promptNorm',      value=0.,  seed=[0. , 6. ], ranges=[0. , 50.], std=0.05, tag=tag),
+    #     Param(name='muonNorm',        value=1.,  seed=[0.1, 2. ], ranges=[0. , 50.], std=0.1,  tag=tag),
+    #     Param(name='astroNorm',       value=6.9, seed=[0.1, 10.], ranges=[0. , 50.], std=0.1,  tag=tag),
+    #     Param(name='astroDeltaGamma', value=2.5, seed=[1. , 3. ], ranges=[-5., 5. ], std=0.1,  tag=tag)
+    # ])
     return ParamSet(nuisance)
 
 

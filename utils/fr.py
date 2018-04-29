@@ -194,12 +194,13 @@ def normalise_fr(fr):
     array([ 0.16666667,  0.33333333,  0.5       ])
 
     """
-    return np.array(fr) / np.sum(fr)
+    return np.array(fr) / float(np.sum(fr))
 
 
 def estimate_scale(args):
     """Estimate the scale at which new physics will enter."""
-    m_eign = args.m3x_2
+    try: m_eign = args.m3x_2
+    except: m_eign = MASS_EIGENVALUES[1]
     if args.energy_dependance is EnergyDependance.MONO:
         scale = np.power(
             10, np.round(np.log10(m_eign/args.energy)) - \
@@ -459,8 +460,7 @@ def u_to_fr(source_fr, matrix):
 
     """
     composition = np.einsum(
-        'ai, bi, a -> b',
-        np.abs(matrix)**2, np.abs(matrix)**2, source_fr,
+        'ai, bi, a -> b', np.abs(matrix)**2, np.abs(matrix)**2, source_fr,
     )
     ratio = composition / np.sum(source_fr)
     return ratio

@@ -115,12 +115,16 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
     )
 
     m_eig_names = ['m21_2', 'm3x_2']
-    mass_eigenvalues = [x.value for x in llh_paramset if x.name in m_eig_names]
-
     ma_names = ['s_12_2', 'c_13_4', 's_23_2', 'dcp']
-    sm_u = fr_utils.angles_to_u(
-        [x.value for x in llh_paramset if x.name in ma_names]
-    )
+
+    if set(m_eig_names+ma_names).issubset(set(llh_paramset.names)):
+        mass_eigenvalues = [x.value for x in llh_paramset if x.name in m_eig_names]
+        sm_u = fr_utils.angles_to_u(
+            [x.value for x in llh_paramset if x.name in ma_names]
+        )
+    else:
+        mass_eigenvalues = fr_utils.MASS_EIGENVALUES
+        sm_u = fr_utils.NUFIT_U
 
     if args.energy_dependance is EnergyDependance.MONO:
         u = fr_utils.params_to_BSMu(
@@ -164,6 +168,8 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
         param.value = flavour_angles[idx]
 
     print 'llh_paramset', llh_paramset
+    print 'hypo_paramset', hypo_paramset
+    print 'fr', fr
     if args.likelihood is Likelihood.FLAT:
         llh = 1.
     elif args.likelihood is Likelihood.GAUSSIAN:

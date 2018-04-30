@@ -242,7 +242,7 @@ def get_paramsets(args, nuisance_paramset):
         llh_paramset.extend([
             Param(name='np_s_12^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{12}^2', tag=tag),
             Param(name='np_c_13^4', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{c}_{13}^4', tag=tag),
-            Param(name='np_s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^4', tag=tag),
+            Param(name='np_s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^2', tag=tag),
             Param(name='np_dcp', value=np.pi, ranges=[0., 2*np.pi], std=0.2, tex=r'\tilde{\delta_{CP}}', tag=tag)
         ])
     if args.fix_mixing_almost:

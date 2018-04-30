@@ -131,9 +131,10 @@ def gen_figtext(args):
     if args.likelihood is Likelihood.GAUSSIAN:
         t += '\nSigma = {0:.3f}'.format(args.sigma_ratio)
     if args.energy_dependance is EnergyDependance.SPECTRAL:
-        t += '\nSpectral Index = {0}\nBinning = [{1}, {2}] TeV - {3} bins'.format(
-            int(args.spectral_index), int(args.binning[0]/1e3),
-            int(args.binning[-1]/1e3), len(args.binning)-1
+        if not args.fold_index:
+            t += '\nSpectral Index = {0}'.format(int(args.spectral_index))
+        t += '\nBinning = [{0}, {1}] TeV - {2} bins'.format(
+            int(args.binning[0]/1e3), int(args.binning[-1]/1e3), len(args.binning)-1
         )
     elif args.energy_dependance is EnergyDependance.MONO:
         t += '\nEnergy = {0} TeV'.format(int(args.energy/1e3))

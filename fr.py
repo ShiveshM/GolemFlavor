@@ -86,8 +86,7 @@ def process_args(args):
         )
 
     if not args.fix_scale:
-        args.scale = fr_utils.estimate_scale(args)
-        args.scale_region = (args.scale/args.scale_region, args.scale*args.scale_region)
+        args.scale, args.scale_region = fr_utils.estimate_scale(args)
 
 
 def parse_args(args=None):

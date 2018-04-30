@@ -57,14 +57,9 @@ def steering_params(args):
     steering_categ = args.ast
     params = gf.SteeringParams()
     params.quiet = False
-    params.fastmode = True
     params.simToLoad= steering_categ.name.lower()
-    params.spline_dom_efficiency = False
-    params.spline_hole_ice = False
-    params.spline_anisotrophy = False
     params.evalThreads = args.threads
     # params.evalThreads = thread_factors(args.threads)[1]
-    params.diffuse_fit_type = gf.DiffuseFitType.SinglePowerLaw
     return params
 
 

@@ -206,14 +206,15 @@ def estimate_scale(args):
             10, np.round(np.log10(m_eign/args.energy)) - \
             np.log10(args.energy**(args.dimension-3))
         )
+        scale_region = (scale/args.scale_region, scale*args.scale_region)
     elif args.energy_dependance is EnergyDependance.SPECTRAL:
-        scale = np.power(
-            10, np.round(
-                np.log10(m_eign/np.power(10, np.average(np.log10(args.binning)))) \
-                - np.log10(np.power(10, np.average(np.log10(args.binning)))**(args.dimension-3))
-            )
-        )
-    return scale
+        lower_s = (m_eign/args.binning[-1]) / (args.binning[-1]**(args.dimension-3))
+        upper_s = (m_eign/args.binning[0]) / (args.binning[0]**(args.dimension-3))
+        scale = np.power(10, np.average(np.log10([lower_s, upper_s])))
+        diff = upper_s / lower_s
+        scale_region = (lower_s/diff, upper_s*diff)
+        scale_region = [np.power(10, np.round(np.log10(x))) for x in scale_region]
+    return scale, scale_region
 
 
 def fr_argparse(parser):

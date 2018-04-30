@@ -94,8 +94,7 @@ def process_args(args):
         )
 
     if not args.fix_scale:
-        args.scale = fr_utils.estimate_scale(args)
-        args.scale_region = (args.scale/args.scale_region, args.scale*args.scale_region)
+        args.scale, args.scale_region = fr_utils.estimate_scale(args)
 
     if args.sens_eval_bin.lower() == 'all':
         args.sens_eval_bin = None

@@ -27,21 +27,23 @@ GLOBAL_PARAMS = {}
 sens_eval_bin = 'all' # set to 'all' to run normally
 GLOBAL_PARAMS.update(dict(
     sens_run      = 'True',
-    run_method    = 'fixed_angle', # full, fixed_angle, corr_angle
+    run_method    = 'full', # full, fixed_angle, corr_angle
     stat_method   = 'frequentist',
-    sens_bins     = 10,
+    sens_bins     = 40,
     seed          = 'None'
 ))
 
 # MultiNest
 GLOBAL_PARAMS.update(dict(
-    mn_live_points = 400,
+    mn_live_points = 800,
     mn_tolerance   = 0.01,
     mn_output      = './mnrun'
 ))
 
 # FR
-dimension         = [3, 6]
+# dimension         = [3, 6]
+dimension         = [4, 5, 7, 8]
+# dimension         = [3, 4, 5, 6, 7, 8]
 GLOBAL_PARAMS.update(dict(
     threads           = 1,
     binning           = '1e4 1e7 5',
@@ -50,12 +52,13 @@ GLOBAL_PARAMS.update(dict(
     energy_dependance = 'spectral',
     spectral_index    = -2,
     fix_mixing        = 'False',
-    fix_mixing_almost = 'False'
+    fix_mixing_almost = 'False',
+    fold_index        = 'False'
 ))
 
 # Likelihood
 GLOBAL_PARAMS.update(dict(
-    likelihood  = 'golemfit',
+    likelihood  = 'gaussian',
     sigma_ratio = '0.01'
 ))
 
@@ -70,8 +73,8 @@ GLOBAL_PARAMS.update(dict(
     plot_statistic = 'True'
 ))
 
-outfile = 'dagman_FR_SENS_{0}_{1}.submit'.format(
-    GLOBAL_PARAMS['stat_method'], GLOBAL_PARAMS['run_method']
+outfile = 'dagman_FR_SENS_{0}_{1}_{2}.submit'.format(
+    GLOBAL_PARAMS['stat_method'], GLOBAL_PARAMS['run_method'], GLOBAL_PARAMS['likelihood']
 )
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/sens_submit.sub'
@@ -141,3 +144,5 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
                 f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, output))
                 job_number += 1
+
+    print 'dag file = {0}'.format(outfile)

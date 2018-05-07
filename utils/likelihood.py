@@ -167,9 +167,6 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
     for idx, param in enumerate(hypo_paramset.from_tag(ParamTag.BESTFIT)):
         param.value = flavour_angles[idx]
 
-    print 'llh_paramset', llh_paramset
-    print 'hypo_paramset', hypo_paramset
-    print 'fr', fr
     if args.likelihood is Likelihood.FLAT:
         llh = 1.
     elif args.likelihood is Likelihood.GAUSSIAN:
@@ -179,7 +176,6 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
         llh = gf_utils.get_llh(fitter, hypo_paramset)
     elif args.likelihood is Likelihood.GF_FREQ:
         lhh = gf_utils.get_llh_freq(fitter, hypo_paramset)
-    print 'llh', llh
     return llh
 
 

@@ -16,7 +16,7 @@ getenv = True
 # +TransferOutput="" 
 Transfer_output_files = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/metaouts/
 
-request_memory = 1GB
+request_memory = 3GB
 request_cpus = 1
 
 Universe        = vanilla 
@@ -33,7 +33,7 @@ Notification    = never
 
 # Requirements = IS_GLIDEIN && HAS_CVMFS_icecube_opensciencegrid_org && (OpSysAndVer =?= "CentOS6" || OpSysAndVer =?= "RedHat6" || OpSysAndVer =?= "SL6")
 # Requirements = IS_GLIDEIN
-# Requirements = (OpSysMajorVer =?= 6)
+Requirements = (OpSysMajorVer =?= 6)
 
 # GO! 
 queue

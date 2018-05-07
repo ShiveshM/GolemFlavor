@@ -1,9 +1,14 @@
+import numpy.ma as ma
+
 import GolemFitPy as gf
+
+FASTMODE = True
 
 def steering_params():
     steering_categ = 'p2_0'
     params = gf.SteeringParams(gf.sampleTag.HESE)
-    params.fastmode = True
+    if FASTMODE:
+        params.fastmode = True
     params.quiet = False
     params.simToLoad= steering_categ.lower()
     return params
@@ -50,7 +55,7 @@ test_paramset = {'astroFlavorAngle1': 4/9., 'astroFlavorAngle2': 0}
 print 'testing', test_paramset
 print 'llh', get_llh(fitter, test_paramset)
 
-test_paramset = {'astroFlavorAngle1': 4/9, 'astroFlavorAngle2': 0}
+test_paramset = {'astroFlavorAngle1': 4/9., 'astroFlavorAngle2': 0}
 print 'testing', test_paramset
 print 'llh', get_llh(fitter, test_paramset)
 
@@ -68,9 +73,17 @@ for an1 in angle1_binning:
     llhs = []
     for an2 in angle2_binning:
         test_paramset = {'astroFlavorAngle1': an1, 'astroFlavorAngle2': an2}
-        llhs.append(get_llh(fitter, test_paramset))
+        llh = get_llh(fitter, test_paramset)
+        if abs(llh) > 9e9:
+            llhs.append(np.nan)
+        else:
+            llhs.append(llh)
+    llhs = ma.masked_invalid(llhs)
     plt.plot(angle2_binning, llhs, label='astroFlavorAngle1 = {0}'.format(an1))
 plt.xlabel('astroFlavorAngle2')
 plt.ylabel('LLH')
 plt.legend()
-plt.savefig('llh_profile_fastmode.png'.format(an1))
+if FASTMODE:
+    plt.savefig('llh_profile_fastmode.png'.format(an1))
+else:
+    plt.savefig('llh_profile.png'.format(an1))

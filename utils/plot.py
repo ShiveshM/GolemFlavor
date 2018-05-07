@@ -10,6 +10,7 @@ Plotting functions for the BSM flavour ratio analysis
 from __future__ import absolute_import, division
 
 import os
+from copy import deepcopy
 
 import numpy as np
 import matplotlib as mpl
@@ -112,18 +113,18 @@ def plot_Tchain(Tchain, axes_labels, ranges):
 def gen_figtext(args):
     """Generate the figure text."""
     t = ''
-    mr1, mr2, mr3 = args.measured_ratio
+    mr1, mr2, mr3 = misc_utils.solve_ratio(args.measured_ratio)
     if args.fix_source_ratio:
-        sr1, sr2, sr3 = args.source_ratio
-        t += 'Source flavour ratio = [{0:.2f}, {1:.2f}, {2:.2f}]\nIC ' \
-                'observed flavour ratio = [{3:.2f}, {4:.2f}, ' \
-                '{5:.2f}]\nDimension = {6}'.format(
+        sr1, sr2, sr3 = misc_utils.solve_ratio(args.source_ratio)
+        t += 'Source flavour ratio = [{0}, {1}, {2}]\nIC ' \
+                'observed flavour ratio = [{3}, {4}, ' \
+                '{5}]\nDimension = {6}'.format(
                     sr1, sr2, sr3, mr1, mr2, mr3, args.dimension,
                     int(args.energy)
                 )
     else:
-        t += 'IC observed flavour ratio = [{0:.2f}, {1:.2f}, ' \
-                '{2:.2f}]\nDimension = {3}'.format(
+        t += 'IC observed flavour ratio = [{0}, {1}, ' \
+                '{2}]\nDimension = {3}'.format(
                     mr1, mr2, mr3, args.dimension, int(args.energy)
                 )
     if args.fix_scale:
@@ -229,28 +230,33 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset):
             g.export(outfile+'_elements.'+of)
 
 
+def myround(x, base=5, up=False, down=False):
+    if up == down and up is True: assert 0
+    if up: return int(base * np.round(float(x)/base-0.5))
+    elif down: return int(base * np.round(float(x)/base+0.5))
+    else: int(base * np.round(float(x)/base))
+
+
 def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     """Make MultiNest factor or LLH value plot."""
-    print "Making Statistic plot"
+    print 'Making Statistic plot'
     fig_text = gen_figtext(args)
     if label is not None: fig_text += '\n' + label
 
     print 'data', data
     print 'data.shape', data.shape
     scales, statistic = data.T
+    min_idx = np.argmin(scales)
+    null = statistic[min_idx]
     if args.stat_method is StatCateg.BAYESIAN:
-        min_idx = np.argmin(scales)
-        null = statistic[min_idx]
         reduced_ev = -(statistic - null)
     elif args.stat_method is StatCateg.FREQUENTIST:
-        min_idx = np.argmin(scales)
-        null = statistic[min_idx]
         reduced_ev = -2*(statistic - null)
 
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
 
-    ax.set_xlim(scale_param.ranges)
+    ax.set_xlim(np.log10(args.scale_region))
     ax.set_xlabel('$'+scale_param.tex+'$')
     if args.stat_method is StatCateg.BAYESIAN:
         ax.set_ylabel(r'Bayes Factor')
@@ -271,85 +277,302 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     ax.add_artist(at)
     misc_utils.make_dir(outfile)
     for of in outformat:
+        print 'Saving as {0}'.format(outfile+'.'+of)
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
 
 
-def myround(x, base=5, up=False, down=False):
-    if up == down and up is True: assert 0
-    if up: return int(base * np.round(float(x)/base-0.5))
-    elif down: return int(base * np.round(float(x)/base+0.5))
-    else: int(base * np.round(float(x)/base))
+def plot_sens_full(data, outfile, outformat, args):
+    print 'Making FULL sensitivity plot'
 
-
-def plot_BSM_angles_limit(dirname, outfile, outformat, args, bayesian):
-    """Make BSM angles vs scale limit plot."""
-    if not args.plot_angles_limit: return
-    print "Making BSM angles limit plot."""
-    fig_text = gen_figtext(args)
-    xticks = [r'$\mathcal{O}_{12}$', r'$\mathcal{O}_{13}$', r'$\mathcal{O}_{23}$']
-
-    raw = []
-    for root, dirs, filenames in os.walk(dirname):
-        for fn in filenames:
-            if fn[-4:] == '.npy':
-                raw.append(np.load(os.path.join(root, fn)))
-    raw = np.vstack(raw)
-    raw = raw[np.argsort(raw[:,0])]
-    print 'raw', raw
-    print 'raw.shape', raw.shape
-    sc_ranges = (
-        myround(np.min(raw[0][:,0]), up=True),
-        myround(np.max(raw[0][:,0]), down=True)
-    )
-
-    proc = []
-    if bayesian:
-        for idx, theta in enumerate(raw):
-            scale, evidences = theta.T
-            null = evidences[0]
-            reduced_ev = -(evidences - null)
-            al = scale[reduced_ev > np.log(10**(1/2.))]
-            proc.append((idx+1, al[0]))
-    else:
-        for idx, theta in enumerate(raw):
-            scale, llh = theta.T
-            delta_llh = -2 * (llh - np.max(llh))
-            # 90% CL for 1 dof
-            al = scale[delta_llh > 2.71]
-            proc.append((idx+1, al[0]))
-
-    limits = np.array(proc)
-    print 'limits',  limits
+    colour = {0:'red', 1:'blue', 2:'green', 3:'purple', 4:'orange', 5:'black'}
+    xticks = ['{0}'.format(x) for x in range(np.min(args.dimensions),
+                                             np.max(args.dimensions)+1)]
+    yranges = [np.inf, -np.inf]
+    legend_handles = []
 
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
 
-    ax.set_xticklabels(['']+xticks+[''])
-    ax.set_xlim(0, len(xticks)+1)
-    ax.set_ylim(sc_ranges[0], sc_ranges[-1])
-    ax.set_xlabel(r'BSM angle')
-    ylabel = r'${\rm log}_{10} \Lambda' + get_units(args.dimension) + r'$'
-    ax.set_ylabel(ylabel)
+    ax.set_xlim(args.dimensions[0]-1, args.dimensions[-1]+1)
+    ax.set_xticklabels([''] + xticks + [''])
+    ax.set_xlabel(r'BSM operator dimension ' + r'$d$')
+    ax.set_ylabel(r'${\rm log}_{10} \Lambda^{-1} / GeV^{-d+4}$')
 
-    for l in limits:
-        line = plt.Line2D(
-            (l[0]-0.1, l[0]+0.1), (l[1], l[1]), lw=3, color='r'
-        )
-        ax.add_line(line)
-        # ax.arrow(
-        #     l[0], l[1], 0, -1.5, head_width=0.05, head_length=0.2, fc='r',
-        #     ec='r', lw=2
-        # )
-        ax.annotate(
-            s='', xy=l, xytext=(l[0], l[1]+1.5),
-            arrowprops={'arrowstyle': '<-', 'lw': 1.5, 'color':'r'}
-        )
+    argsc = deepcopy(args)
+    for idim in xrange(len(data)):
+        dim = args.dimensions[idim]
+        print 'dim', dim
+        argsc.dimension = dim
+        for isrc in xrange(len(data[idim])):
+            src = args.source_ratios[isrc]
+            argsc.source_ratio = src
 
+            # fig_text = gen_figtext(argsc)
+            scales, statistic = data[idim][isrc].T
+            min_idx = np.argmin(scales)
+            null = statistic[min_idx]
+            if args.stat_method is StatCateg.BAYESIAN:
+                reduced_ev = -(statistic - null)
+                # al = scales[reduced_ev > np.log(10**(3/2.))] # Strong degree of belief
+                al = scales[reduced_ev > 0.4] # Testing
+            elif args.stat_method is StatCateg.FREQUENTIST:
+                reduced_ev = -2*(statistic - null)
+                al = scales[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
+            if len(al) == 0:
+                print 'No points for DIM {0} FRS {1} NULL {2}!'.format(
+                    dim, misc_utils.solve_ratio(src), null
+                )
+                print 'Reduced EV {0}'.format(reduced_ev)
+                continue
+            lim = al[0]
+            label = '[{0}, {1}, {2}]'.format(*misc_utils.solve_ratio(src))
+            if lim < yranges[0]: yranges[0] = lim
+            if lim > yranges[1]: yranges[1] = lim+4
+            line = plt.Line2D(
+                (dim-0.1, dim+0.1), (lim, lim), lw=3, color=colour[isrc], label=label
+            )
+            ax.add_line(line)
+            if idim == 0: legend_handles.append(line)
+            x_offset = isrc*0.05 - 0.05
+            ax.annotate(
+                s='', xy=(dim+x_offset, lim), xytext=(dim+x_offset, lim+3),
+                arrowprops={'arrowstyle': '<-', 'lw': 1.2, 'color':colour[isrc]}
+            )
+
+    try:
+        yranges = (myround(yranges[0], up=True), myround(yranges[1], down=True))
+        ax.set_ylim(yranges)
+    except: pass
+
+    ax.legend(handles=legend_handles, prop=dict(size=8), loc='upper right')
     for ymaj in ax.yaxis.get_majorticklocs():
-        ax.axhline(y=ymaj, ls='-', color='gray', alpha=0.4, linewidth=1)
+        ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.4, linewidth=1)
     for xmaj in ax.xaxis.get_majorticklocs():
-        ax.axvline(x=xmaj, ls='-', color='gray', alpha=0.4, linewidth=1)
+        ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.4, linewidth=1)
 
+    misc_utils.make_dir(outfile)
     for of in outformat:
+        print 'Saving plot as {0}'.format(outfile+'.'+of)
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
 
+
+def plot_sens_fixed_angle(data, outfile, outformat, args):
+    print 'Making FIXED_ANGLE sensitivity plot'
+
+    colour = {0:'red', 1:'blue', 2:'green', 3:'purple', 4:'orange', 5:'black'}
+    xticks = [r'$\mathcal{O}_{12}$', r'$\mathcal{O}_{13}$', r'$\mathcal{O}_{23}$']
+    argsc = deepcopy(args)
+    for idim in xrange(len(data)):
+        dim = args.dimensions[idim]
+        print '= dim', dim
+        argsc.dimension = dim
+
+        yranges = [np.inf, -np.inf]
+        legend_handles = []
+
+        fig = plt.figure(figsize=(7, 5))
+        ax = fig.add_subplot(111)
+        ax.set_xlim(0, len(xticks)+1)
+        ax.set_xticklabels([''] + xticks + [''])
+        ax.set_xlabel(r'BSM operator angle')
+        ax.set_ylabel(r'${\rm log}_{10} \Lambda^{-1} / GeV^{-d+4}$')
+
+        for isrc in xrange(len(data[idim])):
+            src = args.source_ratios[isrc]
+            argsc.source_ratio = src
+            print '== src', src
+
+            for ian in xrange(len(data[idim][isrc])):
+                print '=== an', ian
+                scales, statistic = data[idim][isrc][ian].T
+                min_idx = np.argmin(scales)
+                null = statistic[min_idx]
+                if args.stat_method is StatCateg.BAYESIAN:
+                    reduced_ev = -(statistic - null)
+                    al = scales[reduced_ev > np.log(10**(3/2.))] # Strong degree of belief
+                elif args.stat_method is StatCateg.FREQUENTIST:
+                    reduced_ev = -2*(statistic - null)
+                    al = scales[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
+                print 'reduced_ev', reduced_ev
+                if len(al) == 0:
+                    print 'No points for DIM {0} FRS {1}\nreduced_ev {2}!'.format(
+                        dim, src, reduced_ev
+                    )
+                    continue
+                lim = al[0]
+                print 'limit = {0}'.format(lim)
+                label = '[{0}, {1}, {2}]'.format(*misc_utils.solve_ratio(src))
+                if lim < yranges[0]: yranges[0] = lim
+                if lim > yranges[1]: yranges[1] = lim+4
+                line = plt.Line2D(
+                    (ian+1-0.1, ian+1+0.1), (lim, lim), lw=3, color=colour[isrc], label=label
+                )
+                ax.add_line(line)
+                if len(legend_handles) < isrc+1:
+                    legend_handles.append(line)
+                x_offset = isrc*0.05 - 0.05
+                ax.annotate(
+                    s='', xy=(ian+1+x_offset, lim), xytext=(ian+1+x_offset, lim+3),
+                    arrowprops={'arrowstyle': '<-', 'lw': 1.2, 'color':colour[isrc]}
+                )
+
+        try:
+            yranges = (myround(yranges[0], up=True), myround(yranges[1], down=True))
+            ax.set_ylim(yranges)
+        except: pass
+
+        ax.legend(handles=legend_handles, prop=dict(size=8), loc='upper right')
+        for ymaj in ax.yaxis.get_majorticklocs():
+            ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.4, linewidth=1)
+        for xmaj in ax.xaxis.get_majorticklocs():
+            ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.4, linewidth=1)
+
+        out = outfile + '_DIM{0}'.format(dim)
+        misc_utils.make_dir(out)
+        for of in outformat:
+            print 'Saving plot as {0}'.format(out+'.'+of)
+            fig.savefig(out+'.'+of, bbox_inches='tight', dpi=150)
+
+
+        for ymaj in ax.yaxis.get_majorticklocs():
+            ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.4, linewidth=1)
+        for xmaj in ax.xaxis.get_majorticklocs():
+            ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.4, linewidth=1)
+
+
+def plot_sens_corr_angle(data, outfile, outformat, args):
+    print 'Making CORR_ANGLE sensitivity plot'
+
+    labels = [r'$sin^2(2\mathcal{O}_{12})$',
+              r'$sin^2(2\mathcal{O}_{13})$',
+              r'$sin^2(2\mathcal{O}_{23})$']
+
+    argsc = deepcopy(args)
+    for idim in xrange(len(data)):
+        dim = args.dimensions[idim]
+        print '= dim', dim
+        argsc.dimension = dim
+        for isrc in xrange(len(data[idim])):
+            src = args.source_ratios[isrc]
+            argsc.source_ratio = src
+            print '== src', src
+            for ian in xrange(len(data[idim][isrc])):
+                print '=== an', ian
+
+                d = data[idim][isrc][ian].reshape(
+                    len(data[idim][isrc][ian])**2, 3
+                )
+
+                fig = plt.figure(figsize=(7, 5))
+                ax = fig.add_subplot(111)
+                ax.set_ylim(0, 1)
+                ax.set_ylabel(labels[ian])
+                ax.set_xlabel(r'${\rm log}_{10} \Lambda^{-1}'+get_units(dim)+r'$')
+
+                xranges = [np.inf, -np.inf]
+                legend_handles = []
+
+                y = d[:,0]
+                x = d[:,1]
+                z = d[:,2]
+
+                print 'x', x
+                print 'y', y
+                print 'z', z
+                null_idx = np.argmin(x)
+                null = z[null_idx]
+                print 'null = {0}, for scale = {1}'.format(null, x[null_idx])
+
+                if args.stat_method is StatCateg.BAYESIAN:
+                    z_r = -(z - null)
+                elif args.stat_method is StatCateg.FREQUENTIST:
+                    z_r = -2*(z - null)
+                print 'scale', x
+                print 'reduced ev', z_r
+
+                pdat = np.array([x, y, z_r, np.ones(x.shape)]).T
+                print 'pdat', pdat
+                pdat_clean = []
+                for d in pdat:
+                    if not np.any(np.isnan(d)): pdat_clean.append(d)
+                pdat = np.vstack(pdat_clean)
+                sort_column = 3
+                pdat_sorted = pdat[pdat[:,sort_column].argsort()]
+                uni, c = np.unique(pdat[:,sort_column], return_counts=True)
+                print uni, c
+                print len(uni)
+                print np.unique(c)
+                
+                n = len(uni)
+                assert len(np.unique(c)) == 1
+                c = c[0]
+                col_array = []
+                for col in pdat_sorted.T:
+                    col_array.append(col.reshape(n, c))
+                col_array = np.stack(col_array)
+                sep_arrays = []
+                for x_i in xrange(n):
+                    sep_arrays.append(col_array[:,x_i])
+                
+                print len(sep_arrays)
+                sep_arrays = sep_arrays[0][:3]
+                print sep_arrays
+
+                if args.stat_method is StatCateg.BAYESIAN:
+                    reduced_pdat_mask = (sep_arrays[2] > log(10**(3/2.))) # Strong degree of belief
+                elif args.stat_method is StatCateg.FREQUENTIST:
+                    reduced_pdat_mask = (sep_arrays[2] > 4.61) # 90% CL for 2 DOFS via Wilks
+                reduced_pdat = sep_arrays.T[reduced_pdat_mask].T
+                print 'reduced_pdat', reduced_pdat
+
+                ax.tick_params(axis='x', labelsize=11)
+                ax.tick_params(axis='y', labelsize=11)
+
+                mini, maxi = np.min(x), np.max(x)
+                ax.set_xlim((mini, maxi))
+                ax.set_ylim(0, 1)
+                ax.grid(b=False)
+                
+                x_v = reduced_pdat[0].round(decimals=4)
+                y_v = reduced_pdat[1].round(decimals=4)
+                uniques = np.unique(x_v)
+                print 'uniques', uniques
+                if len(uniques) == 1: continue
+                bw = np.min(np.diff(uniques))
+                print 'bw', bw
+                print np.diff(uniques)
+                uni_x_split = np.split(uniques, np.where(np.diff(uniques) > bw*(1e20))[0] + 1)
+                print 'len(uni_x_split)', len(uni_x_split)
+                for uni_x in uni_x_split:
+                    p_x_l, p_y_l = [], []
+                    p_x_u, p_y_u = [], []
+                    for uni in uni_x:
+                        idxes = np.where(x_v == uni)[0]
+                        ymin, ymax = 1, 0
+                        for idx in idxes:
+                            if y_v[idx] < ymin: ymin = y_v[idx]
+                            if y_v[idx] > ymax: ymax = y_v[idx]
+                        p_x_l.append(uni)
+                        p_y_l.append(ymin)
+                        p_x_u.append(uni)
+                        p_y_u.append(ymax)
+                    p_x_l, p_y_l = np.array(p_x_l, dtype=np.float64), np.array(p_y_l, dtype=np.float64)
+                    p_x_u, p_y_u = np.array(list(reversed(p_x_u)), dtype=np.float64), np.array(list(reversed(p_y_u)), dtype=np.float64)
+                    p_x = np.hstack([p_x_l, p_x_u])
+                    p_y = np.hstack([p_y_l, p_y_u])
+                    p_x = np.r_[p_x, p_x[0]]
+                    p_y = np.r_[p_y, p_y[0]]
+                    print 'p_x', p_x
+                    print 'p_y', p_y
+                    try:
+                        tck, u = interpolate.splprep([p_x, p_y], s=1e-5, per=True)
+                        xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
+                    except:
+                        xi, yi = p_x, p_y
+                    ax.fill(xi, yi, 'r', edgecolor='r', linewidth=1)
+
+                out = outfile + '_DIM{0}_SRC{1}_AN{2}'.format(dim, isrc, ian)
+                misc_utils.make_dir(out)
+                for of in outformat:
+                    print 'Saving plot as {0}'.format(out+'.'+of)
+                    fig.savefig(out+'.'+of, bbox_inches='tight', dpi=150)

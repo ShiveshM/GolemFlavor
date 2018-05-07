@@ -252,10 +252,16 @@ def get_paramsets(args, nuisance_paramset):
         ])
     if not args.fix_scale:
         tag = ParamTag.SCALE
-        llh_paramset.append(
-            Param(name='logLam', value=np.log10(args.scale), ranges=np.log10(args.scale_region), std=3,
-                  tex=r'{\rm log}_{10}\Lambda^{-1}'+get_units(args.dimension), tag=tag)
-        )
+        if hasattr(args, 'dimension'):
+            llh_paramset.append(
+                Param(name='logLam', value=np.log10(args.scale), ranges=np.log10(args.scale_region), std=3,
+                      tex=r'{\rm log}_{10}\Lambda^{-1}'+get_units(args.dimension), tag=tag)
+            )
+        elif hasattr(args, 'dimensions'):
+            llh_paramset.append(
+                Param(name='logLam', value=np.log10(args.scale), ranges=np.log10(args.scale_region), std=3,
+                      tex=r'{\rm log}_{10}\Lambda^{-1} / GeV^{-d+4}', tag=tag)
+            )
     if not args.fix_source_ratio:
         tag = ParamTag.SRCANGLES
         llh_paramset.extend([

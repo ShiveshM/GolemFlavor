@@ -34,14 +34,14 @@ from utils import multinest as mn_utils
 def define_nuisance():
     """Define the nuisance parameters."""
     tag = ParamTag.SM_ANGLES
+    nuisance = []
     g_prior = PriorsCateg.GAUSSIAN
-    hg_prior = PriorsCateg.HALFGAUSS
     e = 1e-9
-    nuisance = [
-        Param(name='s_12_2', value=0.307,          seed=[0.26, 0.35],     ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2', prior=g_prior,  tag=tag),
-        Param(name='c_13_4', value=1-(0.02206)**2, seed=[0.995, 1-e],     ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=hg_prior, tag=tag),
-        Param(name='s_23_2', value=0.538,          seed=[0.31, 0.75],     ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2', prior=g_prior,  tag=tag),
-        Param(name='dcp',    value=4.08404,        seed=[0+e, 2*np.pi-e], ranges=[0., 2*np.pi], std=2.0,     tex=r'\delta_{CP}', tag=tag),
+    nuisance.extend([
+        Param(name='s_12_2', value=0.307,            seed=[0.26, 0.35],     ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2', prior=g_prior,  tag=tag),
+        Param(name='c_13_4', value=(1-(0.02206))**2, seed=[0.950, 0.961],   ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=g_prior, tag=tag),
+        Param(name='s_23_2', value=0.538,            seed=[0.31, 0.75],     ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2', prior=g_prior,  tag=tag),
+        Param(name='dcp',    value=4.08404,          seed=[0+e, 2*np.pi-e], ranges=[0., 2*np.pi], std=2.0,     tex=r'\delta_{CP}', tag=tag),
         Param(
             name='m21_2', value=7.40E-23, seed=[7.2E-23, 7.6E-23], ranges=[6.80E-23, 8.02E-23],
             std=2.1E-24, tex=r'\Delta m_{21}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag
@@ -50,7 +50,7 @@ def define_nuisance():
             name='m3x_2', value=2.494E-21, seed=[2.46E-21, 2.53E-21], ranges=[2.399E-21, 2.593E-21],
             std=3.3E-23, tex=r'\Delta m_{3x}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag
         )
-    ]
+    ])
     tag = ParamTag.NUISANCE
     nuisance.extend([
         Param(name='convNorm',        value=1.,  seed=[0.5, 2. ], ranges=[0. , 50.], std=0.3,  tag=tag),
@@ -173,10 +173,8 @@ def main():
         np.random.seed(args.seed)
 
     asimov_paramset, llh_paramset = get_paramsets(args, define_nuisance())
-    scale = llh_paramset.from_tag(ParamTag.SCALE)[0]
-    outfile = misc_utils.gen_outfile_name(args)
-    print '== {0:<25} = {1}'.format('outfile', outfile)
 
+    scale = llh_paramset.from_tag(ParamTag.SCALE)[0]
     mmangles = llh_paramset.from_tag(ParamTag.MMANGLES)
     if args.run_method is SensitivityCateg.FULL:
         st_paramset_arr = [llh_paramset.from_tag(ParamTag.SCALE, invert=True)]
@@ -246,7 +244,13 @@ def main():
             for idx_an, an in enumerate(scan_angles):
                 if args.run_method in corr_angles_categ:
                     for x in mmangles: x.value = 0.+1e-9
-                    mmangles[idx_scen].value = an
+                    angle = np.arcsin(np.sqrt(an))/2.
+                    if idx_scen == 0 or idx_scen == 2:
+                        mmangles[idx_scen].value = np.sin(angle)**2
+                        """s_12^2 or s_23^2"""
+                    elif idx_scen == 1:
+                        mmangles[idx_scen].value = np.cos(angle)**4
+                        """c_13^4"""
 
                 for idx_sc, sc in enumerate(scan_scales):
                     if args.sens_eval_bin is not None:
@@ -275,6 +279,7 @@ def main():
                             )
                         except:
                             print 'Failed run, continuing'
+                            # raise
                             continue
                         print '## Evidence = {0}'.format(stat)
                     elif args.stat_method is StatCateg.FREQUENTIST:
@@ -289,18 +294,27 @@ def main():
                                 llh_paramset=llh_paramset, fitter=fitter
                             )
                             # print 'llh_paramset', llh_paramset
-                            # print 'llh', llh
+                            # print '-llh', -llh
                             return -llh
 
                         n_params = len(sens_paramset)
-                        x0 = np.full(n_params, 0.7)
                         bounds = np.dstack([np.zeros(n_params), np.ones(n_params)])[0]
+                        x0_arr = np.linspace(0+1e-3, 1-1e-3, 3)
+                        stat = -np.inf
                         try:
-                            res = minimize(fun=fn, x0=x0, method='L-BFGS-B', bounds=bounds)
+                            for x0_v in x0_arr:
+                                x0 = np.full(n_params, x0_v)
+                                # res = minimize(fun=fn, x0=x0, method='Powell', tol=1e-3)
+                                res = minimize(fun=fn, x0=x0, method='Nelder-Mead', tol=1e-3)
+                                # res = minimize(fun=fn, x0=x0, method='L-BFGS-B', tol=1e-3, bounds=bounds)
+                                # res = minimize(fun=fn, x0=x0, method='BFGS', tol=1e-3)
+                                s = -fn(res.x)
+                                if s > stat:
+                                    stat = s
                         except AssertionError:
                             print 'Failed run, continuing'
+                            # raise
                             continue
-                        stat = -fn(res.x)
                         print '=== final llh', stat
                     if args.run_method is SensitivityCateg.FULL:
                         statistic_arr[idx_sc] = np.array([sc, stat])
@@ -323,7 +337,7 @@ def main():
         print 'Plotting statistic'
         if args.sens_run: raw = statistic_arr
         else: raw = np.load(out+'.npy')
-        data = ma.masked_invalid(raw, 0)
+        data = ma.masked_invalid(raw)
 
         basename = os.path.dirname(out) + '/statrun/' + os.path.basename(out)
         baseoutfile = basename[:5]+basename[5:].replace('data', 'plots')

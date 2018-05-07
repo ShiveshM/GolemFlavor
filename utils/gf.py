@@ -57,9 +57,14 @@ def steering_params(args):
     steering_categ = args.ast
     params = gf.SteeringParams()
     params.quiet = False
+    params.fastmode = True
     params.simToLoad= steering_categ.name.lower()
     params.evalThreads = args.threads
     # params.evalThreads = thread_factors(args.threads)[1]
+
+    # For Tianlu
+    # params.years = [999]
+
     return params
 
 

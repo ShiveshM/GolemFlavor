@@ -35,6 +35,7 @@ GLOBAL_PARAMS.update(dict(
 
 # FR
 dimension         = [3, 6]
+# dimension         = [4, 5, 7, 8]
 GLOBAL_PARAMS.update(dict(
     threads           = 1,
     binning           = '1e4 1e7 5',
@@ -44,7 +45,7 @@ GLOBAL_PARAMS.update(dict(
     spectral_index    = -2,
     fix_mixing        = 'False',
     fix_mixing_almost = 'False',
-    fold_index        = 'False'
+    fold_index        = 'True'
 ))
 
 # Likelihood
@@ -65,7 +66,7 @@ GLOBAL_PARAMS.update(dict(
     plot_elements     = 'False',
 ))
 
-outfile = 'dagman_FR_MCMC.submit'
+outfile = 'dagman_FR_MCMC_{0}.submit'.format(GLOBAL_PARAMS['likelihood'])
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/mcmc_submit.sub'
 
@@ -115,3 +116,5 @@ with open(outfile, 'w') as f:
                 f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
             f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outchains))
             job_number += 1
+
+    print 'dag file = {0}'.format(outfile)

@@ -16,7 +16,7 @@ import numpy as np
 from pymultinest import analyse, run
 
 from utils import likelihood
-from utils.misc import gen_outfile_name, make_dir
+from utils.misc import gen_identifier, make_dir
 
 
 def CubePrior(cube, ndim, n_params):
@@ -37,13 +37,15 @@ def lnProb(cube, ndim, n_params, mn_paramset, llh_paramset, asimov_paramset,
         llh_paramset[pm].value = mn_paramset[pm].value
     theta = llh_paramset.values
     # print 'llh_paramset', llh_paramset
-    return likelihood.ln_prob(
+    llh = likelihood.ln_prob(
         theta=theta,
         args=args,
         asimov_paramset=asimov_paramset,
         llh_paramset=llh_paramset,
         fitter=fitter
     )
+    # print 'llh', llh
+    return llh
 
 
 def mn_argparse(parser):
@@ -77,8 +79,8 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, fitter):
         fitter          = fitter
     )
 
-    prefix = './mnrun/DIM{0}/{1}_{2:>019}_'.format(
-        args.dimension, gen_outfile_name(args), np.random.randint(0, 2**63)
+    prefix = './mnrun/DIM{0}/{1}_{2:>010}_'.format(
+        args.dimension, gen_identifier(args), np.random.randint(0, 2**30)
     )
     make_dir(prefix)
     print 'Running evidence calculation for {0}'.format(prefix)

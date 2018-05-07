@@ -1,5 +1,5 @@
 Executable = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/fr.py
-Arguments = "--ast $(ast) --burnin $(burnin) --data $(data) --dimension $(dimension) --fix-mixing $(fix_mixing) --fix-source-ratio $(fix_source_ratio) --likelihood $(likelihood) --measured-ratio $(mr0) $(mr1) $(mr2) --no-bsm $(no_bsm) --nsteps $(nsteps) --nwalkers $(nwalkers) --outfile $(outfile) --plot-angles $(plot_angles) --plot-elements $(plot_elements) --run-mcmc $(run_mcmc) --scale-region $(scale_region) --seed $(seed) --sigma-ratio $(sigma_ratio) --source-ratio $(sr0) $(sr1) $(sr2) --threads $(threads) --energy-dependance $(energy_dependance) --spectral-index $(spectral_index) --binning $(binning) --fix-mixing-almost $(fix_mixing_almost) --fold-index $(fold_index)"
+Arguments = "--ast $(ast) --burnin $(burnin) --data $(data) --dimension $(dimension) --fix-mixing $(fix_mixing) --fix-source-ratio $(fix_source_ratio) --likelihood $(likelihood) --measured-ratio $(mr0) $(mr1) $(mr2) --no-bsm $(no_bsm) --nsteps $(nsteps) --nwalkers $(nwalkers) --outfile $(outfile) --plot-angles $(plot_angles) --plot-elements $(plot_elements) --run-mcmc $(run_mcmc) --scale-region $(scale_region) --seed $(seed) --sigma-ratio $(sigma_ratio) --source-ratio $(sr0) $(sr1) $(sr2) --threads $(threads) --energy-dependance $(energy_dependance) --spectral-index $(spectral_index) --binning $(binning) --fix-mixing-almost $(fix_mixing_almost) --fold-index $(fold_index) --mcmc-seed-type $(mcmc_seed_type)"
 
 # All logs will go to a single file 
 log    = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/logs/job_$(Cluster).log
@@ -16,7 +16,7 @@ getenv = True
 # +TransferOutput="" 
 Transfer_output_files = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/metaouts/
 
-request_memory = 2GB
+request_memory = 3GB
 request_cpus = 1
 
 Universe        = vanilla 
@@ -33,7 +33,7 @@ Notification    = never
 
 # Requirements = IS_GLIDEIN && HAS_CVMFS_icecube_opensciencegrid_org && (OpSysAndVer =?= "CentOS6" || OpSysAndVer =?= "RedHat6" || OpSysAndVer =?= "SL6")
 # Requirements = IS_GLIDEIN
-# Requirements = (OpSysMajorVer =?= 6)
+Requirements = (OpSysMajorVer =?= 6)
 
 # GO! 
 queue

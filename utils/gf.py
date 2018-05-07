@@ -94,7 +94,7 @@ def get_llh(fitter, params):
 
 
 def get_llh_freq(fitter, params):
-    print 'setting to {0}'.format(params)
+    # print 'setting to {0}'.format(params)
     fitparams = gf.FitParameters(gf.sampleTag.HESE)
     for parm in params:
         fitparams.__setattr__(parm.name, float(parm.value))

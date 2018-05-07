@@ -331,27 +331,30 @@ def main():
     if args.plot:
         print 'Plotting sensitivities'
 
-        basename = args.infile + '{0}/{1}'.format(args.likelihood, args.stat_method)
+        if args.likelihood in [Likelihood.GOLEMFIT, Likelihood.GF_FREQ]:
+            basename = args.infile + 'golemfit/{1}'.format(args.likelihood, args.stat_method)
+        elif args.likelihood is Likelihood.GAUSSIAN:
+            basename = args.infile + 'gaussian/{1}'.format(args.likelihood, args.stat_method)
         baseoutfile = basename[:5]+basename[5:].replace('data', 'plots')
 
         if args.run_method is SensitivityCateg.FULL:
             plot_utils.plot_sens_full(
                 data      = data,
-                outfile   = basename + '/FULL',
+                outfile   = baseoutfile + '/FULL',
                 outformat = ['png'],
                 args      = args,
             )
         elif args.run_method in fixed_angle_categ:
             plot_utils.plot_sens_fixed_angle(
                 data      = data,
-                outfile   = basename + '/FIXED_ANGLE',
+                outfile   = baseoutfile + '/FIXED_ANGLE',
                 outformat = ['png'],
                 args      = args,
             )
         elif args.run_method in corr_angles_categ:
             plot_utils.plot_sens_corr_angle(
                 data      = data,
-                outfile   = basename + '/CORR_ANGLE',
+                outfile   = baseoutfile + '/CORR_ANGLE',
                 outformat = ['png'],
                 args      = args,
             )

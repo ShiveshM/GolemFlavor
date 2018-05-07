@@ -175,7 +175,7 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
     elif args.likelihood is Likelihood.GOLEMFIT:
         llh = gf_utils.get_llh(fitter, hypo_paramset)
     elif args.likelihood is Likelihood.GF_FREQ:
-        lhh = gf_utils.get_llh_freq(fitter, hypo_paramset)
+        llh = gf_utils.get_llh_freq(fitter, hypo_paramset)
     return llh
 
 

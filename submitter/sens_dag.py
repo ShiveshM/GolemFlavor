@@ -24,11 +24,11 @@ fix_sfr_mfr = [
 GLOBAL_PARAMS = {}
 
 # Bayes Factor
-sens_eval_bin = 'all' # set to 'all' to run normally
+sens_eval_bin = 'true' # set to 'all' to run normally
 GLOBAL_PARAMS.update(dict(
     sens_run      = 'True',
-    run_method    = 'full', # full, fixed_angle, corr_angle
-    stat_method   = 'frequentist',
+    run_method    = 'fixed_angle', # full, fixed_angle, corr_angle
+    stat_method   = 'bayesian',
     sens_bins     = 40,
     seed          = 'None'
 ))
@@ -41,8 +41,8 @@ GLOBAL_PARAMS.update(dict(
 ))
 
 # FR
-# dimension         = [3, 6]
-dimension         = [4, 5, 7, 8]
+dimension         = [3, 6]
+# dimension         = [4, 5, 7, 8]
 # dimension         = [3, 4, 5, 6, 7, 8]
 GLOBAL_PARAMS.update(dict(
     threads           = 1,
@@ -58,7 +58,7 @@ GLOBAL_PARAMS.update(dict(
 
 # Likelihood
 GLOBAL_PARAMS.update(dict(
-    likelihood  = 'gaussian',
+    likelihood  = 'golemfit',
     sigma_ratio = '0.01'
 ))
 

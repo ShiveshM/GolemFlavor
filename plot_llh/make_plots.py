@@ -7,6 +7,7 @@ sys.path.append('/Users/Teps/Theory')
 #import anarchy_header as ah
 sys.path.append('/Users/Teps/Theory/HESE/Carlos')
 import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import rc, rcParams
 import MinimalTools as MT

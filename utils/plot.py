@@ -519,7 +519,7 @@ def plot_sens_corr_angle(data, outfile, outformat, args):
                 print sep_arrays
 
                 if args.stat_method is StatCateg.BAYESIAN:
-                    reduced_pdat_mask = (sep_arrays[2] > log(10**(3/2.))) # Strong degree of belief
+                    reduced_pdat_mask = (sep_arrays[2] > np.log(10**(3/2.))) # Strong degree of belief
                 elif args.stat_method is StatCateg.FREQUENTIST:
                     reduced_pdat_mask = (sep_arrays[2] > 4.61) # 90% CL for 2 DOFS via Wilks
                 reduced_pdat = sep_arrays.T[reduced_pdat_mask].T

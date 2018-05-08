@@ -61,9 +61,9 @@ for i in range(len(sys.argv)-1):
     print "Done loading data"
 
     if not use_same_canvas :
-        filename = "triangle_plot_"+os.path.splitext(sys.argv[i+1])[0]
+        filename = "triangle_plot_"+os.path.basename(sys.argv[i+1])[:-4]
     else :
-        filename = "triangle_plot"
+        filename = "triangle_plot"+os.path.basename(sys.argv[i+1])[:-4]
 
     # plots scale and diviions
     scale = 8

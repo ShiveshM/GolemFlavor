@@ -90,7 +90,8 @@ def MakeFlavorTriangle(list_of_flavor_ratios, scale = 8,
                        p = np.array([0.,0.]), save_file = False, PlotPoints = False, PlotTrayectories = False, figure = None, alpha = 1.0,
                        filename = "triangle",icolor = "green", icolormap = "Greens", divisions = 5, initial_flavor_ratio = [1,0,0],
                        term = "a", subdivisions = False, triangle_collection = None, color_scale = "lin", return_fig = True, addtext = "",
-                       add_default_text = True, ilw = 1., slw = 0.75, output_format = "eps", inner_line_color = "k", plot_color_bar = False):
+                       add_default_text = True, ilw = 1., slw = 0.75, output_format = "eps", inner_line_color = "k", plot_color_bar = False,
+                       levels=[0.68, 0.90]):
     # i will be nice ...
     list_of_flavor_ratios = np.array(list_of_flavor_ratios)
 
@@ -126,88 +127,64 @@ def MakeFlavorTriangle(list_of_flavor_ratios, scale = 8,
     # ax.text((p+s1*0.5 + 0.7*s0)[0], (p+s1*0.5 + 0.6*s0)[1]+0.05*scale,r"$\alpha^{\oplus}_{\mu}$",
     #             horizontalalignment="center",fontsize = 50, zorder = 10, rotation = -60)
 
-    ax.text((p+s0*0.5+s0*0.025)[0], (p+s0*0.5-np.array([0,0.15*scale]))[1],r"$f_{e,\oplus}$",
-                horizontalalignment="center",fontsize = 50, zorder = 10, rotation = 60.)
-    ax.text((p+s1*0.5-0.2*s0)[0], (p+s1*0.5+0.1*s0)[1]+scale*0.1,r"$f_{\tau, \oplus}$",
-                horizontalalignment="center",fontsize = 50, zorder = 10, rotation = -60.)
-    ax.text((p+s1*0.5 + 0.7*s0)[0], (p+s1*0.5 + 0.6*s0)[1]+0.05*scale,r"$f_{\mu, \oplus}$",
-                horizontalalignment="center",fontsize = 50, zorder = 10)
+    ax.text((p+s0*0.5+s0*0.025)[0], (p+s0*0.5-np.array([0,0.15*scale]))[1],r"$f_{e}^{\oplus}$",
+                horizontalalignment="center",fontsize = 40, zorder = 10) 
+    ax.text((p+s1*0.5-0.1*s0)[0], (p+s1*0.5 + 0.6*s0)[1]+0.05*scale,r"$f_{\tau}^{\oplus}$",
+                horizontalalignment="center",fontsize = 40, zorder = 10) 
+    ax.text((p+s1*0.5 + 0.6*s0)[0], (p+s1*0.5 + 0.6*s0)[1]+0.05*scale,r"$f_{\mu}^{\oplus}$",
+                horizontalalignment="center",fontsize = 40, zorder = 10) 
 
     # construct triangle grid
-    fsl = 35
+    fsl = 25
     for i in range(divisions+1):
         subsize = 1./float(divisions)
 
         ax.text((p+s0*subsize*float(i))[0], (p+s0*subsize*float(i)-np.array([0,0.05*scale]))[1],str(i*subsize),
-                horizontalalignment="center",fontsize = fsl)
-        plt.plot(*PointToList(p+s0*subsize*float(i), p+s1+s2*subsize*float(i)), color = inner_line_color, lw = ilw, ls = "dashed", zorder = -1)
+                horizontalalignment="center",fontsize = fsl, rotation=60.)
+        plt.plot(*PointToList(p+s0*subsize*float(i), p+s1+s2*subsize*float(i)), color = inner_line_color, lw = ilw, ls = "dashed", zorder = -1) 
         ax.text((p+s1-s1*subsize*float(i)-np.array([0.06*scale,0.0]))[0], (p+s1-s1*subsize*float(i))[1],str(i*subsize),
-                horizontalalignment="center",fontsize = fsl)
-        plt.plot(*PointToList(p+s0*subsize*float(divisions-i), p+s1-s1*subsize*float(i)), color = inner_line_color, lw = ilw, ls = "dashed", zorder = -1)
+                horizontalalignment="center",fontsize = fsl, rotation=-60.)
+        plt.plot(*PointToList(p+s0*subsize*float(divisions-i), p+s1-s1*subsize*float(i)), color = inner_line_color, lw = ilw, ls = "dashed", zorder = -1) 
 
         ax.text((p+s1+s2*subsize*float(i)+np.array([0.05*scale,0.0]))[0], (p+s1+s2*subsize*float(i))[1],str((divisions-i)*subsize),
                 horizontalalignment="center",fontsize = fsl)
-        plt.plot(*PointToList(p+s1*subsize*float(divisions-i), p+s1+s2*subsize*float(i)), color = inner_line_color, lw = ilw, ls = "dashed", zorder = -1)
+        plt.plot(*PointToList(p+s1*subsize*float(divisions-i), p+s1+s2*subsize*float(i)), color = inner_line_color, lw = ilw, ls = "dashed", zorder = -1) 
 
         if subdivisions and i < divisions:
-            plt.plot(*PointToList(p+s0*subsize*float(i+0.5), p+s1+s2*subsize*float(i+0.5)), color = inner_line_color, lw = slw, ls = "dotted", zorder = -1)
+            plt.plot(*PointToList(p+s0*subsize*float(i+0.5), p+s1+s2*subsize*float(i+0.5)), color = inner_line_color, lw = slw, ls = "dotted", zorder = -1) 
         if subdivisions and i > 0:
-            plt.plot(*PointToList(p+s0*subsize*float(divisions-(i-0.5)), p+s1-s1*subsize*float(i-0.5)), color = inner_line_color, lw = slw, ls = "dotted", zorder = -1)
-            plt.plot(*PointToList(p+s1*subsize*float(divisions-(i-0.5)), p+s1+s2*subsize*float(i-0.5)), color = inner_line_color, lw = slw, ls = "dotted", zorder = -1)
+            plt.plot(*PointToList(p+s0*subsize*float(divisions-(i-0.5)), p+s1-s1*subsize*float(i-0.5)), color = inner_line_color, lw = slw, ls = "dotted", zorder = -1) 
+            plt.plot(*PointToList(p+s1*subsize*float(divisions-(i-0.5)), p+s1+s2*subsize*float(i-0.5)), color = inner_line_color, lw = slw, ls = "dotted", zorder = -1) 
 
-    # chi2
-    if (triangle_collection != None):
-        total_points = float(sum([ triangle.number_of_points for triangle in triangle_collection]))
-        max_points = float(max([ triangle.number_of_points for triangle in triangle_collection]))
-        delta_llh = [-2*(np.log10(triangle.number_of_points) - np.log10(max_points)) for triangle in triangle_collection]
+    levels = np.array(sorted(levels) + [1.0001])
+
+    level_colors = np.linspace(1.0, 0.0, len(levels))
+
+    total_points = float(sum([ triangle.number_of_points for triangle in triangle_collection]))
+    max_points = float(max([ triangle.number_of_points for triangle in triangle_collection]))
+    triangle_collection = list(reversed(sorted(triangle_collection, key=lambda x: x.number_of_points)))
+    color_map = plt.get_cmap(icolormap)
+    color_i = 0
+
+    total_mass = 0.0
 
     # plot triangle collection
     if (triangle_collection != None):
         # get total number of points
-        total_points = float(sum([ triangle.number_of_points for triangle in triangle_collection]))
-        max_points = float(max([ triangle.number_of_points for triangle in triangle_collection]))
-        color_map = plt.get_cmap(icolormap)
-        for i_triangle, triangle in enumerate(triangle_collection):
+        for i,triangle in enumerate(triangle_collection):
+            print float(i) / float(len(triangle_collection)), color_i, level_colors[color_i]
+            total_mass += float(triangle.number_of_points) / float(total_points)
+            if total_mass > levels[color_i]:
+                print 'mass:', total_mass
+                color_i += 1
             if triangle.number_of_points > 0:
                 xx,yy = zip(*triangle.coordinates)
                 if color_scale == "lin":
-                    plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(0.75), alpha = np.sqrt(float(triangle.number_of_points)/max_points))
-                    #plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(float(triangle.number_of_points)/max_points), alpha = alpha)
+                    plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(0.75), alpha = level_colors[color_i])
                 elif color_scale == "log":
-                    # plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(0.75), alpha = (np.log10(float(triangle.number_of_points))/np.log10(max_points)))
-                    if delta_llh[i_triangle] > 2.30:
-                        plt.fill(xx,yy,lw = 0., zorder = -0.8, color = 'blue', alpha = np.sqrt(float(triangle.number_of_points)/max_points))
-                    else:
-                        plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(0.75), alpha = np.sqrt(float(triangle.number_of_points)/max_points))
-                    #plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(0.7), alpha = (np.log10(float(triangle.number_of_points))/np.log10(max_points))**(2./3.))
-                    #plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(np.log10(float(triangle.number_of_points))/np.log10(max_points)), alpha = alpha)
-                    #plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(np.log10(float(triangle.number_of_points))))
+                    plt.fill(xx,yy,lw = 0., zorder = -0.8, color = color_map(0.75), alpha = level_colors[color_i])
                 else : 
                     raise NameError('Error. Love CA.')
-
-        if(plot_color_bar):
-            # the color bar magic
-            # location set on 0 to 1 scales.
-            left = 0.1
-            bottom = -0.25
-            width = 0.8
-            height = 0.025
-            cbaxes = fig.add_axes([left,bottom,width,height])
-            if color_scale == "lin":
-                norm = mpl.colors.Normalize(vmin = 0., vmax = max_points)
-                label_format='%.0e'
-            elif color_scale == "log":
-                # norm = mpl.colors.Normalize(vmin = 0., vmax = 1.0)
-                norm = mpl.colors.LogNorm(vmin = 1., vmax = max_points)
-                label_format=None
-            else :
-                raise NameError('Error. Love CA.')
-            mpl.rcParams.update({'font.size': 10})
-            triangle_colorbar = mpl.colorbar.ColorbarBase(cbaxes, cmap = color_map, norm = norm,
-                                                          orientation = "horizontal", spacing = "proportional",
-							 # )
-                                                          format =label_format)
-            cbaxes.set_xlabel("Likelihood", fontsize = 12)
 
     # plot flavor ratio points
     if PlotTrayectories :
@@ -215,7 +192,7 @@ def MakeFlavorTriangle(list_of_flavor_ratios, scale = 8,
             for flavor_ratio_l in list_of_flavor_ratios:
                 flv_ratio_coords = map(lambda f:PointFromFlavor(p,scale,np.array(f)),flavor_ratio_l)
                 xc, yc = zip(*flv_ratio_coords)
-                plt.plot(xc,yc, color = icolor,
+                plt.plot(xc,yc, color = color_map(level_colors[color_i]),
                         ms = 10, linewidth = 4, zorder = 0)
         elif len(list_of_flavor_ratios.shape) == 2 :
             flv_ratio_coords = map(lambda f:PointFromFlavor(p,scale,np.array(f)),list_of_flavor_ratios)
@@ -234,7 +211,7 @@ def MakeFlavorTriangle(list_of_flavor_ratios, scale = 8,
                 icolor_ = icolor
             else:
                 icolor_ = icolor[i]
-            plt.plot(*PointFromFlavor(p,scale,np.array(flavor_ratio)), color = icolor_,
+            plt.plot(*PointFromFlavor(p,scale,np.array(flavor_ratio)), color = color_map(level_colors[color_i]),
                      marker = 'o', ms = 10, linewidth = 0,
                      markeredgecolor=None,markeredgewidth=0.1, zorder = 1000)
 

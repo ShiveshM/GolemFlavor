@@ -9,6 +9,7 @@ import sys
 
 import argparse
 import multiprocessing
+from fractions import gcd
 
 import numpy as np
 from scipy.stats import multivariate_normal

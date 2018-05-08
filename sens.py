@@ -237,6 +237,8 @@ def main():
                 if idx_scen == 0 or idx_scen == 2:
                     mmangles[idx_scen].value = np.sin(np.pi/4., dtype=DTYPE)**2
                     """s_12^2 or s_23^2"""
+                    mmangles[1].value = 1.
+                    """c_13^4"""
                 elif idx_scen == 1:
                     mmangles[idx_scen].value = np.cos(np.pi/4., dtype=DTYPE)**4
                     """c_13^4"""
@@ -248,6 +250,8 @@ def main():
                     if idx_scen == 0 or idx_scen == 2:
                         mmangles[idx_scen].value = np.sin(angle)**2
                         """s_12^2 or s_23^2"""
+                        mmangles[1].value = 1.
+                        """c_13^4"""
                     elif idx_scen == 1:
                         mmangles[idx_scen].value = np.cos(angle)**4
                         """c_13^4"""

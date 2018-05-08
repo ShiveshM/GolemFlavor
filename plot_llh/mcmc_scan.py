@@ -20,6 +20,11 @@ MEASURED_FR = [1, 1, 1]
 SIGMA = 0.001
 
 
+def solve_ratio(fr):
+    denominator = reduce(gcd, fr)
+    return [int(x/denominator) for x in fr]
+
+
 def angles_to_fr(angles):
     sphi4, c2psi = angles
 
@@ -145,8 +150,9 @@ def main():
         pass
     print "Finished"
 
-    outfile = args.outfile+'_{0:03d}_{1:03d}_{2:03d}_{3:.1E}'.format(
-            int(MEASURED_FR[0]*100), int(MEASURED_FR[1]*100), int(MEASURED_FR[2]*100), SIGMA
+    mr = solve_ratio(MEASURED_FR)
+    outfile = args.outfile+'_{0}_{1}_{2}_{3:.1E}'.format(
+            mr[0], mr[1], mr[2], SIGMA
     )
 
     samples = sampler.chain[0, :, :, :].reshape((-1, ndim))

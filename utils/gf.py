@@ -55,7 +55,8 @@ def fit_flags(llh_paramset):
 
 def steering_params(args):
     steering_categ = args.ast
-    params = gf.SteeringParams()
+    # params = gf.SteeringParams(gf.sampleTag.HESE)
+    params = gf.SteeringParams(gf.sampleTag.MagicTau)
     params.quiet = False
     params.fastmode = True
     params.simToLoad= steering_categ.name.lower()
@@ -65,12 +66,15 @@ def steering_params(args):
     # For Tianlu
     # params.years = [999]
 
+    params.minFitEnergy = 1.0e5 # GeV
+
     return params
 
 
 def set_up_as(fitter, params):
     print 'Injecting the model', params
-    asimov_params = gf.FitParameters(gf.sampleTag.HESE)
+    # asimov_params = gf.FitParameters(gf.sampleTag.HESE)
+    asimov_params = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         asimov_params.__setattr__(parm.name, float(parm.value))
     fitter.SetupAsimov(asimov_params)
@@ -81,12 +85,14 @@ def setup_fitter(args, asimov_paramset):
     sparams = steering_params(args)
     npp = gf.NewPhysicsParams()
     fitter = gf.GolemFit(datapaths, sparams, npp)
-    set_up_as(fitter, asimov_paramset)
+    # comment to use data
+    # set_up_as(fitter, asimov_paramset)
     return fitter
 
 
 def get_llh(fitter, params):
-    fitparams = gf.FitParameters(gf.sampleTag.HESE)
+    # fitparams = gf.FitParameters(gf.sampleTag.HESE)
+    fitparams = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         fitparams.__setattr__(parm.name, float(parm.value))
     llh = -fitter.EvalLLH(fitparams)
@@ -95,7 +101,8 @@ def get_llh(fitter, params):
 
 def get_llh_freq(fitter, params):
     print 'setting to {0}'.format(params)
-    fitparams = gf.FitParameters(gf.sampleTag.HESE)
+    # fitparams = gf.FitParameters(gf.sampleTag.HESE)
+    fitparams = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         fitparams.__setattr__(parm.name, float(parm.value))
     fitter.SetFitParametersSeed(fitparams)

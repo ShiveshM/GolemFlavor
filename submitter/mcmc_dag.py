@@ -34,11 +34,11 @@ GLOBAL_PARAMS.update(dict(
 ))
 
 # FR
-dimension         = [3, 6]
+dimension         = [3]
 # dimension         = [4, 5, 7, 8]
 GLOBAL_PARAMS.update(dict(
     threads           = 1,
-    binning           = '1e4 1e7 5',
+    binning           = '6e4 1e7 5',
     no_bsm            = 'False',
     scale_region      = "1E10",
     energy_dependance = 'spectral',

@@ -313,8 +313,8 @@ def plot_sens_full(data, outfile, outformat, args):
             null = statistic[min_idx]
             if args.stat_method is StatCateg.BAYESIAN:
                 reduced_ev = -(statistic - null)
-                # al = scales[reduced_ev > np.log(10**(3/2.))] # Strong degree of belief
-                al = scales[reduced_ev > 0.4] # Testing
+                al = scales[reduced_ev > np.log(10**(3/2.))] # Strong degree of belief
+                # al = scales[reduced_ev > 0.4] # Testing
             elif args.stat_method is StatCateg.FREQUENTIST:
                 reduced_ev = -2*(statistic - null)
                 al = scales[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
@@ -360,7 +360,8 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
     print 'Making FIXED_ANGLE sensitivity plot'
 
     colour = {0:'red', 1:'blue', 2:'green', 3:'purple', 4:'orange', 5:'black'}
-    xticks = [r'$\mathcal{O}_{12}$', r'$\mathcal{O}_{13}$', r'$\mathcal{O}_{23}$']
+    # xticks = [r'$\mathcal{O}_{12}$', r'$\mathcal{O}_{13}$', r'$\mathcal{O}_{23}$']
+    xticks = [r'$\mathcal{O}_{e\mu}$', r'$\mathcal{O}_{e\tau}$', r'$\mathcal{O}_{\mu\tau}$']
     argsc = deepcopy(args)
     for idim in xrange(len(data)):
         dim = args.dimensions[idim]
@@ -390,6 +391,7 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                 if args.stat_method is StatCateg.BAYESIAN:
                     reduced_ev = -(statistic - null)
                     al = scales[reduced_ev > np.log(10**(3/2.))] # Strong degree of belief
+                    # al = scales[reduced_ev > np.log(10**(1/2.))]
                 elif args.stat_method is StatCateg.FREQUENTIST:
                     reduced_ev = -2*(statistic - null)
                     al = scales[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
@@ -403,7 +405,8 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                 print 'limit = {0}'.format(lim)
                 label = '[{0}, {1}, {2}]'.format(*misc_utils.solve_ratio(src))
                 if lim < yranges[0]: yranges[0] = lim
-                if lim > yranges[1]: yranges[1] = lim+4
+                # if lim > yranges[1]: yranges[1] = lim+5
+                if lim > yranges[1]: yranges[1] = lim
                 line = plt.Line2D(
                     (ian+1-0.1, ian+1+0.1), (lim, lim), lw=3, color=colour[isrc], label=label
                 )
@@ -417,7 +420,7 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                 )
 
         try:
-            yranges = (myround(yranges[0], up=True), myround(yranges[1], down=True))
+            # yranges = (myround(yranges[0], up=True), myround(yranges[1], down=True))
             ax.set_ylim(yranges)
         except: pass
 
@@ -432,7 +435,6 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
         for of in outformat:
             print 'Saving plot as {0}'.format(out+'.'+of)
             fig.savefig(out+'.'+of, bbox_inches='tight', dpi=150)
-
 
         for ymaj in ax.yaxis.get_majorticklocs():
             ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.4, linewidth=1)

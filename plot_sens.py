@@ -145,6 +145,10 @@ def parse_args(args=None):
         help='Make sensitivity plots'
     )
     parser.add_argument(
+        '--data', type=misc_utils.parse_bool, default='False',
+        help='Use HESE7 data'
+    )
+    parser.add_argument(
         '--plot-statistic', type=misc_utils.parse_bool, default='False',
         help='Plot MultiNest evidence or LLH value'
     )
@@ -227,6 +231,7 @@ def main():
                 infile += '/golemfit/'
             elif args.likelihood is Likelihood.GAUSSIAN:
                 infile += '/gaussian/'
+            # infile += '/DIM{0}/fix_ifr/HESESim'.format(dim)
             infile += '/DIM{0}/fix_ifr/'.format(dim)
             if args.likelihood is Likelihood.GAUSSIAN:
                 infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
@@ -273,6 +278,7 @@ def main():
             argsc.dimension = dim
             _, scale_region = fr_utils.estimate_scale(argsc)
             argsc.scale_region = scale_region
+            # infile = base_infile + '/DIM{0}/fix_ifrHESESim/'.format(dim)
             infile = base_infile + '/DIM{0}/fix_ifr/'.format(dim)
             if args.likelihood is Likelihood.GAUSSIAN:
                 infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
@@ -282,8 +288,11 @@ def main():
                 argsc.source_ratio = src
                 finfile = infile +'/{0}/{1}/fr_stat'.format(args.stat_method, args.run_method) \
                     + misc_utils.gen_identifier(argsc)
-                basename = os.path.dirname(finfile) + '/statrun/' + os.path.basename(finfile)
+                basename = os.path.dirname(finfile) + '/statrun/'
                 baseoutfile = basename[:5]+basename[5:].replace('data', 'plots')
+                if args.data:
+                    baseoutfile += '/data/'
+                baseoutfile += os.path.basename(finfile)
                 if args.run_method is SensitivityCateg.FULL:
                     outfile = baseoutfile
                     plot_utils.plot_statistic(
@@ -331,11 +340,12 @@ def main():
     if args.plot:
         print 'Plotting sensitivities'
 
+        basename = args.infile[:5]+args.infile[5:].replace('data', 'plots')
         if args.likelihood in [Likelihood.GOLEMFIT, Likelihood.GF_FREQ]:
-            basename = args.infile + 'golemfit/{1}'.format(args.likelihood, args.stat_method)
+            baseoutfile = basename + 'golemfit/{1}'.format(args.likelihood, args.stat_method)
+            if args.data: baseoutfile += '/data'
         elif args.likelihood is Likelihood.GAUSSIAN:
-            basename = args.infile + 'gaussian/{1}'.format(args.likelihood, args.stat_method)
-        baseoutfile = basename[:5]+basename[5:].replace('data', 'plots')
+            baseoutfile = basename + 'gaussian/{1}'.format(args.likelihood, args.stat_method)
 
         if args.run_method is SensitivityCateg.FULL:
             plot_utils.plot_sens_full(

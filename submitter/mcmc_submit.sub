@@ -22,6 +22,7 @@ request_cpus = 1
 Universe        = vanilla 
 Notification    = never 
 
++AccountingGroup="sanctioned.$ENV(USER)"
 # run on both SL5 and 6
 # +WantRHEL6 = True
 # +WantSLC6 = False

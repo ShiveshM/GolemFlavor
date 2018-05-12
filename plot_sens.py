@@ -232,7 +232,8 @@ def main():
             elif args.likelihood is Likelihood.GAUSSIAN:
                 infile += '/gaussian/'
             # infile += '/DIM{0}/fix_ifr/HESESim'.format(dim)
-            infile += '/DIM{0}/fix_ifr/'.format(dim)
+            # infile += '/DIM{0}/fix_ifr/'.format(dim)
+            infile += '/DIM{0}/fix_ifr/data'.format(dim)
             if args.likelihood is Likelihood.GAUSSIAN:
                 infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
             infile += 'fr_stat/{0}/{1}/fr_stat'.format(args.stat_method, args.run_method) \
@@ -279,7 +280,8 @@ def main():
             _, scale_region = fr_utils.estimate_scale(argsc)
             argsc.scale_region = scale_region
             # infile = base_infile + '/DIM{0}/fix_ifrHESESim/'.format(dim)
-            infile = base_infile + '/DIM{0}/fix_ifr/'.format(dim)
+            # infile = base_infile + '/DIM{0}/fix_ifr/'.format(dim)
+            infile = base_infile + '/DIM{0}/fix_ifr/data'.format(dim)
             if args.likelihood is Likelihood.GAUSSIAN:
                 infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
             infile += 'fr_stat/'

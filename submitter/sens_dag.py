@@ -77,8 +77,8 @@ GLOBAL_PARAMS.update(dict(
 outfile = 'dagman_FR_SENS_{0}_{1}_{2}_sim.submit'.format(
     GLOBAL_PARAMS['stat_method'], GLOBAL_PARAMS['run_method'], GLOBAL_PARAMS['likelihood']
 )
-golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
-condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/sens_submit.sub'
+
+condor_script = '/home/users/smandalia/flavour_ratio/submitter/sens_submit.sub'
 
 if sens_eval_bin.lower() != 'all':
     if GLOBAL_PARAMS['run_method'].lower() == 'corr_angle':
@@ -91,7 +91,7 @@ with open(outfile, 'w') as f:
     job_number = 1
     for dim in dimension:
         print 'dimension', dim
-        outchain_head = '/data/user/smandalia/flavour_ratio/data/{0}/DIM{1}'.format(
+        outchain_head = '/home/users/smandalia/data/{0}/DIM{1}'.format(
             GLOBAL_PARAMS['likelihood'], dim
         )
         for frs in fix_sfr_mfr:

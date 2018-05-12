@@ -41,13 +41,14 @@ GLOBAL_PARAMS.update(dict(
 ))
 
 # FR
-dimension         = [6]
-# dimension         = [3, 6]
+# dimension         = [3]
+dimension         = [3, 6]
 # dimension         = [4, 5, 7, 8]
 # dimension         = [3, 4, 5, 6, 7, 8]
 GLOBAL_PARAMS.update(dict(
     threads           = 1,
-    binning           = '6e4 1e7 5',
+    # binning           = '6e4 1e7 5',
+    binning           = '1e5 1e7 5',
     no_bsm            = 'False',
     scale_region      = "1E10",
     energy_dependance = 'spectral',
@@ -74,7 +75,7 @@ GLOBAL_PARAMS.update(dict(
     plot_statistic = 'True'
 ))
 
-outfile = 'dagman_FR_SENS_{0}_{1}_{2}_sim.submit'.format(
+outfile = 'dagman_FR_SENS_{0}_{1}_{2}_data_100TeV.submit'.format(
     GLOBAL_PARAMS['stat_method'], GLOBAL_PARAMS['run_method'], GLOBAL_PARAMS['likelihood']
 )
 
@@ -98,8 +99,9 @@ with open(outfile, 'w') as f:
             print 'frs', frs
             # output = outchain_head + '/fix_ifr/'
             # output = outchain_head + '/fix_ifr/HESESim'
-            output = outchain_head + '/fix_ifr/sim'
+            # output = outchain_head + '/fix_ifr/sim'
             # output = outchain_head + '/fix_ifr/data'
+            output = outchain_head + '/fix_ifr/data/100TeV/'
             if GLOBAL_PARAMS['likelihood'].lower() == 'gaussian':
                 output += '{0}/'.format(str(GLOBAL_PARAMS['sigma_ratio']).replace('.', '_'))
             output += 'fr_stat'

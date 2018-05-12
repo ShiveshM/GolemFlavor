@@ -405,8 +405,8 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                 print 'limit = {0}'.format(lim)
                 label = '[{0}, {1}, {2}]'.format(*misc_utils.solve_ratio(src))
                 if lim < yranges[0]: yranges[0] = lim
-                # if lim > yranges[1]: yranges[1] = lim+5
-                if lim > yranges[1]: yranges[1] = lim
+                if lim > yranges[1]: yranges[1] = lim+5
+                # if lim > yranges[1]: yranges[1] = lim
                 line = plt.Line2D(
                     (ian+1-0.1, ian+1+0.1), (lim, lim), lw=3, color=colour[isrc], label=label
                 )
@@ -420,7 +420,7 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                 )
 
         try:
-            # yranges = (myround(yranges[0], up=True), myround(yranges[1], down=True))
+            yranges = (myround(yranges[0], up=True), myround(yranges[1], down=True))
             ax.set_ylim(yranges)
         except: pass
 

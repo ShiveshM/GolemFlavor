@@ -11,9 +11,8 @@ from enum import Enum
 
 
 class DataType(Enum):
-    REAL    = 1
-    FAKE    = 2
-    ASMIMOV = 3
+    REAL   = 1
+    ASIMOV = 2
 
 
 class EnergyDependance(Enum):

@@ -140,16 +140,16 @@ def cardano_eqn(ham):
         )
 
     a = -np.trace(ham)
-    b = (0.5) * ((np.trace(ham))**2 - np.trace(np.dot(ham, ham)))
+    b = DTYPE(1)/2 * ((np.trace(ham))**DTYPE(2) - np.trace(np.dot(ham, ham)))
     c = -np.linalg.det(ham)
 
-    Q = (1/9.) * (a**2 - 3*b)
-    R = (1/54.) * (2*a**3 - 9*a*b + 27*c)
-    theta = np.arccos(R / np.sqrt(Q**3))
+    Q = (DTYPE(1)/9) * (a**DTYPE(2) - DTYPE(3)*b)
+    R = (DTYPE(1)/54) * (DTYPE(2)*a**DTYPE(3) - DTYPE(9)*a*b + DTYPE(27)*c)
+    theta = np.arccos(R / np.sqrt(Q**DTYPE(3)))
 
-    E1 = -2 * np.sqrt(Q) * np.cos(theta/3.) - (1/3.)*a
-    E2 = -2 * np.sqrt(Q) * np.cos((theta - 2.*PI)/3.) - (1/3.)*a
-    E3 = -2 * np.sqrt(Q) * np.cos((theta + 2.*PI)/3.) - (1/3.)*a
+    E1 = -DTYPE(2) * np.sqrt(Q) * np.cos(theta/DTYPE(3)) - (DTYPE(1)/3)*a
+    E2 = -DTYPE(2) * np.sqrt(Q) * np.cos((theta - DTYPE(2)*PI)/DTYPE(3)) - (DTYPE(1)/3)*a
+    E3 = -DTYPE(2) * np.sqrt(Q) * np.cos((theta + DTYPE(2)*PI)/DTYPE(3)) - (DTYPE(1)/3)*a
 
     A1 = ham[1][2] * (ham[0][0] - E1) - ham[1][0]*ham[0][2]
     A2 = ham[1][2] * (ham[0][0] - E2) - ham[1][0]*ham[0][2]
@@ -383,7 +383,7 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
     mass_matrix = np.array(
         [[0, 0, 0], [0, mass_eigenvalues[0], 0], [0, 0, mass_eigenvalues[1]]]
     )
-    sm_ham = (1./(2*energy))*np.dot(sm_u, np.dot(mass_matrix, sm_u.conj().T))
+    sm_ham = (1./(2*energy))*np.matmul(sm_u, np.matmul(mass_matrix, sm_u.conj().T))
     if no_bsm:
         eg_vector = cardano_eqn(sm_ham)
     else:
@@ -391,23 +391,16 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
         scale_matrix = np.array(
             [[0, 0, 0], [0, sc1, 0], [0, 0, sc2]]
         )
-        bsm_term = (energy**(dim-3)) * np.dot(new_physics_u, np.dot(scale_matrix, new_physics_u.conj().T))
-
+        bsm_term = (energy**(dim-3)) * np.matmul(new_physics_u, np.matmul(scale_matrix, new_physics_u.conj().T))
         bsm_ham = sm_ham + bsm_term
         eg_vector = cardano_eqn(bsm_ham)
 
     if check_uni:
-        tu = test_unitarity(eg_vector)
-        if not np.abs(np.trace(tu) - 3.) < epsilon or \
-           not np.abs(np.sum(tu) - 3.) < epsilon:
-            raise AssertionError(
-                'Matrix is not unitary!\neg_vector\n{0}\ntest '
-                'u\n{1}'.format(eg_vector, tu)
-            )
+        test_unitarity(eg_vector, rse=True, epsilon=epsilon)
     return eg_vector
 
 
-def test_unitarity(x, prnt=False):
+def test_unitarity(x, prnt=False, rse=False, epsilon=None):
     """Test the unitarity of a matrix.
 
     Parameters
@@ -417,6 +410,9 @@ def test_unitarity(x, prnt=False):
 
     prnt : bool
         Print the result
+
+    rse : bool
+        Raise Assertion if matrix is not unitary
 
     Returns
     ----------
@@ -435,6 +431,13 @@ def test_unitarity(x, prnt=False):
     f = np.abs(np.dot(x, x.conj().T), dtype=DTYPE)
     if prnt:
         print 'Unitarity test:\n{0}'.format(f)
+    if rse:
+        if not np.abs(np.trace(f) - 3.) < epsilon or \
+           not np.abs(np.sum(f) - 3.) < epsilon:
+            raise AssertionError(
+                'Matrix is not unitary!\nx\n{0}\ntest '
+                'u\n{1}'.format(x, f)
+            )
     return f
 
 

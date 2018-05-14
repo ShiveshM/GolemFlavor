@@ -32,9 +32,10 @@ Notification    = never
 
 # +TransferOutput=""
 
++NATIVE_OS = True
 # Requirements = IS_GLIDEIN && HAS_CVMFS_icecube_opensciencegrid_org && (OpSysAndVer =?= "CentOS6" || OpSysAndVer =?= "RedHat6" || OpSysAndVer =?= "SL6")
 # Requirements = IS_GLIDEIN
-Requirements = (OpSysMajorVer =?= 6)
+# Requirements = (OpSysMajorVer =?= 6)
 
 # GO! 
 queue

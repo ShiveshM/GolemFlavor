@@ -38,7 +38,7 @@ dimension         = [3]
 # dimension         = [4, 5, 7, 8]
 GLOBAL_PARAMS.update(dict(
     threads           = 1,
-    binning           = '6e4 1e7 5',
+    binning           = '6e4 1e7 20',
     no_bsm            = 'False',
     scale_region      = "1E10",
     energy_dependance = 'spectral',
@@ -57,7 +57,7 @@ GLOBAL_PARAMS.update(dict(
 # GolemFit
 GLOBAL_PARAMS.update(dict(
     ast  = 'p2_0',
-    data = 'real'
+    data = 'asimov'
 ))
 
 # Plot
@@ -82,6 +82,7 @@ with open(outfile, 'w') as f:
             outchains = outchain_head + '/fix_ifr/'
             if GLOBAL_PARAMS['likelihood'].lower() == 'gaussian':
                 outchains += '{0}/'.format(str(GLOBAL_PARAMS['sigma_ratio']).replace('.', '_'))
+            outchains += '{0}/'.format(GLOBAL_PARAMS['data'].lower())
             outchains += 'mcmc_chain'
             f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))
             f.write('VARS\tjob{0}\tdimension="{1}"\n'.format(job_number, dim))

@@ -207,8 +207,9 @@ def main():
         eval_dim = args.sens_bins
     else: eval_dim = 1
 
-    out = args.outfile+'/{0}/{1}/fr_stat'.format(args.stat_method, args.run_method) \
-        + misc_utils.gen_identifier(args)
+    out = args.outfile+'/{0}/{1}/{2}/fr_stat'.format(
+        *map(misc_utils.parse_enum, [args.stat_method, args.run_method, args.data])
+    ) + misc_utils.gen_identifier(args)
     if args.sens_run:
         if args.likelihood in [Likelihood.GOLEMFIT, Likelihood.GF_FREQ]:
             fitter = gf_utils.setup_fitter(args, asimov_paramset)

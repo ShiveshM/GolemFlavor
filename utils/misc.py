@@ -106,6 +106,10 @@ def parse_bool(s):
         raise ValueError
 
 
+def parse_enum(e):
+    return '{0}'.format(e).split('.')[1].lower()
+
+
 def print_args(args):
     """Print the input arguments.
 

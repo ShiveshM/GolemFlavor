@@ -55,7 +55,6 @@ def fit_flags(llh_paramset):
 
 def steering_params(args):
     steering_categ = args.ast
-    # params = gf.SteeringParams(gf.sampleTag.HESE)
     params = gf.SteeringParams(gf.sampleTag.MagicTau)
     params.quiet = False
     params.fastmode = True
@@ -66,14 +65,13 @@ def steering_params(args):
     # For Tianlu
     # params.years = [999]
 
-    params.minFitEnergy = 1.0e5 # GeV
+    # params.minFitEnergy = 1.0e5 # GeV
 
     return params
 
 
 def set_up_as(fitter, params):
     print 'Injecting the model', params
-    # asimov_params = gf.FitParameters(gf.sampleTag.HESE)
     asimov_params = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         asimov_params.__setattr__(parm.name, float(parm.value))
@@ -85,13 +83,14 @@ def setup_fitter(args, asimov_paramset):
     sparams = steering_params(args)
     npp = gf.NewPhysicsParams()
     fitter = gf.GolemFit(datapaths, sparams, npp)
-    # comment to use data
-    # set_up_as(fitter, asimov_paramset)
+    if args.data is DataType.ASIMOV:
+        set_up_as(fitter, asimov_paramset)
+    elif args.data is DataType.REAL:
+        print 'Using MagicTau DATA'
     return fitter
 
 
 def get_llh(fitter, params):
-    # fitparams = gf.FitParameters(gf.sampleTag.HESE)
     fitparams = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         fitparams.__setattr__(parm.name, float(parm.value))
@@ -101,7 +100,6 @@ def get_llh(fitter, params):
 
 def get_llh_freq(fitter, params):
     print 'setting to {0}'.format(params)
-    # fitparams = gf.FitParameters(gf.sampleTag.HESE)
     fitparams = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         fitparams.__setattr__(parm.name, float(parm.value))
@@ -118,7 +116,7 @@ def data_distributions(fitter):
 
 def gf_argparse(parser):
     parser.add_argument(
-        '--data', default='real', type=partial(enum_parse, c=DataType),
+        '--data', default='asimov', type=partial(enum_parse, c=DataType),
         choices=DataType, help='select datatype'
     )
     parser.add_argument(

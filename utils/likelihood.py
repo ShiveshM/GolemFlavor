@@ -146,7 +146,7 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
             u = fr_utils.params_to_BSMu(
                 theta             = bsm_angles,
                 dim               = args.dimension,
-                energy            = args.energy,
+                energy            = bin_centers[i_sf],
                 mass_eigenvalues  = mass_eigenvalues,
                 sm_u              = sm_u,
                 no_bsm            = args.no_bsm,

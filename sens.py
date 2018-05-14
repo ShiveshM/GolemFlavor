@@ -11,6 +11,9 @@ HESE BSM flavour ratio analysis script
 from __future__ import absolute_import, division
 
 import os
+import sys
+sys.path.append("/home/users/smandalia/flavour_ratio/")
+
 import argparse
 from functools import partial
 

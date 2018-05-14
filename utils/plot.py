@@ -18,6 +18,7 @@ mpl.use('Agg')
 from matplotlib import rc
 from matplotlib import pyplot as plt
 from matplotlib.offsetbox import AnchoredText
+import matplotlib.patches as patches
 
 from getdist import plots, mcsamples
 
@@ -230,7 +231,7 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset):
             g.export(outfile+'_elements.'+of)
 
 
-def myround(x, base=5, up=False, down=False):
+def myround(x, base=1, up=False, down=False):
     if up == down and up is True: assert 0
     if up: return int(base * np.round(float(x)/base-0.5))
     elif down: return int(base * np.round(float(x)/base+0.5))
@@ -368,7 +369,8 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
         print '= dim', dim
         argsc.dimension = dim
 
-        yranges = [np.inf, -np.inf]
+        # yranges = [np.inf, -np.inf]
+        yranges = None
         legend_handles = []
 
         fig = plt.figure(figsize=(7, 5))
@@ -404,9 +406,10 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                 lim = al[0]
                 print 'limit = {0}'.format(lim)
                 label = '[{0}, {1}, {2}]'.format(*misc_utils.solve_ratio(src))
-                if lim < yranges[0]: yranges[0] = lim
-                if lim > yranges[1]: yranges[1] = lim+5
+                # if lim < yranges[0]: yranges[0] = lim
+                # if lim > yranges[1]: yranges[1] = lim+5
                 # if lim > yranges[1]: yranges[1] = lim
+                if yranges is None: yranges = (np.min(scales), np.max(scales))
                 line = plt.Line2D(
                     (ian+1-0.1, ian+1+0.1), (lim, lim), lw=3, color=colour[isrc], label=label
                 )
@@ -415,12 +418,14 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                     legend_handles.append(line)
                 x_offset = isrc*0.05 - 0.05
                 ax.annotate(
-                    s='', xy=(ian+1+x_offset, lim), xytext=(ian+1+x_offset, lim+3),
+                    s='', xy=(ian+1+x_offset, lim), xytext=(ian+1+x_offset, lim+int(dim/3)),
                     arrowprops={'arrowstyle': '<-', 'lw': 1.2, 'color':colour[isrc]}
                 )
 
         try:
-            yranges = (myround(yranges[0], up=True), myround(yranges[1], down=True))
+            yranges = [myround(yranges[0], up=True), myround(yranges[1], down=True)]
+            if dim == 3 and yranges[0] < -26: yranges[0] = -26
+            if dim == 6 and yranges[0] < -40: yranges[0] = -40
             ax.set_ylim(yranges)
         except: pass
 
@@ -429,6 +434,17 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
             ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.4, linewidth=1)
         for xmaj in ax.xaxis.get_majorticklocs():
             ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.4, linewidth=1)
+
+        # if dim == 3:
+        #     # limit is 2E-24
+        #     ax.add_patch(patches.Rectangle(
+        #         (3-0.2, -40), 0.4, 16.301, hatch='/', alpha=0.4
+        #     ))
+        # elif dim == 6:
+        #     # limit is 9.1E-37
+        #     ax.add_patch(patches.Rectangle(
+        #         (3-0.2, -60), 0.4, 23.9590, hatch='/', alpha=0.4
+        #     ))
 
         out = outfile + '_DIM{0}'.format(dim)
         misc_utils.make_dir(out)

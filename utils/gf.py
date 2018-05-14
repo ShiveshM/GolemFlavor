@@ -66,7 +66,8 @@ def steering_params(args):
     # For Tianlu
     # params.years = [999]
 
-    params.minFitEnergy = 1.0e5 # GeV
+    # params.minFitEnergy = 1.0e5 # GeV
+    # params.minFitEnergy = 6.0e4 # GeV
 
     return params
 
@@ -86,7 +87,7 @@ def setup_fitter(args, asimov_paramset):
     npp = gf.NewPhysicsParams()
     fitter = gf.GolemFit(datapaths, sparams, npp)
     # comment to use data
-    # set_up_as(fitter, asimov_paramset)
+    set_up_as(fitter, asimov_paramset)
     return fitter
 
 

@@ -19,6 +19,7 @@ import numpy as np
 import numpy.ma as ma
 
 from utils import fr as fr_utils
+from utils import gf as gf_utils
 from utils import likelihood as llh_utils
 from utils import misc as misc_utils
 from utils import plot as plot_utils
@@ -27,6 +28,18 @@ from utils.enums import PriorsCateg, SensitivityCateg, StatCateg
 from utils.param import Param, ParamSet, get_paramsets
 
 from utils import multinest as mn_utils
+
+import matplotlib as mpl
+print mpl.rcParams.keys()
+mpl.rcParams['text.usetex'] = True
+# mpl.rcParams['text.latex.unicode'] = True
+# mpl.rcParams['text.latex.preamble'] = r'\usepackage{cmbright}'
+mpl.rcParams['font.family'] = 'sans-serif'
+# mpl.rcParams['font.sans-serif'] = 'DejaVu Sans'
+# mpl.rcParams['mathtext.fontset'] = 'stixsans'
+# mpl.rcParams['mathtext.rm'] = 'DejaVu Sans'
+# mpl.rcParams['mathtext.it'] = 'DejaVu Sans:italic'
+# mpl.rcParams['mathtext.bf'] = 'DejaVu Sans:bold'
 
 
 def define_nuisance():
@@ -149,6 +162,7 @@ def parse_args(args=None):
         help='Plot MultiNest evidence or LLH value'
     )
     fr_utils.fr_argparse(parser)
+    gf_utils.gf_argparse(parser)
     llh_utils.likelihood_argparse(parser)
     mn_utils.mn_argparse(parser)
     nuisance_argparse(parser)
@@ -229,8 +243,8 @@ def main():
                 infile += '/gaussian/'
             if args.likelihood is Likelihood.GAUSSIAN:
                 infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
-            infile += '/{0}/{1}/{2}/fr_stat'.format(
-                *map(misc_utils.parse_enum, [args.stat_method, args.run_method, args.data])
+            infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/fr_stat'.format(
+                dim, *map(misc_utils.parse_enum, [args.stat_method, args.run_method, args.data])
             ) + misc_utils.gen_identifier(argsc)
             print '== {0:<25} = {1}'.format('infile', infile)
 
@@ -264,28 +278,27 @@ def main():
         print 'Plotting statistic'
 
         argsc = deepcopy(args)
-        base_infile = args.infile
-        if args.likelihood is Likelihood.GOLEMFIT:
-            base_infile += '/golemfit/'
-        elif args.likelihood is Likelihood.GAUSSIAN:
-            base_infile += '/gaussian/'
         for idim, dim in enumerate(args.dimensions):
             argsc.dimension = dim
             _, scale_region = fr_utils.estimate_scale(argsc)
             argsc.scale_region = scale_region
+            base_infile = args.infile
+            if args.likelihood is Likelihood.GOLEMFIT:
+                base_infile += '/golemfit/'
+            elif args.likelihood is Likelihood.GAUSSIAN:
+                base_infile += '/gaussian/'
             if args.likelihood is Likelihood.GAUSSIAN:
-                infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
+                base_infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
+            base_infile += '/DIM{0}/fix_ifr'.format(dim)
 
             for isrc, src in enumerate(args.source_ratios):
                 argsc.source_ratio = src
-                finfile = infile +'/{0}/{1}/{2}/fr_stat'.format(
+                infile = base_infile +'/{0}/{1}/{2}/fr_stat'.format(
                     *map(misc_utils.parse_enum, [args.stat_method, args.run_method, args.data])
                 ) + misc_utils.gen_identifier(argsc)
-                basename = os.path.dirname(finfile) + '/statrun/'
+                basename = os.path.dirname(infile)
                 baseoutfile = basename[:5]+basename[5:].replace('data', 'plots')
-                if args.data:
-                    baseoutfile += '/data/'
-                baseoutfile += os.path.basename(finfile)
+                baseoutfile += '/' + os.path.basename(infile)
                 if args.run_method is SensitivityCateg.FULL:
                     outfile = baseoutfile
                     plot_utils.plot_statistic(
@@ -334,7 +347,7 @@ def main():
         print 'Plotting sensitivities'
 
         basename = args.infile[:5]+args.infile[5:].replace('data', 'plots')
-        baseoutfile = basename + '/{1}/{2}/{3}'.format(
+        baseoutfile = basename + '/{0}/{1}/{2}/'.format(
             *map(misc_utils.parse_enum, [args.likelihood, args.stat_method, args.data])
         )
 

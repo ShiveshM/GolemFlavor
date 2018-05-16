@@ -22,7 +22,8 @@ from matplotlib.offsetbox import AnchoredText
 from getdist import plots, mcsamples
 
 from utils import misc as misc_utils
-from utils.enums import EnergyDependance, Likelihood, ParamTag, StatCateg
+from utils.enums import DataType, EnergyDependance
+from utils.enums import Likelihood, ParamTag, StatCateg
 from utils.fr import angles_to_u, angles_to_fr
 
 rc('text', usetex=False)
@@ -34,12 +35,12 @@ def centers(x):
 
 
 def get_units(dimension):
-    if dimension == 3: return r' / GeV'
+    if dimension == 3: return r' / \:GeV'
     if dimension == 4: return r''
-    if dimension == 5: return r' / GeV^{-1}'
-    if dimension == 6: return r' / GeV^{-2}'
-    if dimension == 7: return r' / GeV^{-3}'
-    if dimension == 8: return r' / GeV^{-4}'
+    if dimension == 5: return r' / \:GeV^{-1}'
+    if dimension == 6: return r' / \:GeV^{-2}'
+    if dimension == 7: return r' / \:GeV^{-3}'
+    if dimension == 8: return r' / \:GeV^{-4}'
 
 
 def calc_nbins(x):
@@ -230,7 +231,7 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset):
             g.export(outfile+'_elements.'+of)
 
 
-def myround(x, base=5, up=False, down=False):
+def myround(x, base=1, up=False, down=False):
     if up == down and up is True: assert 0
     if up: return int(base * np.round(float(x)/base-0.5))
     elif down: return int(base * np.round(float(x)/base+0.5))
@@ -271,7 +272,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
         ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.3, linewidth=1)
 
     at = AnchoredText(
-        '\n'+fig_text, prop=dict(size=7), frameon=True, loc=2
+        fig_text, prop=dict(size=10), frameon=True, loc=2
     )
     at.patch.set_boxstyle("round,pad=0.1,rounding_size=0.5")
     ax.add_artist(at)
@@ -296,7 +297,7 @@ def plot_sens_full(data, outfile, outformat, args):
     ax.set_xlim(args.dimensions[0]-1, args.dimensions[-1]+1)
     ax.set_xticklabels([''] + xticks + [''])
     ax.set_xlabel(r'BSM operator dimension ' + r'$d$')
-    ax.set_ylabel(r'${\rm log}_{10} \Lambda^{-1} / GeV^{-d+4}$')
+    ax.set_ylabel(r'${\rm log}_{10} \left (\Lambda^{-1} / GeV^{-d+4} \right )$')
 
     argsc = deepcopy(args)
     for idim in xrange(len(data)):
@@ -360,7 +361,6 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
     print 'Making FIXED_ANGLE sensitivity plot'
 
     colour = {0:'red', 1:'blue', 2:'green', 3:'purple', 4:'orange', 5:'black'}
-    # xticks = [r'$\mathcal{O}_{12}$', r'$\mathcal{O}_{13}$', r'$\mathcal{O}_{23}$']
     xticks = [r'$\mathcal{O}_{e\mu}$', r'$\mathcal{O}_{e\tau}$', r'$\mathcal{O}_{\mu\tau}$']
     argsc = deepcopy(args)
     for idim in xrange(len(data)):
@@ -376,7 +376,7 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
         ax.set_xlim(0, len(xticks)+1)
         ax.set_xticklabels([''] + xticks + [''])
         ax.set_xlabel(r'BSM operator angle')
-        ax.set_ylabel(r'${\rm log}_{10} \Lambda^{-1} / GeV^{-d+4}$')
+        ax.set_ylabel(r'${\rm log}_{10} \left (\Lambda^{-1}' + get_units(dim) +r'\right )$')
 
         for isrc in xrange(len(data[idim])):
             src = args.source_ratios[isrc]
@@ -391,7 +391,6 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                 if args.stat_method is StatCateg.BAYESIAN:
                     reduced_ev = -(statistic - null)
                     al = scales[reduced_ev > np.log(10**(3/2.))] # Strong degree of belief
-                    # al = scales[reduced_ev > np.log(10**(1/2.))]
                 elif args.stat_method is StatCateg.FREQUENTIST:
                     reduced_ev = -2*(statistic - null)
                     al = scales[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
@@ -401,22 +400,24 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                         dim, src, reduced_ev
                     )
                     continue
+                arr_len = dim-2
                 lim = al[0]
                 print 'limit = {0}'.format(lim)
-                label = '[{0}, {1}, {2}]'.format(*misc_utils.solve_ratio(src))
+                label = '{0} : {1} : {2}'.format(*misc_utils.solve_ratio(src))
                 if lim < yranges[0]: yranges[0] = lim
-                if lim > yranges[1]: yranges[1] = lim+5
+                if lim > yranges[1]: yranges[1] = lim+arr_len+1
                 # if lim > yranges[1]: yranges[1] = lim
+                xoff = 0.15
                 line = plt.Line2D(
-                    (ian+1-0.1, ian+1+0.1), (lim, lim), lw=3, color=colour[isrc], label=label
+                    (ian+1-xoff, ian+1+xoff), (lim, lim), lw=2., color=colour[isrc], label=label
                 )
                 ax.add_line(line)
                 if len(legend_handles) < isrc+1:
                     legend_handles.append(line)
-                x_offset = isrc*0.05 - 0.05
+                x_offset = isrc*xoff/2. - xoff/2.
                 ax.annotate(
-                    s='', xy=(ian+1+x_offset, lim), xytext=(ian+1+x_offset, lim+3),
-                    arrowprops={'arrowstyle': '<-', 'lw': 1.2, 'color':colour[isrc]}
+                    s='', xy=(ian+1+x_offset, lim-0.01), xytext=(ian+1+x_offset, lim+arr_len),
+                    arrowprops={'arrowstyle': '<-', 'lw': 2., 'color':colour[isrc]}
                 )
 
         try:
@@ -424,7 +425,29 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
             ax.set_ylim(yranges)
         except: pass
 
-        ax.legend(handles=legend_handles, prop=dict(size=8), loc='upper right')
+        legend = ax.legend(handles=legend_handles, prop=dict(size=8), loc='upper right',
+                           title=r'$\nu_e:\nu_\mu:\nu_\tau{\rm\:\:at\:\:source}$',
+                           framealpha=1., edgecolor='black')
+        plt.setp(legend.get_title(), fontsize='8')
+        legend.get_frame().set_linestyle('-')
+
+        an_text = 'Dimension {0}'.format(dim)
+        at = AnchoredText(
+            an_text, prop=dict(size=10), frameon=True, loc=2
+        )
+        at.patch.set_boxstyle("round,pad=0.1,rounding_size=0.5")
+        ax.add_artist(at)
+
+        fig.text(0.42, 0.8, 'Excluded', color='red', fontsize=20, ha='center',
+                 va='center', fontweight='bold')
+
+        if args.data is DataType.REAL:
+            fig.text(0.805, 0.14, 'IceCube Preliminary', color='red', fontsize=11,
+                     ha='center', va='center')
+        elif args.data is DataType.ASIMOV:
+            fig.text(0.805, 0.14, 'IceCube Simulation', color='red', fontsize=11,
+                     ha='center', va='center')
+
         for ymaj in ax.yaxis.get_majorticklocs():
             ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.4, linewidth=1)
         for xmaj in ax.xaxis.get_majorticklocs():
@@ -469,7 +492,7 @@ def plot_sens_corr_angle(data, outfile, outformat, args):
                 ax = fig.add_subplot(111)
                 ax.set_ylim(0, 1)
                 ax.set_ylabel(labels[ian])
-                ax.set_xlabel(r'${\rm log}_{10} \Lambda^{-1}'+get_units(dim)+r'$')
+                ax.set_xlabel(r'${\rm log}_{10} \left (\Lambda^{-1}'+get_units(dim)+r'\right )$')
 
                 xranges = [np.inf, -np.inf]
                 legend_handles = []

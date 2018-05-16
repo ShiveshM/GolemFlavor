@@ -57,7 +57,7 @@ GLOBAL_PARAMS.update(dict(
 # GolemFit
 GLOBAL_PARAMS.update(dict(
     ast  = 'p2_0',
-    data = 'asimov'
+    data = 'real'
 ))
 
 # Plot

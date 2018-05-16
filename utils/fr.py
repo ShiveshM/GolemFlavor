@@ -248,7 +248,7 @@ def fr_argparse(parser):
         help='Fold in the spectral index when using GolemFit'
     )
     parser.add_argument(
-        '--binning', default=[6e4, 1e7, 5], type=float, nargs=3,
+        '--binning', default=[6e4, 1e7, 20], type=float, nargs=3,
         help='Binning for spectral energy dependance'
     )
     parser.add_argument(

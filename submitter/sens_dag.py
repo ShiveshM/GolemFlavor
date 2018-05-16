@@ -27,9 +27,9 @@ GLOBAL_PARAMS = {}
 sens_eval_bin = 'true' # set to 'all' to run normally
 GLOBAL_PARAMS.update(dict(
     sens_run      = 'True',
-    run_method    = 'fixed_angle', # full, fixed_angle, corr_angle
+    run_method    = 'corr_angle', # full, fixed_angle, corr_angle
     stat_method   = 'bayesian',
-    sens_bins     = 20,
+    sens_bins     = 15,
     seed          = 'None'
 ))
 
@@ -46,7 +46,7 @@ dimension         = [3]
 GLOBAL_PARAMS.update(dict(
     threads           = 1,
     binning           = '6e4 1e7 20',
-    # binning           = '1e5 1e7 5',
+    # binning           = '1e5 1e7 20',
     no_bsm            = 'False',
     scale_region      = "1E10",
     energy_dependance = 'spectral',
@@ -65,7 +65,7 @@ GLOBAL_PARAMS.update(dict(
 # GolemFit
 GLOBAL_PARAMS.update(dict(
     ast  = 'p2_0',
-    data = 'asimov'
+    data = 'real'
 ))
 
 # Plot
@@ -73,10 +73,12 @@ GLOBAL_PARAMS.update(dict(
     plot_statistic = 'True'
 ))
 
-outfile = 'dagman_FR_SENS_{0}_{1}_{2}_{3}.submit'.format(
+outfile = 'dagman_FR_SENS_{0}_{1}_{2}_{3}'.format(
     GLOBAL_PARAMS['stat_method'], GLOBAL_PARAMS['run_method'],
     GLOBAL_PARAMS['likelihood'], GLOBAL_PARAMS['data']
 )
+# outfile += '_100TeV'
+outfile += '.submit'
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/sens_submit.sub'
 
@@ -99,6 +101,7 @@ with open(outfile, 'w') as f:
             output = outchain_head + '/fix_ifr/'
             if GLOBAL_PARAMS['likelihood'].lower() == 'gaussian':
                 output += '{0}/'.format(str(GLOBAL_PARAMS['sigma_ratio']).replace('.', '_'))
+            # output += '100TeV/'
             for r in xrange(sens_runs):
                 print 'run', r
                 f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))
@@ -119,29 +122,29 @@ with open(outfile, 'w') as f:
                 f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, output))
                 job_number += 1
 
-        for frs in full_scan_mfr:
-            print 'frs', frs
-            output = outchain_head + '/full/'
-            if GLOBAL_PARAMS['likelihood'].lower() == 'gaussian':
-                output += '{0}/'.format(str(GLOBAL_PARAMS['sigma_ratio']).replace('.', '_'))
-            for r in xrange(sens_runs):
-                print 'run', r
-                f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))
-                f.write('VARS\tjob{0}\tdimension="{1}"\n'.format(job_number, dim))
-                f.write('VARS\tjob{0}\tmr0="{1}"\n'.format(job_number, frs[0]))
-                f.write('VARS\tjob{0}\tmr1="{1}"\n'.format(job_number, frs[1]))
-                f.write('VARS\tjob{0}\tmr2="{1}"\n'.format(job_number, frs[2]))
-                f.write('VARS\tjob{0}\tfix_source_ratio="{1}"\n'.format(job_number, False))
-                f.write('VARS\tjob{0}\tsr0="{1}"\n'.format(job_number, 0))
-                f.write('VARS\tjob{0}\tsr1="{1}"\n'.format(job_number, 0))
-                f.write('VARS\tjob{0}\tsr2="{1}"\n'.format(job_number, 0))
-                if sens_eval_bin.lower() != 'all':
-                    f.write('VARS\tjob{0}\tsens_eval_bin="{1}"\n'.format(job_number, r))
-                else:
-                    f.write('VARS\tjob{0}\tsens_eval_bin="{1}"\n'.format(job_number, 'all'))
-                for key in GLOBAL_PARAMS.iterkeys():
-                    f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
-                f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, output))
-                job_number += 1
+        # for frs in full_scan_mfr:
+        #     print 'frs', frs
+        #     output = outchain_head + '/full/'
+        #     if GLOBAL_PARAMS['likelihood'].lower() == 'gaussian':
+        #         output += '{0}/'.format(str(GLOBAL_PARAMS['sigma_ratio']).replace('.', '_'))
+        #     for r in xrange(sens_runs):
+        #         print 'run', r
+        #         f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))
+        #         f.write('VARS\tjob{0}\tdimension="{1}"\n'.format(job_number, dim))
+        #         f.write('VARS\tjob{0}\tmr0="{1}"\n'.format(job_number, frs[0]))
+        #         f.write('VARS\tjob{0}\tmr1="{1}"\n'.format(job_number, frs[1]))
+        #         f.write('VARS\tjob{0}\tmr2="{1}"\n'.format(job_number, frs[2]))
+        #         f.write('VARS\tjob{0}\tfix_source_ratio="{1}"\n'.format(job_number, False))
+        #         f.write('VARS\tjob{0}\tsr0="{1}"\n'.format(job_number, 0))
+        #         f.write('VARS\tjob{0}\tsr1="{1}"\n'.format(job_number, 0))
+        #         f.write('VARS\tjob{0}\tsr2="{1}"\n'.format(job_number, 0))
+        #         if sens_eval_bin.lower() != 'all':
+        #             f.write('VARS\tjob{0}\tsens_eval_bin="{1}"\n'.format(job_number, r))
+        #         else:
+        #             f.write('VARS\tjob{0}\tsens_eval_bin="{1}"\n'.format(job_number, 'all'))
+        #         for key in GLOBAL_PARAMS.iterkeys():
+        #             f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
+        #         f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, output))
+        #         job_number += 1
 
     print 'dag file = {0}'.format(outfile)

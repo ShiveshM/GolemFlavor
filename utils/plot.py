@@ -405,7 +405,7 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                 print 'limit = {0}'.format(lim)
                 label = '{0} : {1} : {2}'.format(*misc_utils.solve_ratio(src))
                 if lim < yranges[0]: yranges[0] = lim
-                if lim > yranges[1]: yranges[1] = lim+arr_len+1
+                if lim > yranges[1]: yranges[1] = lim+arr_len+2
                 # if lim > yranges[1]: yranges[1] = lim
                 xoff = 0.15
                 line = plt.Line2D(

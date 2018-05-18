@@ -27,9 +27,9 @@ GLOBAL_PARAMS = {}
 sens_eval_bin = 'true' # set to 'all' to run normally
 GLOBAL_PARAMS.update(dict(
     sens_run      = 'True',
-    run_method    = 'corr_angle', # full, fixed_angle, corr_angle
+    run_method    = 'fixed_angle', # full, fixed_angle, corr_angle
     stat_method   = 'bayesian',
-    sens_bins     = 15,
+    sens_bins     = 20,
     seed          = 'None'
 ))
 
@@ -41,8 +41,8 @@ GLOBAL_PARAMS.update(dict(
 ))
 
 # FR
-dimension         = [3]
-# dimension         = [3, 6]
+# dimension         = [3]
+dimension         = [3, 6]
 GLOBAL_PARAMS.update(dict(
     threads           = 1,
     binning           = '6e4 1e7 20',
@@ -65,7 +65,7 @@ GLOBAL_PARAMS.update(dict(
 # GolemFit
 GLOBAL_PARAMS.update(dict(
     ast  = 'p2_0',
-    data = 'real'
+    data = 'asimov'
 ))
 
 # Plot

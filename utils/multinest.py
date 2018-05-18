@@ -95,6 +95,7 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, fitter):
         resume                     = False,
         verbose                    = True
     )
+    if result is None: return None
 
     analyser = analyse.Analyzer(
         outputfiles_basename=prefix, n_params=n_params

@@ -244,6 +244,7 @@ def main():
             if args.likelihood is Likelihood.GAUSSIAN:
                 infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
             infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/fr_stat'.format(
+            # infile += '/DIM{0}/fix_ifr/100TeV/{1}/{2}/{3}/fr_stat'.format(
                 dim, *map(misc_utils.parse_enum, [args.stat_method, args.run_method, args.data])
             ) + misc_utils.gen_identifier(argsc)
             print '== {0:<25} = {1}'.format('infile', infile)
@@ -290,6 +291,7 @@ def main():
             if args.likelihood is Likelihood.GAUSSIAN:
                 base_infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
             base_infile += '/DIM{0}/fix_ifr'.format(dim)
+            # base_infile += '/DIM{0}/fix_ifr/100TeV'.format(dim)
 
             for isrc, src in enumerate(args.source_ratios):
                 argsc.source_ratio = src

@@ -25,7 +25,6 @@ from utils import misc as misc_utils
 from utils import plot as plot_utils
 from utils.enums import EnergyDependance, Likelihood, ParamTag
 from utils.enums import PriorsCateg, SensitivityCateg, StatCateg
-from utils.misc import DTYPE
 from utils.param import Param, ParamSet, get_paramsets
 
 from utils import multinest as mn_utils
@@ -236,12 +235,12 @@ def main():
             if args.run_method in fixed_angle_categ:
                 for x in mmangles: x.value = 0.+1e-9
                 if idx_scen == 0 or idx_scen == 2:
-                    mmangles[idx_scen].value = np.sin(np.pi/4., dtype=DTYPE)**2
+                    mmangles[idx_scen].value = np.sin(np.pi/4.)**2
                     """s_12^2 or s_23^2"""
                     mmangles[1].value = 1.
                     """c_13^4"""
                 elif idx_scen == 1:
-                    mmangles[idx_scen].value = np.cos(np.pi/4., dtype=DTYPE)**4
+                    mmangles[idx_scen].value = np.cos(np.pi/4.)**4
                     """c_13^4"""
 
             for idx_an, an in enumerate(scan_angles):
@@ -274,18 +273,17 @@ def main():
                     print '|||| SCALE = {0:.0E}'.format(np.power(10, sc))
                     scale.value = sc
                     if args.stat_method is StatCateg.BAYESIAN:
-                        try:
-                            stat = mn_utils.mn_evidence(
-                                mn_paramset     = sens_paramset,
-                                llh_paramset    = llh_paramset,
-                                asimov_paramset = asimov_paramset,
-                                args            = args,
-                                fitter          = fitter
-                            )
-                        except:
+                        stat = mn_utils.mn_evidence(
+                            mn_paramset     = sens_paramset,
+                            llh_paramset    = llh_paramset,
+                            asimov_paramset = asimov_paramset,
+                            args            = args,
+                            fitter          = fitter
+                        )
+                        if stat is None:
                             print 'Failed run, continuing'
-                            # raise
-                            continue
+                            raise
+                            # continue
                         print '## Evidence = {0}'.format(stat)
                     elif args.stat_method is StatCateg.FREQUENTIST:
                         def fn(x):

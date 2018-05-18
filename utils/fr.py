@@ -14,12 +14,59 @@ from functools import partial
 import numpy as np
 
 from utils.enums import EnergyDependance
-from utils.misc import DTYPE, CDTYPE, PI
 from utils.misc import enum_parse, parse_bool
 
+import mpmath as mp
+mp.mp.dps = 100 # Computation precision
+
+# DTYPE  = np.float128
+# CDTYPE = np.complex256
+# PI     = np.arccos(DTYPE(-1))
+# SQRT   = np.sqrt
+# COS    = np.cos
+# SIN    = np.sin
+# ACOS   = np.arccos
+# ASIN   = np.arcsin
+# EXP    = np.exp
+
+DTYPE  = mp.mpf
+CDTYPE = mp.mpc
+PI     = mp.pi
+SQRT   = mp.sqrt
+COS    = mp.cos
+SIN    = mp.sin
+ACOS   = mp.acos
+ASIN   = mp.asin
+EXP    = mp.exp
 
 MASS_EIGENVALUES = [7.40E-23, 2.515E-21]
 """SM mass eigenvalues"""
+
+
+def determinant(x):
+    """Calculate the determininant of a 3x3 matrix.
+
+    Parameters
+    ----------
+    x : ndarray, shape = (3, 3)
+
+    Returns
+    ----------
+    float determinant
+
+    Examples
+    ----------
+    >>> print determinant(
+    >>>     [[-1.65238188-0.59549718j,  0.27486548-0.18437467j, -1.35524534-0.38542072j],
+    >>>      [-1.07480906+0.29630449j, -0.47808456-0.80316821j, -0.88609356-1.50737308j],
+    >>>      [-0.14924144-0.99230446j,  0.49504234+0.63639805j, 2.29258915-0.36537507j]]
+    >>> )
+    (2.7797571563274688+3.0841795325804848j)
+
+    """
+    return (x[0][0] * (x[1][1] * x[2][2] - x[2][1] * x[1][2])
+           -x[1][0] * (x[0][1] * x[2][2] - x[2][1] * x[0][2])
+           +x[2][0] * (x[0][1] * x[1][2] - x[1][1] * x[0][2]))
 
 
 def angles_to_fr(src_angles):
@@ -41,13 +88,13 @@ def angles_to_fr(src_angles):
     (0.38340579025361626, 0.16431676725154978, 0.45227744249483393)
 
     """
-    sphi4, c2psi = src_angles
+    sphi4, c2psi = map(DTYPE, src_angles)
 
-    psi = (0.5)*np.arccos(c2psi, dtype=DTYPE)
+    psi = (0.5)*ACOS(c2psi)
 
-    sphi2 = np.sqrt(sphi4, dtype=DTYPE)
+    sphi2 = SQRT(sphi4)
     cphi2 = 1. - sphi2
-    spsi2 = np.sin(psi, dtype=DTYPE)**2
+    spsi2 = SIN(psi)**2
     cspi2 = 1. - spsi2
 
     x = sphi2*cspi2
@@ -78,27 +125,27 @@ def angles_to_u(bsm_angles):
            [ 0.28614067-0.42427084j, -0.64749908-0.21213542j,  0.52331757+0.j        ]])
 
     """
-    s12_2, c13_4, s23_2, dcp = bsm_angles
+    s12_2, c13_4, s23_2, dcp = map(DTYPE, bsm_angles)
     dcp = CDTYPE(dcp)
 
     c12_2 = 1. - s12_2
-    c13_2 = np.sqrt(c13_4, dtype=DTYPE)
+    c13_2 = SQRT(c13_4)
     s13_2 = 1. - c13_2
     c23_2 = 1. - s23_2
 
-    t12 = np.arcsin(np.sqrt(s12_2, dtype=DTYPE))
-    t13 = np.arccos(np.sqrt(c13_2, dtype=DTYPE))
-    t23 = np.arcsin(np.sqrt(s23_2, dtype=DTYPE))
+    t12 = ASIN(SQRT(s12_2))
+    t13 = ACOS(SQRT(c13_2))
+    t23 = ASIN(SQRT(s23_2))
 
-    c12 = np.cos(t12)
-    s12 = np.sin(t12)
-    c13 = np.cos(t13)
-    s13 = np.sin(t13)
-    c23 = np.cos(t23)
-    s23 = np.sin(t23)
+    c12 = COS(t12)
+    s12 = SIN(t12)
+    c13 = COS(t13)
+    s13 = SIN(t13)
+    c23 = COS(t23)
+    s23 = SIN(t23)
 
     p1 = np.array([[1   , 0   , 0]                   , [0    , c23 , s23] , [0                   , -s23 , c23]] , dtype=CDTYPE)
-    p2 = np.array([[c13 , 0   , s13*np.exp(-1j*dcp)] , [0    , 1   , 0]   , [-s13*np.exp(1j*dcp) , 0    , c13]] , dtype=CDTYPE)
+    p2 = np.array([[c13 , 0   , s13*EXP(-1j*dcp)] , [0    , 1   , 0]   , [-s13*EXP(1j*dcp) , 0    , c13]] , dtype=CDTYPE)
     p3 = np.array([[c12 , s12 , 0]                   , [-s12 , c12 , 0]   , [0                   , 0    , 1]]   , dtype=CDTYPE)
 
     u = np.dot(np.dot(p1, p2), p3)
@@ -141,15 +188,15 @@ def cardano_eqn(ham):
 
     a = -np.trace(ham)
     b = DTYPE(1)/2 * ((np.trace(ham))**DTYPE(2) - np.trace(np.dot(ham, ham)))
-    c = -np.linalg.det(ham)
+    c = -determinant(ham)
 
     Q = (DTYPE(1)/9) * (a**DTYPE(2) - DTYPE(3)*b)
     R = (DTYPE(1)/54) * (DTYPE(2)*a**DTYPE(3) - DTYPE(9)*a*b + DTYPE(27)*c)
-    theta = np.arccos(R / np.sqrt(Q**DTYPE(3)))
+    theta = ACOS(R / SQRT(Q**DTYPE(3)))
 
-    E1 = -DTYPE(2) * np.sqrt(Q) * np.cos(theta/DTYPE(3)) - (DTYPE(1)/3)*a
-    E2 = -DTYPE(2) * np.sqrt(Q) * np.cos((theta - DTYPE(2)*PI)/DTYPE(3)) - (DTYPE(1)/3)*a
-    E3 = -DTYPE(2) * np.sqrt(Q) * np.cos((theta + DTYPE(2)*PI)/DTYPE(3)) - (DTYPE(1)/3)*a
+    E1 = -DTYPE(2) * SQRT(Q) * COS(theta/DTYPE(3)) - (DTYPE(1)/3)*a
+    E2 = -DTYPE(2) * SQRT(Q) * COS((theta - DTYPE(2)*PI)/DTYPE(3)) - (DTYPE(1)/3)*a
+    E3 = -DTYPE(2) * SQRT(Q) * COS((theta + DTYPE(2)*PI)/DTYPE(3)) - (DTYPE(1)/3)*a
 
     A1 = ham[1][2] * (ham[0][0] - E1) - ham[1][0]*ham[0][2]
     A2 = ham[1][2] * (ham[0][0] - E2) - ham[1][0]*ham[0][2]
@@ -163,9 +210,9 @@ def cardano_eqn(ham):
     C2 = ham[1][0] * (ham[2][2] - E2) - ham[1][2]*ham[2][0]
     C3 = ham[1][0] * (ham[2][2] - E3) - ham[1][2]*ham[2][0]
 
-    N1 = np.sqrt(np.abs(A1*B1, dtype=DTYPE)**2 + np.abs(A1*C1, dtype=DTYPE)**2 + np.abs(B1*C1, dtype=DTYPE)**2)
-    N2 = np.sqrt(np.abs(A2*B2, dtype=DTYPE)**2 + np.abs(A2*C2, dtype=DTYPE)**2 + np.abs(B2*C2, dtype=DTYPE)**2)
-    N3 = np.sqrt(np.abs(A3*B3, dtype=DTYPE)**2 + np.abs(A3*C3, dtype=DTYPE)**2 + np.abs(B3*C3, dtype=DTYPE)**2)
+    N1 = SQRT(np.abs(A1*B1)**2 + np.abs(A1*C1)**2 + np.abs(B1*C1)**2)
+    N2 = SQRT(np.abs(A2*B2)**2 + np.abs(A2*C2)**2 + np.abs(B2*C2)**2)
+    N3 = SQRT(np.abs(A3*B3)**2 + np.abs(A3*C3)**2 + np.abs(B3*C3)**2)
 
     mm = np.array([
         [np.conjugate(B1)*C1 / N1, np.conjugate(B2)*C2 / N2, np.conjugate(B3)*C3 / N3],
@@ -383,7 +430,7 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
     mass_matrix = np.array(
         [[0, 0, 0], [0, mass_eigenvalues[0], 0], [0, 0, mass_eigenvalues[1]]]
     )
-    sm_ham = (1./(2*energy))*np.matmul(sm_u, np.matmul(mass_matrix, sm_u.conj().T))
+    sm_ham = (1./(2*energy))*np.dot(sm_u, np.dot(mass_matrix, sm_u.conj().T))
     if no_bsm:
         eg_vector = cardano_eqn(sm_ham)
     else:
@@ -391,7 +438,7 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
         scale_matrix = np.array(
             [[0, 0, 0], [0, sc1, 0], [0, 0, sc2]]
         )
-        bsm_term = (energy**(dim-3)) * np.matmul(new_physics_u, np.matmul(scale_matrix, new_physics_u.conj().T))
+        bsm_term = (energy**(dim-3)) * np.dot(new_physics_u, np.dot(scale_matrix, new_physics_u.conj().T))
         bsm_ham = sm_ham + bsm_term
         eg_vector = cardano_eqn(bsm_ham)
 

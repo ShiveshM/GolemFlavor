@@ -66,6 +66,7 @@ def steering_params(args):
     # params.years = [999]
 
     params.minFitEnergy = args.binning[0] # GeV
+    params.load_data_from_text_file = False
 
     return params
 

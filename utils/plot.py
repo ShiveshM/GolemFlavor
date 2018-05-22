@@ -13,6 +13,8 @@ import os
 from copy import deepcopy
 
 import numpy as np
+from scipy import interpolate
+
 import matplotlib as mpl
 mpl.use('Agg')
 from matplotlib import rc
@@ -27,7 +29,7 @@ from utils.enums import Likelihood, ParamTag, StatCateg
 from utils.fr import angles_to_u, angles_to_fr
 
 rc('text', usetex=False)
-rc('font', **{'family':'serif', 'serif':['Computer Modern'], 'size':18})
+rc('font', **{'family':'serif', 'serif':['DejaVu Sans'], 'size':18})
 
 
 def centers(x):
@@ -117,17 +119,18 @@ def gen_figtext(args):
     mr1, mr2, mr3 = misc_utils.solve_ratio(args.measured_ratio)
     if args.fix_source_ratio:
         sr1, sr2, sr3 = misc_utils.solve_ratio(args.source_ratio)
-        t += 'Source flavour ratio = [{0}, {1}, {2}]\nIC ' \
-                'observed flavour ratio = [{3}, {4}, ' \
-                '{5}]\nDimension = {6}'.format(
-                    sr1, sr2, sr3, mr1, mr2, mr3, args.dimension,
-                    int(args.energy)
-                )
+        t += 'Source flavour ratio = [{0}, {1}, {2}]'.format(sr1, sr2, sr3)
+        if args.data is DataType.ASIMOV:
+            t += '\nIC observed flavour ratio = [{0}, {1}, {2}]'.format(
+                mr1, mr2, mr3
+            )
+        t += '\nDimension = {0}'.format(args.dimension)
     else:
-        t += 'IC observed flavour ratio = [{0}, {1}, ' \
-                '{2}]\nDimension = {3}'.format(
-                    mr1, mr2, mr3, args.dimension, int(args.energy)
-                )
+        if args.data is DataType.ASIMOV:
+            t += 'IC observed flavour ratio = [{0}, {1}, ' \
+                    '{2}]\nDimension = {3}'.format(
+                        mr1, mr2, mr3, args.dimension, int(args.energy)
+                    )
     if args.fix_scale:
         t += 'Scale = {0}'.format(args.scale)
     if args.likelihood is Likelihood.GAUSSIAN:
@@ -231,7 +234,7 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset):
             g.export(outfile+'_elements.'+of)
 
 
-def myround(x, base=1, up=False, down=False):
+def myround(x, base=2, up=False, down=False):
     if up == down and up is True: assert 0
     if up: return int(base * np.round(float(x)/base-0.5))
     elif down: return int(base * np.round(float(x)/base+0.5))
@@ -241,12 +244,17 @@ def myround(x, base=1, up=False, down=False):
 def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     """Make MultiNest factor or LLH value plot."""
     print 'Making Statistic plot'
-    fig_text = gen_figtext(args)
+    fig_text = '\n' + gen_figtext(args)
     if label is not None: fig_text += '\n' + label
 
     print 'data', data
     print 'data.shape', data.shape
     scales, statistic = data.T
+    tck, u = interpolate.splprep([scales, statistic], s=0)
+    scales, statistic = interpolate.splev(np.linspace(0, 1, 1000), tck)
+    print 'scales', scales
+    print 'statistic', statistic
+
     min_idx = np.argmin(scales)
     null = statistic[min_idx]
     if args.stat_method is StatCateg.BAYESIAN:
@@ -258,21 +266,31 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     ax = fig.add_subplot(111)
 
     ax.set_xlim(np.log10(args.scale_region))
-    ax.set_xlabel('$'+scale_param.tex+'$')
+    ax.set_xlabel(r'${\mathrm {log}}_{10} \left (\Lambda^{-1}' + \
+                  get_units(args.dimension) +r'\right )$', fontsize=16)
     if args.stat_method is StatCateg.BAYESIAN:
-        ax.set_ylabel(r'Bayes Factor')
+        ax.set_ylabel(r'log(Bayes Factor)')
     elif args.stat_method is StatCateg.FREQUENTIST:
         ax.set_ylabel(r'$-2\Delta {\rm LLH}$')
 
     ax.plot(scales, reduced_ev)
+
+    ax.axhline(y=np.log(10**(3/2.)), color='red', alpha=1., linewidth=1.3)
 
     for ymaj in ax.yaxis.get_majorticklocs():
         ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.3, linewidth=1)
     for xmaj in ax.xaxis.get_majorticklocs():
         ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.3, linewidth=1)
 
+    if args.data is DataType.REAL:
+        fig.text(0.8, 0.14, 'IceCube Preliminary', color='red', fontsize=9,
+                 ha='center', va='center')
+    elif args.data is DataType.ASIMOV:
+        fig.text(0.8, 0.14, 'IceCube Simulation', color='red', fontsize=9,
+                 ha='center', va='center')
+
     at = AnchoredText(
-        fig_text, prop=dict(size=10), frameon=True, loc=2
+        fig_text, prop=dict(size=10), frameon=True, loc=4
     )
     at.patch.set_boxstyle("round,pad=0.1,rounding_size=0.5")
     ax.add_artist(at)
@@ -374,9 +392,13 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
         fig = plt.figure(figsize=(7, 5))
         ax = fig.add_subplot(111)
         ax.set_xlim(0, len(xticks)+1)
-        ax.set_xticklabels([''] + xticks + [''])
-        ax.set_xlabel(r'BSM operator angle')
-        ax.set_ylabel(r'${\rm log}_{10} \left (\Lambda^{-1}' + get_units(dim) +r'\right )$')
+        ax.set_xticklabels([''] + xticks + [''], fontsize=14)
+        ax.set_xlabel(r'BSM operator angle', fontsize=16)
+        ax.set_ylabel(r'${\mathrm {log}}_{10} \left (\Lambda^{-1}' + \
+                      get_units(dim) +r'\right )$', fontsize=16)
+
+        # ax.tick_params(axis='x', labelsize=11)
+        ax.tick_params(axis='y', labelsize=14)
 
         for isrc in xrange(len(data[idim])):
             src = args.source_ratios[isrc]
@@ -386,6 +408,8 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
             for ian in xrange(len(data[idim][isrc])):
                 print '=== an', ian
                 scales, statistic = data[idim][isrc][ian].T
+                tck, u = interpolate.splprep([scales, statistic], s=0)
+                scales, statistic = interpolate.splev(np.linspace(0, 1, 1000), tck)
                 min_idx = np.argmin(scales)
                 null = statistic[min_idx]
                 if args.stat_method is StatCateg.BAYESIAN:
@@ -400,24 +424,30 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                         dim, src, reduced_ev
                     )
                     continue
+                if reduced_ev[-1] < np.log(10**(3/2.)) - 0.1:
+                    print 'Peaked contour does not exclude large scales! For ' \
+                        'DIM {0} FRS{1} reduced_ev {2}!'.format(
+                        dim, src, reduced_ev
+                    )
+                    continue
                 arr_len = dim-2
                 lim = al[0]
                 print 'limit = {0}'.format(lim)
                 label = '{0} : {1} : {2}'.format(*misc_utils.solve_ratio(src))
-                if lim < yranges[0]: yranges[0] = lim
+                if lim < yranges[0]: yranges[0] = lim-arr_len
                 if lim > yranges[1]: yranges[1] = lim+arr_len+2
                 # if lim > yranges[1]: yranges[1] = lim
                 xoff = 0.15
                 line = plt.Line2D(
-                    (ian+1-xoff, ian+1+xoff), (lim, lim), lw=2., color=colour[isrc], label=label
+                    (ian+1-xoff, ian+1+xoff), (lim, lim), lw=2.5, color=colour[isrc], label=label
                 )
                 ax.add_line(line)
                 if len(legend_handles) < isrc+1:
                     legend_handles.append(line)
                 x_offset = isrc*xoff/2. - xoff/2.
                 ax.annotate(
-                    s='', xy=(ian+1+x_offset, lim-0.01), xytext=(ian+1+x_offset, lim+arr_len),
-                    arrowprops={'arrowstyle': '<-', 'lw': 2., 'color':colour[isrc]}
+                    s='', xy=(ian+1+x_offset, lim-0.02), xytext=(ian+1+x_offset, lim+arr_len),
+                    arrowprops={'arrowstyle': '<-', 'lw': 1.5, 'color':colour[isrc]}
                 )
 
         try:
@@ -438,14 +468,14 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
         at.patch.set_boxstyle("round,pad=0.1,rounding_size=0.5")
         ax.add_artist(at)
 
-        fig.text(0.42, 0.8, 'Excluded', color='red', fontsize=20, ha='center',
+        fig.text(0.42, 0.8, r'Excluded', color='red', fontsize=16, ha='center',
                  va='center', fontweight='bold')
 
         if args.data is DataType.REAL:
-            fig.text(0.805, 0.14, 'IceCube Preliminary', color='red', fontsize=11,
+            fig.text(0.805, 0.14, 'IceCube Preliminary', color='red', fontsize=9,
                      ha='center', va='center')
         elif args.data is DataType.ASIMOV:
-            fig.text(0.805, 0.14, 'IceCube Simulation', color='red', fontsize=11,
+            fig.text(0.805, 0.14, 'IceCube Simulation', color='red', fontsize=9,
                      ha='center', va='center')
 
         for ymaj in ax.yaxis.get_majorticklocs():

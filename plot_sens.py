@@ -29,18 +29,6 @@ from utils.param import Param, ParamSet, get_paramsets
 
 from utils import multinest as mn_utils
 
-import matplotlib as mpl
-print mpl.rcParams.keys()
-mpl.rcParams['text.usetex'] = True
-# mpl.rcParams['text.latex.unicode'] = True
-# mpl.rcParams['text.latex.preamble'] = r'\usepackage{cmbright}'
-mpl.rcParams['font.family'] = 'sans-serif'
-# mpl.rcParams['font.sans-serif'] = 'DejaVu Sans'
-# mpl.rcParams['mathtext.fontset'] = 'stixsans'
-# mpl.rcParams['mathtext.rm'] = 'DejaVu Sans'
-# mpl.rcParams['mathtext.it'] = 'DejaVu Sans:italic'
-# mpl.rcParams['mathtext.bf'] = 'DejaVu Sans:bold'
-
 
 def define_nuisance():
     """Define the nuisance parameters."""

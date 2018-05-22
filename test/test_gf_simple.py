@@ -5,28 +5,31 @@ import matplotlib.pyplot as plt
 
 import GolemFitPy as gf
 
-FASTMODE = True
+FASTMODE = False
 
 dp = gf.DataPaths()
 npp = gf.NewPhysicsParams()
-sp = gf.SteeringParams(gf.sampleTag.HESE)
+sp = gf.SteeringParams(gf.sampleTag.MagicTau)
 
 sp.quiet = False
 if FASTMODE:
     sp.fastmode = True
 sp.frequentist = True
+sp.load_data_from_text_file = False
 
 golem = gf.GolemFit(dp, sp, npp)
 
-fp = gf.FitParameters(gf.sampleTag.HESE)
+fp = gf.FitParameters(gf.sampleTag.MagicTau)
 fp.astroFlavorAngle1 = 4./9.
-fp.astroFlavorAngle2 = 0
+fp.astroFlavorAngle2 = 0.
 
 golem.SetupAsimov(fp)
 
-fp_sh = gf.FitParameters(gf.sampleTag.HESE)
-fp_sh.astroFlavorAngle1 = 0.36
-fp_sh.astroFlavorAngle2 = -0.57
+fp_sh = gf.FitParameters(gf.sampleTag.MagicTau)
+# fp_sh.astroFlavorAngle1 = 0.36
+# fp_sh.astroFlavorAngle2 = -0.57
+fp_sh.astroFlavorAngle1 = 1.
+fp_sh.astroFlavorAngle2 = 0.
 
 print 'Eval fp = {0}'.format(golem.EvalLLH(fp))
 

@@ -84,7 +84,7 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, fitter):
     )
     make_dir(prefix)
     print 'Running evidence calculation for {0}'.format(prefix)
-    result = run(
+    run(
         LogLikelihood              = lnProbEval,
         Prior                      = CubePrior,
         n_dims                     = n_params,
@@ -95,7 +95,6 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, fitter):
         resume                     = False,
         verbose                    = True
     )
-    if result is None: return None
 
     analyser = analyse.Analyzer(
         outputfiles_basename=prefix, n_params=n_params

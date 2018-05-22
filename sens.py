@@ -273,17 +273,18 @@ def main():
                     print '|||| SCALE = {0:.0E}'.format(np.power(10, sc))
                     scale.value = sc
                     if args.stat_method is StatCateg.BAYESIAN:
-                        stat = mn_utils.mn_evidence(
-                            mn_paramset     = sens_paramset,
-                            llh_paramset    = llh_paramset,
-                            asimov_paramset = asimov_paramset,
-                            args            = args,
-                            fitter          = fitter
-                        )
-                        if stat is None:
+                        try:
+                            stat = mn_utils.mn_evidence(
+                                mn_paramset     = sens_paramset,
+                                llh_paramset    = llh_paramset,
+                                asimov_paramset = asimov_paramset,
+                                args            = args,
+                                fitter          = fitter
+                            )
+                        except:
                             print 'Failed run, continuing'
-                            raise
-                            # continue
+                            # raise
+                            continue
                         print '## Evidence = {0}'.format(stat)
                     elif args.stat_method is StatCateg.FREQUENTIST:
                         def fn(x):

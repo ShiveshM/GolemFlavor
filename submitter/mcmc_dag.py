@@ -25,7 +25,7 @@ GLOBAL_PARAMS = {}
 
 # MCMC
 GLOBAL_PARAMS.update(dict(
-    run_mcmc = 'True',
+    run_mcmc = 'False',
     burnin   = 250,
     nsteps   = 1000,
     nwalkers = 60,
@@ -34,8 +34,9 @@ GLOBAL_PARAMS.update(dict(
 ))
 
 # FR
-dimension         = [3]
+# dimension         = [3, 6]
 # dimension         = [4, 5, 7, 8]
+dimension         = [3, 4, 5, 6, 7, 8]
 GLOBAL_PARAMS.update(dict(
     threads           = 1,
     binning           = '6e4 1e7 20',

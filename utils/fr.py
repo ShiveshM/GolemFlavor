@@ -144,9 +144,9 @@ def angles_to_u(bsm_angles):
     c23 = COS(t23)
     s23 = SIN(t23)
 
-    p1 = np.array([[1   , 0   , 0]                   , [0    , c23 , s23] , [0                   , -s23 , c23]] , dtype=CDTYPE)
+    p1 = np.array([[1   , 0   , 0]                , [0    , c23 , s23] , [0                , -s23 , c23]] , dtype=CDTYPE)
     p2 = np.array([[c13 , 0   , s13*EXP(-1j*dcp)] , [0    , 1   , 0]   , [-s13*EXP(1j*dcp) , 0    , c13]] , dtype=CDTYPE)
-    p3 = np.array([[c12 , s12 , 0]                   , [-s12 , c12 , 0]   , [0                   , 0    , 1]]   , dtype=CDTYPE)
+    p3 = np.array([[c12 , s12 , 0]                , [-s12 , c12 , 0]   , [0                , 0    , 1]]   , dtype=CDTYPE)
 
     u = np.dot(np.dot(p1, p2), p3)
     return u

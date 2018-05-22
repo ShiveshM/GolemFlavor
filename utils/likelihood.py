@@ -164,6 +164,7 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
         fr = averaged_measured_flux / np.sum(averaged_measured_flux)
 
     flavour_angles = fr_utils.fr_to_angles(fr)
+    # print 'flavour_angles', map(float, flavour_angles)
     for idx, param in enumerate(hypo_paramset.from_tag(ParamTag.BESTFIT)):
         param.value = flavour_angles[idx]
 

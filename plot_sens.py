@@ -349,6 +349,12 @@ def main():
                 args      = args,
             )
         elif args.run_method in fixed_angle_categ:
+            plot_utils.plot_sens_fixed_angle_pretty(
+                data      = data,
+                outfile   = baseoutfile + '/fixed_angle_pretty',
+                outformat = ['png'],
+                args      = args,
+            )
             plot_utils.plot_sens_fixed_angle(
                 data      = data,
                 outfile   = baseoutfile + '/FIXED_ANGLE',

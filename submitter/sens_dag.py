@@ -27,9 +27,9 @@ GLOBAL_PARAMS = {}
 sens_eval_bin = 'true' # set to 'all' to run normally
 GLOBAL_PARAMS.update(dict(
     sens_run      = 'True',
-    run_method    = 'corr_angle', # full, fixed_angle, corr_angle
+    run_method    = 'fixed_angle', # full, fixed_angle, corr_angle
     stat_method   = 'bayesian',
-    sens_bins     = 10,
+    sens_bins     = 20,
     seed          = 'None'
 ))
 
@@ -65,7 +65,7 @@ GLOBAL_PARAMS.update(dict(
 # GolemFit
 GLOBAL_PARAMS.update(dict(
     ast  = 'p2_0',
-    data = 'real'
+    data = 'realisation'
 ))
 
 # Plot

@@ -71,12 +71,20 @@ def steering_params(args):
     return params
 
 
-def set_up_as(fitter, params):
+def setup_asimov(fitter, params):
     print 'Injecting the model', params
     asimov_params = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         asimov_params.__setattr__(parm.name, float(parm.value))
     fitter.SetupAsimov(asimov_params)
+
+
+def setup_realisation(fitter, params):
+    print 'Injecting the model', params
+    asimov_params = gf.FitParameters(gf.sampleTag.MagicTau)
+    for parm in params:
+        asimov_params.__setattr__(parm.name, float(parm.value))
+    fitter.Swallow(fitter.SpitExpectation(asimov_params))
 
 
 def setup_fitter(args, asimov_paramset):
@@ -85,7 +93,9 @@ def setup_fitter(args, asimov_paramset):
     npp = gf.NewPhysicsParams()
     fitter = gf.GolemFit(datapaths, sparams, npp)
     if args.data is DataType.ASIMOV:
-        set_up_as(fitter, asimov_paramset)
+        setup_asimov(fitter, asimov_paramset)
+    elif args.data is DataType.REALISATION:
+        setup_realisation(fitter, asimov_paramset)
     elif args.data is DataType.REAL:
         print 'Using MagicTau DATA'
     return fitter

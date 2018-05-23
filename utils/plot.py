@@ -10,6 +10,7 @@ Plotting functions for the BSM flavour ratio analysis
 from __future__ import absolute_import, division
 
 import os
+import socket
 from copy import deepcopy
 
 import numpy as np
@@ -20,6 +21,10 @@ mpl.use('Agg')
 from matplotlib import rc
 from matplotlib import pyplot as plt
 from matplotlib.offsetbox import AnchoredText
+import matplotlib.patches as patches
+import matplotlib.gridspec as gridspec
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 from getdist import plots, mcsamples
 
@@ -28,8 +33,9 @@ from utils.enums import DataType, EnergyDependance
 from utils.enums import Likelihood, ParamTag, StatCateg
 from utils.fr import angles_to_u, angles_to_fr
 
-rc('text', usetex=False)
-rc('font', **{'family':'serif', 'serif':['DejaVu Sans'], 'size':18})
+plt.style.use(os.environ['GOLEMSOURCEPATH']+'/GolemFit/scripts/paper/paper.mplstyle')
+if 'submitter' in socket.gethostname():
+    rc('text', usetex=False)
 
 
 def centers(x):
@@ -37,12 +43,12 @@ def centers(x):
 
 
 def get_units(dimension):
-    if dimension == 3: return r' / \:GeV'
+    if dimension == 3: return r' / \:{\rm GeV}'
     if dimension == 4: return r''
-    if dimension == 5: return r' / \:GeV^{-1}'
-    if dimension == 6: return r' / \:GeV^{-2}'
-    if dimension == 7: return r' / \:GeV^{-3}'
-    if dimension == 8: return r' / \:GeV^{-4}'
+    if dimension == 5: return r' / \:{rm GeV}^{-1}'
+    if dimension == 6: return r' / \:{rm GeV}^{-2}'
+    if dimension == 7: return r' / \:{rm GeV}^{-3}'
+    if dimension == 8: return r' / \:{rm GeV}^{-4}'
 
 
 def calc_nbins(x):
@@ -120,13 +126,13 @@ def gen_figtext(args):
     if args.fix_source_ratio:
         sr1, sr2, sr3 = misc_utils.solve_ratio(args.source_ratio)
         t += 'Source flavour ratio = [{0}, {1}, {2}]'.format(sr1, sr2, sr3)
-        if args.data is DataType.ASIMOV:
+        if args.data in [DataType.ASIMOV, DataType.REALISATION]:
             t += '\nIC observed flavour ratio = [{0}, {1}, {2}]'.format(
                 mr1, mr2, mr3
             )
         t += '\nDimension = {0}'.format(args.dimension)
     else:
-        if args.data is DataType.ASIMOV:
+        if args.data in [DataType.ASIMOV, DataType.REALISATION]:
             t += 'IC observed flavour ratio = [{0}, {1}, ' \
                     '{2}]\nDimension = {3}'.format(
                         mr1, mr2, mr3, args.dimension, int(args.energy)
@@ -185,6 +191,13 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset):
         #         '1E{2}'.format(itv[0], itv[2], itv[1])
         #     )
 
+        if args.data is DataType.REAL:
+            fig.text(0.8, 0.7, 'IceCube Preliminary', color='red', fontsize=15,
+                     ha='center', va='center')
+        elif args.data in [DataType.ASIMOV, DataType.REALISATION]:
+            fig.text(0.8, 0.7, 'IceCube Simulation', color='red', fontsize=15,
+                     ha='center', va='center')
+
         for of in outformat:
             g.export(outfile+'_angles.'+of)
 
@@ -228,6 +241,13 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset):
             trns_ranges += [(0, 1)] * 3
 
         g = plot_Tchain(Tchain, trns_axes_labels, trns_ranges)
+
+        if args.data is DataType.REAL:
+            fig.text(0.8, 0.7, 'IceCube Preliminary', color='red', fontsize=15,
+                     ha='center', va='center')
+        elif args.data in [DataType.ASIMOV, DataType.REALISATION]:
+            fig.text(0.8, 0.7, 'IceCube Simulation', color='red', fontsize=15,
+                     ha='center', va='center')
 
         mpl.pyplot.figtext(0.5, 0.7, fig_text, fontsize=15)
         for of in outformat:
@@ -285,7 +305,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     if args.data is DataType.REAL:
         fig.text(0.8, 0.14, 'IceCube Preliminary', color='red', fontsize=9,
                  ha='center', va='center')
-    elif args.data is DataType.ASIMOV:
+    elif args.data in [DataType.ASIMOV, DataType.REALISATION]:
         fig.text(0.8, 0.14, 'IceCube Simulation', color='red', fontsize=9,
                  ha='center', va='center')
 
@@ -375,30 +395,210 @@ def plot_sens_full(data, outfile, outformat, args):
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
 
 
+def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
+    print 'Making FIXED_ANGLE_PRETTY sensitivity plot'
+    argsc = deepcopy(args)
+    dims = len(data)
+    LV_atmo_90pc_limits = {
+        3: (2E-24, 1E-1),
+        4: (2.7E-28, 3.16E-25),
+        5: (1.5E-32, 1.12E-27),
+        6: (9.1E-37, 2.82E-30),
+        7: (3.6E-41, 1.77E-32),
+        8: (1.4E-45, 1.00E-34)
+    }
+
+    show_data = True
+
+    en = np.log10([1E4, 1E7])
+    bote = {
+        3: (-21-(en[0]+en[0]*0), -21-(en[1]+en[1]*0)),
+        4: (-21-(en[0]+en[0]*1), -21-(en[1]+en[1]*1)),
+        5: (-21-(en[0]+en[0]*2), -21-(en[1]+en[1]*2)),
+        6: (-21-(en[0]+en[0]*3), -21-(en[1]+en[1]*3)),
+        7: (-21-(en[0]+en[0]*4), -21-(en[1]+en[1]*4)),
+        8: (-21-(en[0]+en[0]*5), -21-(en[1]+en[1]*5))
+    }
+
+    colour = {0:'red', 1:'blue', 2:'green'}
+    rgb_co = {0:[1,0,0], 1:[0,0,1], 2:[0.0, 0.5019607843137255, 0.0]}
+    yticks = [r'$\mathcal{O}_{e\mu}$', r'$\mathcal{O}_{e\tau}$', r'$\mathcal{O}_{\mu\tau}$']
+    xlims = (-60, -20)
+
+    fig = plt.figure(figsize=(8, 6))
+    gs = gridspec.GridSpec(dims, 1)
+    gs.update(hspace=0.15)
+
+    first_ax = None
+    legend_log = []
+    legend_elements = []
+
+    for idim in xrange(len(data)):
+        dim = args.dimensions[idim]
+        print '== dim', dim
+        argsc.dimension = dim
+        gs0 = gridspec.GridSpecFromSubplotSpec(
+            len(yticks), 1, subplot_spec=gs[idim], hspace=0
+        )
+
+        for ian in xrange(len(yticks)):
+            print '=== an', ian
+            ax = fig.add_subplot(gs0[ian])
+            if first_ax is None: first_ax = ax
+            ax.set_xlim(xlims)
+            ylim = (0.5, 1.5)
+            ax.set_ylim(ylim)
+            # ax.set_yticks([ylim[0], 1., ylim[1]])
+            # ax.set_yticklabels([''] + [yticks[ian]] + [''], fontsize=13)
+            # ax.yaxis.get_major_ticks()[0].set_visible(False)
+            # ax.yaxis.get_major_ticks()[2].set_visible(False)
+            ax.set_yticks([1.])
+            ax.set_yticklabels([yticks[ian]], fontsize=13)
+            ax.yaxis.tick_right()
+            for xmaj in ax.xaxis.get_majorticklocs():
+                ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.2, linewidth=1)
+            ax.get_xaxis().set_visible(False)
+            linestyle = (5, (10, 10))
+            if ian == 0:
+                ax.spines['bottom'].set_alpha(0.6)
+            elif ian == 1:
+                ax.text(
+                    -0.04, ylim[0], '$d = {0}$'.format(dim), fontsize=16,
+                    rotation='90', verticalalignment='center',
+                    transform=ax.transAxes
+                )
+                dim_label_flag = False
+                ax.spines['top'].set_alpha(0.6)
+                ax.spines['bottom'].set_alpha(0.6)
+            elif ian == 2:
+                ax.spines['top'].set_alpha(0.6)
+
+            for isrc in xrange(len(data[idim])):
+                src = args.source_ratios[isrc]
+                print '== src', src
+                argsc.source_ratio = src
+
+                if show_data:
+                    alpha = 0.03
+                    col = 'black'
+                else:
+                    alpha = 0.07
+                    col = 'blue'
+                ax.add_patch(patches.Rectangle(
+                    (bote[dim][1], ylim[0]), bote[dim][0]-bote[dim][1], np.diff(ylim),
+                    fill=True, facecolor=col, alpha=alpha, linewidth=0
+                ))
+
+                scales, statistic = data[idim][isrc][ian].T
+                tck, u = interpolate.splprep([scales, statistic], s=0)
+                scales, statistic = interpolate.splev(np.linspace(0, 1, 1000), tck)
+                min_idx = np.argmin(scales)
+                null = statistic[min_idx]
+                if args.stat_method is StatCateg.BAYESIAN:
+                    reduced_ev = -(statistic - null)
+                    al = scales[reduced_ev > np.log(10**(3/2.))] # Strong degree of belief
+                elif args.stat_method is StatCateg.FREQUENTIST:
+                    reduced_ev = -2*(statistic - null)
+                    al = scales[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
+                if len(al) == 0:
+                    print 'No points for DIM {0} FRS {1}!'.format(dim, src)
+                    continue
+                if reduced_ev[-1] < np.log(10**(3/2.)) - 0.1:
+                    print 'Peaked contour does not exclude large scales! For ' \
+                        'DIM {0} FRS{1}!'.format(dim, src)
+                    continue
+                lim = al[0]
+                print 'limit = {0}'.format(lim)
+
+                if show_data:
+                    ax.axvline(x=lim, color=colour[isrc], alpha=1., linewidth=1.5)
+                    ax.add_patch(patches.Rectangle(
+                        (lim, ylim[0]), 100, np.diff(ylim), fill=True, facecolor=colour[isrc],
+                        alpha=0.3, linewidth=0
+                    ))
+
+                    if isrc not in legend_log:
+                        legend_log.append(isrc)
+                        label = '{0} : {1} : {2} at source'.format(*misc_utils.solve_ratio(src))
+                        legend_elements.append(
+                            Patch(facecolor=rgb_co[isrc]+[0.3],
+                                  edgecolor=rgb_co[isrc]+[1], label=label)
+                        )
+
+            if ian == 2:
+                LV_lim = np.log10(LV_atmo_90pc_limits[dim])
+                ax.add_patch(patches.Rectangle(
+                    (LV_lim[1], ylim[0]), LV_lim[0]-LV_lim[1], np.diff(ylim),
+                    fill=False, hatch='\\\\'
+                ))
+
+    ax.get_xaxis().set_visible(True)
+    ax.set_xlabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda^{-1}\:/\:{\rm GeV}^{-d+4})\: ]$',
+                 fontsize=19)
+    ax.tick_params(axis='x', labelsize=16)
+
+    legend_elements.append(
+        Patch(facecolor=col, alpha=alpha+0.1, edgecolor='k', label='max sensitivity')
+    )
+    legend_elements.append(
+        Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube arXiv:1709.03434')
+    )
+
+    legend = first_ax.legend(
+        handles=legend_elements, prop=dict(size=11), loc='upper left',
+        title='Excluded regions', framealpha=1., edgecolor='black',
+        frameon=True
+    )
+    first_ax.set_zorder(10)
+    plt.setp(legend.get_title(), fontsize='11')
+    legend.get_frame().set_linestyle('-')
+
+    if show_data: ybound = 0.65
+    else: ybound = 0.73
+    if args.data is DataType.REAL and show_data:
+        # fig.text(0.295, 0.684, 'IceCube Preliminary', color='red', fontsize=13,
+        fig.text(0.278, ybound, r'\bf IceCube Preliminary', color='red', fontsize=13,
+                 ha='center', va='center', zorder=11)
+    else:
+        fig.text(0.278, ybound, r'\bf IceCube Simulation', color='red', fontsize=13,
+                 ha='center', va='center', zorder=11)
+
+    misc_utils.make_dir(outfile)
+    for of in outformat:
+        print 'Saving plot as {0}'.format(outfile+'.'+of)
+        fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
+
+
 def plot_sens_fixed_angle(data, outfile, outformat, args):
     print 'Making FIXED_ANGLE sensitivity plot'
 
     colour = {0:'red', 1:'blue', 2:'green', 3:'purple', 4:'orange', 5:'black'}
     xticks = [r'$\mathcal{O}_{e\mu}$', r'$\mathcal{O}_{e\tau}$', r'$\mathcal{O}_{\mu\tau}$']
     argsc = deepcopy(args)
+
+    LV_atmo_90pc_limits = dict(np.genfromtxt('./misc/LV_atmo_90pc_limits.txt'))
+    ylims = {
+        3 : (-28, -22), 4 : (-34, -25), 5 : (-42, -28), 6 : (-48, -33),
+        7 : (-54, -37), 8 : (-61, -40)
+    }
+
     for idim in xrange(len(data)):
         dim = args.dimensions[idim]
         print '= dim', dim
         argsc.dimension = dim
 
-        yranges = [np.inf, -np.inf]
+        # yranges = [np.inf, -np.inf]
         legend_handles = []
 
         fig = plt.figure(figsize=(7, 5))
         ax = fig.add_subplot(111)
         ax.set_xlim(0, len(xticks)+1)
-        ax.set_xticklabels([''] + xticks + [''], fontsize=14)
+        ax.set_xticklabels([''] + xticks + [''], fontsize=16)
         ax.set_xlabel(r'BSM operator angle', fontsize=16)
         ax.set_ylabel(r'${\mathrm {log}}_{10} \left (\Lambda^{-1}' + \
-                      get_units(dim) +r'\right )$', fontsize=16)
+                      get_units(dim) +r'\right )$', fontsize=17)
 
-        # ax.tick_params(axis='x', labelsize=11)
-        ax.tick_params(axis='y', labelsize=14)
+        ax.tick_params(axis='y', labelsize=15)
 
         for isrc in xrange(len(data[idim])):
             src = args.source_ratios[isrc]
@@ -418,24 +618,19 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                 elif args.stat_method is StatCateg.FREQUENTIST:
                     reduced_ev = -2*(statistic - null)
                     al = scales[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
-                print 'reduced_ev', reduced_ev
                 if len(al) == 0:
-                    print 'No points for DIM {0} FRS {1}\nreduced_ev {2}!'.format(
-                        dim, src, reduced_ev
-                    )
+                    print 'No points for DIM {0} FRS {1}!'.format(dim, src)
                     continue
                 if reduced_ev[-1] < np.log(10**(3/2.)) - 0.1:
                     print 'Peaked contour does not exclude large scales! For ' \
-                        'DIM {0} FRS{1} reduced_ev {2}!'.format(
-                        dim, src, reduced_ev
-                    )
+                        'DIM {0} FRS{1}!'.format(dim, src)
                     continue
-                arr_len = dim-2
+                arr_len = 1.5
                 lim = al[0]
                 print 'limit = {0}'.format(lim)
                 label = '{0} : {1} : {2}'.format(*misc_utils.solve_ratio(src))
-                if lim < yranges[0]: yranges[0] = lim-arr_len
-                if lim > yranges[1]: yranges[1] = lim+arr_len+2
+                # if lim < yranges[0]: yranges[0] = lim-arr_len
+                # if lim > yranges[1]: yranges[1] = lim+arr_len+2
                 # if lim > yranges[1]: yranges[1] = lim
                 xoff = 0.15
                 line = plt.Line2D(
@@ -446,19 +641,30 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                     legend_handles.append(line)
                 x_offset = isrc*xoff/2. - xoff/2.
                 ax.annotate(
-                    s='', xy=(ian+1+x_offset, lim-0.02), xytext=(ian+1+x_offset, lim+arr_len),
+                    s='', xy=(ian+1+x_offset, lim+0.02), xytext=(ian+1+x_offset, lim-arr_len),
                     arrowprops={'arrowstyle': '<-', 'lw': 1.5, 'color':colour[isrc]}
                 )
+                if ian == 2:
+                    lim = np.log10(LV_atmo_90pc_limits[dim])
+                    ax.add_patch(patches.Rectangle(
+                        (ian+1-xoff, lim), 2*xoff, 100, fill=True,
+                        facecolor='orange', alpha=0.3, linewidth=1, edgecolor='k'
+                    ))
+                    ax.annotate(s='IC atmospheric', xy=(ian+1, lim+0.13),
+                                color='red', rotation=90, fontsize=7,
+                                horizontalalignment='center',
+                                verticalalignment='bottom')
 
-        try:
-            yranges = (myround(yranges[0], up=True), myround(yranges[1], down=True))
-            ax.set_ylim(yranges)
-        except: pass
+        # try:
+        #     yranges = (myround(yranges[0], up=True), myround(yranges[1], down=True))
+        #     ax.set_ylim(yranges)
+        # except: pass
+        ax.set_ylim(ylims[dim])
 
-        legend = ax.legend(handles=legend_handles, prop=dict(size=8), loc='upper right',
+        legend = ax.legend(handles=legend_handles, prop=dict(size=10), loc='lower left',
                            title=r'$\nu_e:\nu_\mu:\nu_\tau{\rm\:\:at\:\:source}$',
                            framealpha=1., edgecolor='black')
-        plt.setp(legend.get_title(), fontsize='8')
+        plt.setp(legend.get_title(), fontsize='10')
         legend.get_frame().set_linestyle('-')
 
         an_text = 'Dimension {0}'.format(dim)
@@ -468,31 +674,28 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
         at.patch.set_boxstyle("round,pad=0.1,rounding_size=0.5")
         ax.add_artist(at)
 
-        fig.text(0.42, 0.8, r'Excluded', color='red', fontsize=16, ha='center',
+        fig.text(0.52, 0.8, r'Excluded', color='red', fontsize=16, ha='center',
                  va='center', fontweight='bold')
+        # fig.text(0.52, 0.76, r'with strong evidence', color='red', fontsize=11,
+        #          ha='center', va='center')
 
         if args.data is DataType.REAL:
-            fig.text(0.805, 0.14, 'IceCube Preliminary', color='red', fontsize=9,
+            fig.text(0.77, 0.14, 'IceCube Preliminary', color='red', fontsize=10,
                      ha='center', va='center')
-        elif args.data is DataType.ASIMOV:
-            fig.text(0.805, 0.14, 'IceCube Simulation', color='red', fontsize=9,
+        elif args.data in [DataType.ASIMOV, DataType.REALISATION]:
+            fig.text(0.77, 0.14, 'IceCube Simulation', color='red', fontsize=10,
                      ha='center', va='center')
 
         for ymaj in ax.yaxis.get_majorticklocs():
-            ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.4, linewidth=1)
+            ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.2, linewidth=1)
         for xmaj in ax.xaxis.get_majorticklocs():
-            ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.4, linewidth=1)
+            ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.2, linewidth=1)
 
         out = outfile + '_DIM{0}'.format(dim)
         misc_utils.make_dir(out)
         for of in outformat:
             print 'Saving plot as {0}'.format(out+'.'+of)
             fig.savefig(out+'.'+of, bbox_inches='tight', dpi=150)
-
-        for ymaj in ax.yaxis.get_majorticklocs():
-            ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.4, linewidth=1)
-        for xmaj in ax.xaxis.get_majorticklocs():
-            ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.4, linewidth=1)
 
 
 def plot_sens_corr_angle(data, outfile, outformat, args):

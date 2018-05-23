@@ -18,7 +18,7 @@ import numpy as np
 
 from utils.plot import get_units
 from utils.fr import fr_to_angles
-from utils.enums import Likelihood, ParamTag, PriorsCateg
+from utils.enums import DataType, Likelihood, ParamTag, PriorsCateg
 
 
 class Param(object):

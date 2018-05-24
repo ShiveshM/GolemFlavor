@@ -412,12 +412,12 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
 
     en = np.log10([1E4, 1E7])
     bote = {
-        3: (-21-(en[0]+en[0]*0), -21-(en[1]+en[1]*0)),
-        4: (-21-(en[0]+en[0]*1), -21-(en[1]+en[1]*1)),
-        5: (-21-(en[0]+en[0]*2), -21-(en[1]+en[1]*2)),
-        6: (-21-(en[0]+en[0]*3), -21-(en[1]+en[1]*3)),
-        7: (-21-(en[0]+en[0]*4), -21-(en[1]+en[1]*4)),
-        8: (-21-(en[0]+en[0]*5), -21-(en[1]+en[1]*5))
+        3: (-21-(en[0]*1), -21-(en[1]+en[1]*1)),
+        4: (-21-(en[0]*2), -21-(en[1]+en[1]*2)),
+        5: (-21-(en[0]*3), -21-(en[1]+en[1]*3)),
+        6: (-21-(en[0]*4), -21-(en[1]+en[1]*4)),
+        7: (-21-(en[0]*5), -21-(en[1]+en[1]*5)),
+        8: (-21-(en[0]*6), -21-(en[1]+en[1]*6))
     }
 
     colour = {0:'red', 1:'blue', 2:'green'}
@@ -720,6 +720,7 @@ def plot_sens_corr_angle(data, outfile, outformat, args):
         for isrc in xrange(len(data[idim])):
             src = args.source_ratios[isrc]
             argsc.source_ratio = src
+            fig_text = gen_figtext(argsc)
             print '== src', src
             for ian in xrange(len(data[idim][isrc])):
                 print '=== an', ian
@@ -836,6 +837,11 @@ def plot_sens_corr_angle(data, outfile, outformat, args):
                         xi, yi = p_x, p_y
                     ax.fill(xi, yi, 'r', edgecolor='r', linewidth=1)
 
+                at = AnchoredText(
+                    fig_text, prop=dict(size=10), frameon=True, loc=4
+                )
+                at.patch.set_boxstyle("round,pad=0.1,rounding_size=0.5")
+                ax.add_artist(at)
                 out = outfile + '_DIM{0}_SRC{1}_AN{2}'.format(dim, isrc, ian)
                 misc_utils.make_dir(out)
                 for of in outformat:

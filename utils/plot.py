@@ -264,7 +264,7 @@ def myround(x, base=2, up=False, down=False):
 def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     """Make MultiNest factor or LLH value plot."""
     print 'Making Statistic plot'
-    fig_text = '\n' + gen_figtext(args)
+    fig_text = gen_figtext(args)
     if label is not None: fig_text += '\n' + label
 
     print 'data', data
@@ -538,7 +538,7 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
     ax.tick_params(axis='x', labelsize=16)
 
     legend_elements.append(
-        Patch(facecolor=col, alpha=alpha+0.1, edgecolor='k', label='max sensitivity')
+        Patch(facecolor=col, alpha=alpha+0.1, edgecolor='k', label='maximum reach')
     )
     legend_elements.append(
         Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube arXiv:1709.03434')
@@ -576,7 +576,14 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
     xticks = [r'$\mathcal{O}_{e\mu}$', r'$\mathcal{O}_{e\tau}$', r'$\mathcal{O}_{\mu\tau}$']
     argsc = deepcopy(args)
 
-    LV_atmo_90pc_limits = dict(np.genfromtxt('./misc/LV_atmo_90pc_limits.txt'))
+    LV_atmo_90pc_limits = {
+        3: (2E-24, 1E-1),
+        4: (2.7E-28, 3.16E-25),
+        5: (1.5E-32, 1.12E-27),
+        6: (9.1E-37, 2.82E-30),
+        7: (3.6E-41, 1.77E-32),
+        8: (1.4E-45, 1.00E-34)
+    }
     ylims = {
         3 : (-28, -22), 4 : (-34, -25), 5 : (-42, -28), 6 : (-48, -33),
         7 : (-54, -37), 8 : (-61, -40)
@@ -645,7 +652,7 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                     arrowprops={'arrowstyle': '<-', 'lw': 1.5, 'color':colour[isrc]}
                 )
                 if ian == 2:
-                    lim = np.log10(LV_atmo_90pc_limits[dim])
+                    lim = np.log10(LV_atmo_90pc_limits[dim][0])
                     ax.add_patch(patches.Rectangle(
                         (ian+1-xoff, lim), 2*xoff, 100, fill=True,
                         facecolor='orange', alpha=0.3, linewidth=1, edgecolor='k'

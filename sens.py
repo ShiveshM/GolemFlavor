@@ -357,9 +357,9 @@ def main():
             for idx_scen in xrange(len(st_paramset_arr)):
                 print '|||| SCENARIO = {0}'.format(idx_scen)
                 outfile = baseoutfile + '_SCEN{0}'.format(idx_scen)
-                if idx_scen == 0: label = r'$\mathcal{O}_{12}=\frac{\pi}{4}$'
-                elif idx_scen == 1: label = r'$\mathcal{O}_{13}=\frac{\pi}{4}$'
-                elif idx_scen == 2: label = r'$\mathcal{O}_{23}=\frac{\pi}{4}$'
+                if idx_scen == 0: label = r'$\mathcal{O}_{12}=\pi/4$'
+                elif idx_scen == 1: label = r'$\mathcal{O}_{13}=\pi/4$'
+                elif idx_scen == 2: label = r'$\mathcal{O}_{23}=\pi/4$'
                 plot_utils.plot_statistic(
                     data        = data[idx_scen],
                     outfile     = outfile,

@@ -408,6 +408,15 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
         8: (1.4E-45, 1.00E-34)
     }
 
+    best_limits = {
+        3: ('CMB polarization', 1E-43, 'brown'),
+        4: ('GRB vacuum birefringence', 1E-38, 'lightgreen'),
+        5: ('GRB vacuum birefringence', 1E-34, 'lightgreen'),
+        6: ('UHE cosmic ray', 1E-42, 'violet'),
+        7: ('GRB vacuum birefringence', 1E-28, 'lightgreen'),
+        8: ('gravitational Cherenkov radiation', 1E-46, 'lightblue')
+    }
+
     show_data = True
 
     en = np.log10([1E4, 1E7])
@@ -448,10 +457,6 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
             ax.set_xlim(xlims)
             ylim = (0.5, 1.5)
             ax.set_ylim(ylim)
-            # ax.set_yticks([ylim[0], 1., ylim[1]])
-            # ax.set_yticklabels([''] + [yticks[ian]] + [''], fontsize=13)
-            # ax.yaxis.get_major_ticks()[0].set_visible(False)
-            # ax.yaxis.get_major_ticks()[2].set_visible(False)
             ax.set_yticks([1.])
             ax.set_yticklabels([yticks[ian]], fontsize=13)
             ax.yaxis.tick_right()
@@ -488,6 +493,8 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
                     (bote[dim][1], ylim[0]), bote[dim][0]-bote[dim][1], np.diff(ylim),
                     fill=True, facecolor=col, alpha=alpha, linewidth=0
                 ))
+                bc_limit = best_limits[dim]
+                # ax.axvline(x=np.log10(bc_limit[1]), color=bc_limit[2], alpha=0.7, linewidth=1.5)
 
                 scales, statistic = data[idim][isrc][ian].T
                 tck, u = interpolate.splprep([scales, statistic], s=0)
@@ -531,6 +538,15 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
                     (LV_lim[1], ylim[0]), LV_lim[0]-LV_lim[1], np.diff(ylim),
                     fill=False, hatch='\\\\'
                 ))
+
+    # fig.text(
+    #     0.06, 0.5, r'Dimension $d$ of SME coefficient', fontsize=16, rotation='90',
+    #     verticalalignment='center'
+    # )
+    # fig.text(
+    #     0.96, 0.5, r'New Physics Maximal Mixing Scenario', fontsize=16,
+    #     rotation='270', verticalalignment='center'
+    # )
 
     ax.get_xaxis().set_visible(True)
     ax.set_xlabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda^{-1}\:/\:{\rm GeV}^{-d+4})\: ]$',

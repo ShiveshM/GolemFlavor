@@ -23,7 +23,9 @@ fp = gf.FitParameters(gf.sampleTag.MagicTau)
 fp.astroFlavorAngle1 = 4./9.
 fp.astroFlavorAngle2 = 0.
 
-golem.SetupAsimov(fp)
+# golem.SetupAsimov(fp)
+seed = 0
+golem.Swallow(golem.SpitRealization(fp, seed))
 
 fp_sh = gf.FitParameters(gf.sampleTag.MagicTau)
 # fp_sh.astroFlavorAngle1 = 0.36

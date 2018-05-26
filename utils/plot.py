@@ -14,6 +14,7 @@ import socket
 from copy import deepcopy
 
 import numpy as np
+import numpy.ma as ma
 from scipy import interpolate
 
 import matplotlib as mpl
@@ -269,7 +270,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
 
     print 'data', data
     print 'data.shape', data.shape
-    scales, statistic = data.T
+    scales, statistic = ma.compress_rows(data).T
     tck, u = interpolate.splprep([scales, statistic], s=0)
     scales, statistic = interpolate.splev(np.linspace(0, 1, 1000), tck)
     print 'scales', scales
@@ -496,7 +497,7 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
                 bc_limit = best_limits[dim]
                 # ax.axvline(x=np.log10(bc_limit[1]), color=bc_limit[2], alpha=0.7, linewidth=1.5)
 
-                scales, statistic = data[idim][isrc][ian].T
+                scales, statistic = ma.compress_rows(data[idim][isrc][ian]).T
                 tck, u = interpolate.splprep([scales, statistic], s=0)
                 scales, statistic = interpolate.splev(np.linspace(0, 1, 1000), tck)
                 min_idx = np.argmin(scales)

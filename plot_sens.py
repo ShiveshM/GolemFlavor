@@ -260,9 +260,9 @@ def main():
                     print 'Unable to load file {0}'.format(infile+'.npy')
                     continue
 
-    print 'statistic_arr', statistic_arr
-
     data = ma.masked_invalid(statistic_arr)
+
+    print 'data', data
     if args.plot_statistic:
         print 'Plotting statistic'
 

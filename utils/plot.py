@@ -408,6 +408,13 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
         7: (3.6E-41, 1.77E-32),
         8: (1.4E-45, 1.00E-34)
     }
+    PS = 8.203e-20 # GeV^{-1}
+    planck_scale = {
+        5: PS,
+        6: PS**2,
+        7: PS**3,
+        8: PS**4
+    }
 
     best_limits = {
         3: ('CMB polarization', 1E-43, 'brown'),
@@ -497,6 +504,23 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
                 bc_limit = best_limits[dim]
                 # ax.axvline(x=np.log10(bc_limit[1]), color=bc_limit[2], alpha=0.7, linewidth=1.5)
 
+                if dim in planck_scale:
+                    ps = np.log10(planck_scale[dim])
+                    if ps < xlims[0]:
+                        ax.annotate(
+                            s='', xy=(xlims[0], 1), xytext=(xlims[0]+1, 1),
+                            arrowprops={'arrowstyle': '->, head_length=0.2',
+                                        'lw': 1, 'color':'purple'}
+                        )
+                    elif ps > xlims[1]:
+                        ax.annotate(
+                            s='', xy=(xlims[1]-1, 1), xytext=(xlims[1], 1),
+                            arrowprops={'arrowstyle': '<-, head_length=0.2',
+                                        'lw': 1, 'color':'purple'}
+                        )
+                    else:
+                        ax.axvline(x=ps, color='purple', alpha=1., linewidth=1.5)
+
                 scales, statistic = ma.compress_rows(data[idim][isrc][ian]).T
                 tck, u = interpolate.splprep([scales, statistic], s=0)
                 scales, statistic = interpolate.splev(np.linspace(0, 1, 1000), tck)
@@ -557,6 +581,10 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
     legend_elements.append(
         Patch(facecolor=col, alpha=alpha+0.1, edgecolor='k', label='maximum reach')
     )
+    purple = [0.5019607843137255, 0.0, 0.5019607843137255]
+    legend_elements.append(
+        Patch(facecolor=purple+[0.7], edgecolor=purple+[1], label='Planck Scale')
+    )
     legend_elements.append(
         Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube arXiv:1709.03434')
     )
@@ -570,11 +598,14 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
     plt.setp(legend.get_title(), fontsize='11')
     legend.get_frame().set_linestyle('-')
 
-    if show_data: ybound = 0.65
+    if show_data: ybound = 0.595
     else: ybound = 0.73
     if args.data is DataType.REAL and show_data:
         # fig.text(0.295, 0.684, 'IceCube Preliminary', color='red', fontsize=13,
         fig.text(0.278, ybound, r'\bf IceCube Preliminary', color='red', fontsize=13,
+                 ha='center', va='center', zorder=11)
+    elif args.data is DataType.REALISATION:
+        fig.text(0.278, ybound-0.05, r'\bf IceCube Simulation', color='red', fontsize=13,
                  ha='center', va='center', zorder=11)
     else:
         fig.text(0.278, ybound, r'\bf IceCube Simulation', color='red', fontsize=13,

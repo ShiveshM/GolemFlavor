@@ -56,7 +56,7 @@ def define_nuisance():
         Param(name='promptNorm',      value=0.,  seed=[0. , 6. ], ranges=[0. , 50.], std=0.05, tag=tag),
         Param(name='muonNorm',        value=1.,  seed=[0.1, 2. ], ranges=[0. , 50.], std=0.1,  tag=tag),
         Param(name='astroNorm',       value=6.9, seed=[0.1, 10.], ranges=[0. , 50.], std=0.1,  tag=tag),
-        Param(name='astroDeltaGamma', value=2.5, seed=[1. , 3. ], ranges=[-5., 5. ], std=0.1,  tag=tag)
+        Param(name='astroDeltaGamma', value=2.5, seed=[2.4, 3. ], ranges=[-5., 5. ], std=0.1,  tag=tag)
     ])
     return ParamSet(nuisance)
 
@@ -288,6 +288,9 @@ def main():
                         print '## Evidence = {0}'.format(stat)
                     elif args.stat_method is StatCateg.FREQUENTIST:
                         def fn(x):
+                            # Force prior ranges to be inside "seed"
+                            for el in x:
+                                if el < 0 or el > 1: return np.inf
                             pranges = sens_paramset.seeds
                             for i, name in enumerate(sens_paramset.names):
                                 llh_paramset[name].value = \
@@ -316,8 +319,8 @@ def main():
                                 if s > stat:
                                     stat = s
                         except AssertionError:
-                            print 'Failed run, continuing'
-                            # raise
+                            # print 'Failed run, continuing'
+                            raise
                             continue
                         print '=== final llh', stat
                     if args.run_method is SensitivityCateg.FULL:

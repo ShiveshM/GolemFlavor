@@ -30,7 +30,7 @@ GLOBAL_PARAMS.update(dict(
     run_method    = 'fixed_angle', # full, fixed_angle, corr_angle
     stat_method   = 'bayesian',
     sens_bins     = 20,
-    seed          = 'None'
+    seed          = None
 ))
 
 # MultiNest
@@ -41,9 +41,9 @@ GLOBAL_PARAMS.update(dict(
 ))
 
 # FR
-# dimension         = [3]
-dimension         = [3, 6]
-# dimension         = [4, 5, 7, 8]
+dimension         = [3]
+# dimension         = [3, 6]
+# dimension         = [3, 4, 5, 6, 7, 8]
 GLOBAL_PARAMS.update(dict(
     threads           = 1,
     binning           = '6e4 1e7 20',
@@ -77,7 +77,7 @@ outfile = 'dagman_FR_SENS_{0}_{1}_{2}_{3}'.format(
     GLOBAL_PARAMS['stat_method'], GLOBAL_PARAMS['run_method'],
     GLOBAL_PARAMS['likelihood'], GLOBAL_PARAMS['data']
 )
-# outfile += '_100TeV'
+outfile += '_seed2'
 outfile += '.submit'
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/sens_submit.sub'
@@ -101,7 +101,7 @@ with open(outfile, 'w') as f:
             output = outchain_head + '/fix_ifr/'
             if GLOBAL_PARAMS['likelihood'].lower() == 'gaussian':
                 output += '{0}/'.format(str(GLOBAL_PARAMS['sigma_ratio']).replace('.', '_'))
-            # output += '100TeV/'
+            output += 'seed2/'
             for r in xrange(sens_runs):
                 print 'run', r
                 f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))

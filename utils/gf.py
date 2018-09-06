@@ -95,7 +95,7 @@ def setup_fitter(args, asimov_paramset):
     if args.data is DataType.ASIMOV:
         setup_asimov(fitter, asimov_paramset)
     elif args.data is DataType.REALISATION:
-        seed = args.seed if args.seed is not None else 0
+        seed = args.seed if args.seed is not None else 1
         setup_realisation(fitter, asimov_paramset, seed)
     elif args.data is DataType.REAL:
         print 'Using MagicTau DATA'

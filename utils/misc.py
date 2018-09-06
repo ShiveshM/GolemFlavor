@@ -19,7 +19,7 @@ from operator import attrgetter
 
 import numpy as np
 
-from utils.enums import Likelihood
+from utils.enums import Likelihood, MixingScenario
 
 
 class SortingHelpFormatter(argparse.HelpFormatter):
@@ -42,16 +42,16 @@ def gen_identifier(args):
         f += '_sfr_{0:G}_{1:G}_{2:G}_mfr_{3:G}_{4:G}_{5:G}'.format(
             sr1, sr2, sr3, mr1, mr2, mr3
         )
-        if args.fix_mixing:
-            f += '_fix_mixing'
+        if args.fix_mixing is not MixingScenario.NONE:
+            f += '_{0}'.format(args.fix_mixing)
         elif args.fix_mixing_almost:
             f += '_fix_mixing_almost'
         elif args.fix_scale:
             f += '_fix_scale_{0}'.format(args.scale)
     else:
         f += '_mfr_{3:03d}_{4:03d}_{5:03d}'.format(mr1, mr2, mr3)
-    if args.fix_mixing:
-        f += '_fix_mixing'
+    if args.fix_mixing is not MixingScenario.NONE:
+        f += '_{0}'.format(args.fix_mixing)
     elif args.fix_mixing_almost:
         f += '_fix_mixing_almost'
     elif args.fix_scale:

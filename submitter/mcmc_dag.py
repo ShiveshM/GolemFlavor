@@ -44,7 +44,7 @@ GLOBAL_PARAMS.update(dict(
     scale_region      = "1E10",
     energy_dependance = 'spectral',
     spectral_index    = -2,
-    fix_mixing        = 'False',
+    fix_mixing        = 'None',
     fix_mixing_almost = 'False',
     fold_index        = 'True'
 ))

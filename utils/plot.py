@@ -31,7 +31,7 @@ from getdist import plots, mcsamples
 
 from utils import misc as misc_utils
 from utils.enums import DataType, EnergyDependance
-from utils.enums import Likelihood, ParamTag, StatCateg
+from utils.enums import Likelihood, MixingScenario, ParamTag, StatCateg
 from utils.fr import angles_to_u, angles_to_fr
 
 plt.style.use(os.environ['GOLEMSOURCEPATH']+'/GolemFit/scripts/paper/paper.mplstyle')
@@ -228,7 +228,7 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset):
 
         trns_ranges = np.array(ranges)[nu_index,].tolist()
         trns_axes_labels = np.array(axes_labels)[nu_index,].tolist()
-        if not args.fix_mixing:
+        if args.fix_mixing is not MixingScenario.NONE:
             trns_axes_labels += \
                 [r'\mid \tilde{U}_{e1} \mid'    , r'\mid \tilde{U}_{e2} \mid'    , r'\mid \tilde{U}_{e3} \mid'     , \
                  r'\mid \tilde{U}_{\mu1} \mid'  , r'\mid \tilde{U}_{\mu2} \mid'  , r'\mid \tilde{U}_{\mu3} \mid'   , \

@@ -31,7 +31,7 @@ def normalise_fr(fr):
 
 SOURCE_FR = normalise_fr([1, 1, 1])
 SIGMA = 0.001
-ANGLES = (np.sin(np.pi/4.)**2, 0, 0, 0)
+ANGLES = (np.sin(np.pi/4.)**2, 1.0, 0, 0)
 
 
 def angles_to_u(bsm_angles):

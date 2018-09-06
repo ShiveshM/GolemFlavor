@@ -13,7 +13,7 @@ from functools import partial
 
 import numpy as np
 
-from utils.enums import EnergyDependance
+from utils.enums import EnergyDependance, MixingScenario
 from utils.misc import enum_parse, parse_bool
 
 import mpmath as mp
@@ -303,8 +303,9 @@ def fr_argparse(parser):
         help='Fix the source flavour ratio'
     )
     parser.add_argument(
-        '--fix-mixing', type=parse_bool, default='False',
-        help='Fix all mixing parameters to bi-maximal mixing'
+        '--fix-mixing', type=partial(enum_parse, c=MixingScenario),
+        default='None', choices=MixingScenario,
+        help='Fix all mixing parameters to choice of maximal mixing'
     )
     parser.add_argument(
         '--fix-mixing-almost', type=parse_bool, default='False',
@@ -350,7 +351,7 @@ NUFIT_U = angles_to_u((0.307, (1-0.02195)**2, 0.565, 3.97935))
 
 
 def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
-                   sm_u=NUFIT_U, no_bsm=False, fix_mixing=False,
+                   sm_u=NUFIT_U, no_bsm=False, fix_mixing=MixingScenario.NONE,
                    fix_mixing_almost=False, fix_scale=False, scale=None,
                    check_uni=True, epsilon=1e-7):
     """Construct the BSM mixing matrix from the BSM parameters.
@@ -375,7 +376,7 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
     no_bsm : bool
         Turn off BSM behaviour
 
-    fix_mixing : bool
+    fix_mixing : MixingScenario
         Fix the BSM mixing angles
 
     fix_mixing_almost : bool
@@ -409,13 +410,17 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
             'got\n{0}'.format(sm_u)
         )
 
-    if fix_mixing and fix_mixing_almost:
+    if fix_mixing is not MixingScenario.NONE and fix_mixing_almost:
         raise NotImplementedError(
             '--fix-mixing and --fix-mixing-almost cannot be used together'
         )
 
-    if fix_mixing:
-        s12_2, c13_4, s23_2, dcp, sc2 = 0.5, 1.0-1E-6, 0.5, 0., theta
+    if fix_mixing is MixingScenario.T12:
+        s12_2, c13_4, s23_2, dcp, sc2 = 0.5, 1.0, 0.0, 0., theta
+    elif fix_mixing is MixingScenario.T13:
+        s12_2, c13_4, s23_2, dcp, sc2 = 0.0, 0.25, 0.0, 0., theta
+    elif fix_mixing is MixingScenario.T23:
+        s12_2, c13_4, s23_2, dcp, sc2 = 0.0, 1.0, 0.5, 0., theta
     elif fix_mixing_almost:
         s12_2, c13_4, dcp = 0.5, 1.0-1E-6, 0.
         s23_2, sc2 = theta

@@ -23,7 +23,7 @@ from utils import gf as gf_utils
 from utils import likelihood as llh_utils
 from utils import misc as misc_utils
 from utils import plot as plot_utils
-from utils.enums import EnergyDependance, Likelihood, ParamTag
+from utils.enums import EnergyDependance, Likelihood, MixingScenario, ParamTag
 from utils.enums import PriorsCateg, SensitivityCateg, StatCateg
 from utils.param import Param, ParamSet, get_paramsets
 
@@ -72,9 +72,9 @@ def nuisance_argparse(parser):
 
 def process_args(args):
     """Process the input args."""
-    if args.fix_mixing and args.fix_scale:
+    if args.fix_mixing is not MixingScenario.NONE and args.fix_scale:
         raise NotImplementedError('Fixed mixing and scale not implemented')
-    if args.fix_mixing and args.fix_mixing_almost:
+    if args.fix_mixing is not MixingScenario.NONE and args.fix_mixing_almost:
         raise NotImplementedError(
             '--fix-mixing and --fix-mixing-almost cannot be used together'
         )

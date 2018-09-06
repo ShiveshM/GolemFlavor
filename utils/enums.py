@@ -28,6 +28,13 @@ class Likelihood(Enum):
     GF_FREQ  = 4
 
 
+class MixingScenario(Enum):
+    T12  = 1
+    T13  = 2
+    T23  = 3
+    NONE = 4
+
+
 class ParamTag(Enum):
     NUISANCE  = 1
     SM_ANGLES = 2

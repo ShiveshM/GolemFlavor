@@ -502,7 +502,7 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
                     ax.spines['bottom'].set_alpha(0.6)
                 elif ian == 1:
                     ax.text(
-                        -0.04, ylim[0], '$d = {0}$'.format(dim), fontsize=16,
+                        -0.04, ylim[0]+0.3, r'$d = {0}$'.format(dim), fontsize=16,
                         rotation='90', verticalalignment='top',
                         transform=ax.transAxes
                     )

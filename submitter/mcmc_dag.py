@@ -25,7 +25,7 @@ GLOBAL_PARAMS = {}
 
 # MCMC
 GLOBAL_PARAMS.update(dict(
-    run_mcmc = 'False',
+    run_mcmc = 'True',
     burnin   = 250,
     nsteps   = 1000,
     nwalkers = 60,
@@ -34,9 +34,9 @@ GLOBAL_PARAMS.update(dict(
 ))
 
 # FR
-# dimension         = [3, 6]
+dimension         = [6]
 # dimension         = [4, 5, 7, 8]
-dimension         = [3, 4, 5, 6, 7, 8]
+# dimension         = [3, 4, 5, 6, 7, 8]
 GLOBAL_PARAMS.update(dict(
     threads           = 1,
     binning           = '6e4 1e7 20',
@@ -44,7 +44,7 @@ GLOBAL_PARAMS.update(dict(
     scale_region      = "1E10",
     energy_dependance = 'spectral',
     spectral_index    = -2,
-    fix_mixing        = 'None',
+    fix_mixing        = 'T23',
     fix_mixing_almost = 'False',
     fold_index        = 'True'
 ))
@@ -67,7 +67,8 @@ GLOBAL_PARAMS.update(dict(
     plot_elements     = 'False',
 ))
 
-outfile = 'dagman_FR_MCMC_{0}.submit'.format(GLOBAL_PARAMS['likelihood'])
+outfile = 'dagman_FR_MCMC_{0}_{1}.submit'.format(GLOBAL_PARAMS['likelihood'],
+                                                 GLOBAL_PARAMS['fix_mixing'])
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/mcmc_submit.sub'
 
@@ -80,7 +81,7 @@ with open(outfile, 'w') as f:
         )
         for frs in fix_sfr_mfr:
             print 'frs', frs
-            outchains = outchain_head + '/fix_ifr/'
+            outchains = outchain_head + '/fix_ifr/' + '{0}/'.format(GLOBAL_PARAMS['fix_mixing'])
             if GLOBAL_PARAMS['likelihood'].lower() == 'gaussian':
                 outchains += '{0}/'.format(str(GLOBAL_PARAMS['sigma_ratio']).replace('.', '_'))
             outchains += '{0}/'.format(GLOBAL_PARAMS['data'].lower())

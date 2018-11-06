@@ -13,7 +13,11 @@ from functools import partial
 
 import numpy as np
 
-import GolemFitPy as gf
+try:
+    import GolemFitPy as gf
+except:
+    print 'Running without GolemFit'
+    pass
 
 from utils.enums import DataType, SteeringCateg
 from utils.misc import enum_parse, thread_factors

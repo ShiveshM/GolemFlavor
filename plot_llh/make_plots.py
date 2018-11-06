@@ -67,7 +67,7 @@ for i in range(len(sys.argv)-1):
 
     # plots scale and diviions
     scale = 8
-    divisions = 40
+    divisions = 80
 
     print "Begin making plot ..."
     triangle_collection = LVCPT.GenerateTriangles(scale,divisions*2)

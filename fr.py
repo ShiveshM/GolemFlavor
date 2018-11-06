@@ -46,6 +46,18 @@ def define_nuisance():
             name='m3x_2', value=2.494E-21, seed=[2.46E-21, 2.53E-21], ranges=[2.399E-21, 2.593E-21],
             std=3.3E-23, tex=r'\Delta m_{3x}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag
         )
+        # Param(name='s_12_2', value=0.307,            ranges=[0., 1.],      std=20,   tex=r's_{12}^2', prior=g_prior,  tag=tag),
+        # Param(name='c_13_4', value=(1-(0.02206))**2, ranges=[0., 1.],      std=20, tex=r'c_{13}^4', prior=g_prior, tag=tag),
+        # Param(name='s_23_2', value=0.538,            ranges=[0., 1.],      std=20,  tex=r's_{23}^2', prior=g_prior,  tag=tag),
+        # Param(name='dcp',    value=4.08404,          ranges=[0., 2*np.pi], std=20,     tex=r'\delta_{CP}', tag=tag),
+        # Param(
+        #     name='m21_2', value=7.40E-23, ranges=[6.80E-23, 8.02E-23],
+        #     std=2.1E-24, tex=r'\Delta m_{21}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag
+        # ),
+        # Param(
+        #     name='m3x_2', value=2.494E-21, ranges=[2.399E-21, 2.593E-21],
+        #     std=3.3E-23, tex=r'\Delta m_{3x}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag
+        # )
     ])
     tag = ParamTag.NUISANCE
     nuisance.extend([
@@ -108,7 +120,9 @@ def parse_args(args=None):
         help='Path to output results'
     )
     fr_utils.fr_argparse(parser)
-    gf_utils.gf_argparse(parser)
+    try:
+        gf_utils.gf_argparse(parser)
+    except: pass
     llh_utils.likelihood_argparse(parser)
     mcmc_utils.mcmc_argparse(parser)
     nuisance_argparse(parser)
@@ -132,6 +146,9 @@ def main():
         if args.likelihood is Likelihood.GOLEMFIT:
             fitter = gf_utils.setup_fitter(args, asimov_paramset)
         else: fitter = None
+
+        print 'asimov_paramset', asimov_paramset
+        print 'llh_paramset', llh_paramset
 
         ln_prob = partial(
             llh_utils.ln_prob, args=args, fitter=fitter,

@@ -1,0 +1,3 @@
+python sample.py --fix-mixing T23 --fix-source-ratio True --source-ratio 1 0 0 --sigma-ratio 0.01 --threads 4 --outfile ./mcmc_chains --nsteps 400
+python fr.py --likelihood gaussian --fix-source-ratio True --source-ratio 0 1 0 --measured-ratio 0.18301213 0.43765598 0.37933189 --no-bsm True --sigma-ratio 100 --fix-scale True --scale 1E-1 --threads 4 --energy-dependance mono --nsteps 200 --plot-angles False --plot-elements False
+python fr.py --likelihood gaussian --fix-source-ratio True --source-ratio 1 0 0 --measured-ratio 0.55003613 0.18301213 0.26695174 --no-bsm True --sigma-ratio 100 --fix-scale True --scale 1E-1 --threads 4 --energy-dependance mono --nsteps 200 --plot-angles False --plot-elements False

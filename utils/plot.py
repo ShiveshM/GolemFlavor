@@ -34,7 +34,10 @@ from utils.enums import DataType, EnergyDependance
 from utils.enums import Likelihood, MixingScenario, ParamTag, StatCateg
 from utils.fr import angles_to_u, angles_to_fr
 
-plt.style.use(os.environ['GOLEMSOURCEPATH']+'/GolemFit/scripts/paper/paper.mplstyle')
+if os.environ.get('GOLEMSOURCEPATH') is not None:
+    plt.style.use(os.environ['GOLEMSOURCEPATH']+'/GolemFit/scripts/paper/paper.mplstyle')
+elif os.path.isfile('./paper.mplstyle'):
+    plt.style.use('./paper.mplstyle')
 if 'submitter' in socket.gethostname():
     rc('text', usetex=False)
 

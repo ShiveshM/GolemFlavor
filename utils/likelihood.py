@@ -126,7 +126,9 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
         mass_eigenvalues = fr_utils.MASS_EIGENVALUES
         sm_u = fr_utils.NUFIT_U
 
-    if args.energy_dependance is EnergyDependance.MONO:
+    if args.no_bsm:
+        fr = fr_utils.u_to_fr(source_flux, np.array(sm_u, dtype=np.complex256))
+    elif args.energy_dependance is EnergyDependance.MONO:
         u = fr_utils.params_to_BSMu(
             theta             = bsm_angles,
             dim               = args.dimension,

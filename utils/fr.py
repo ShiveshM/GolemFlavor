@@ -266,11 +266,11 @@ def estimate_scale(args):
 
 def fr_argparse(parser):
     parser.add_argument(
-        '--measured-ratio', type=int, nargs=3, default=[1, 1, 1],
+        '--measured-ratio', type=float, nargs=3, default=[1, 1, 1],
         help='Set the central value for the measured flavour ratio at IceCube'
     )
     parser.add_argument(
-        '--source-ratio', type=int, nargs=3, default=[2, 1, 0],
+        '--source-ratio', type=float, nargs=3, default=[2, 1, 0],
         help='Set the source flavour ratio for the case when you want to fix it'
     )
     parser.add_argument(

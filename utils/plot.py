@@ -440,6 +440,8 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
         8: (-21-(en[0]*6), -21-(en[1]+en[1]*6))
     }
 
+    angles = 2
+
     colour = {0:'red', 1:'blue', 2:'green'}
     rgb_co = {0:[1,0,0], 1:[0,0,1], 2:[0.0, 0.5019607843137255, 0.0]}
     yticks = [r'$\mathcal{O}_{e\mu}$', r'$\mathcal{O}_{e\tau}$', r'$\mathcal{O}_{\mu\tau}$']
@@ -457,13 +459,22 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
         dim = args.dimensions[idim]
         print '== dim', dim
         argsc.dimension = dim
-        gs0 = gridspec.GridSpecFromSubplotSpec(
-            len(yticks), 1, subplot_spec=gs[idim], hspace=0
-        )
+        if angles == 3:
+            gs0 = gridspec.GridSpecFromSubplotSpec(
+                len(yticks), 1, subplot_spec=gs[idim], hspace=0
+            )
+        elif angles == 2:
+            gs0 = gridspec.GridSpecFromSubplotSpec(
+                len(yticks)-1, 1, subplot_spec=gs[idim], hspace=0
+            )
 
         for ian in xrange(len(yticks)):
+            if angles == 2 and ian == 0: continue
             print '=== an', ian
-            ax = fig.add_subplot(gs0[ian])
+            if angles == 3:
+                ax = fig.add_subplot(gs0[ian])
+            elif angles == 2:
+                ax = fig.add_subplot(gs0[ian-1])
             if first_ax is None: first_ax = ax
             ax.set_xlim(xlims)
             ylim = (0.5, 1.5)
@@ -475,19 +486,31 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
                 ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.2, linewidth=1)
             ax.get_xaxis().set_visible(False)
             linestyle = (5, (10, 10))
-            if ian == 0:
-                ax.spines['bottom'].set_alpha(0.6)
-            elif ian == 1:
-                ax.text(
-                    -0.04, ylim[0], '$d = {0}$'.format(dim), fontsize=16,
-                    rotation='90', verticalalignment='center',
-                    transform=ax.transAxes
-                )
-                dim_label_flag = False
-                ax.spines['top'].set_alpha(0.6)
-                ax.spines['bottom'].set_alpha(0.6)
-            elif ian == 2:
-                ax.spines['top'].set_alpha(0.6)
+            if angles == 3:
+                if ian == 1:
+                    ax.spines['bottom'].set_alpha(0.6)
+                elif ian == 2:
+                    ax.text(
+                        -0.04, ylim[0], '$d = {0}$'.format(dim), fontsize=16,
+                        rotation='90', verticalalignment='center',
+                        transform=ax.transAxes
+                    )
+                    dim_label_flag = False
+                    ax.spines['top'].set_alpha(0.6)
+                    ax.spines['bottom'].set_alpha(0.6)
+                elif ian == 2:
+                    ax.spines['top'].set_alpha(0.6)
+            if angles == 2:
+                if ian == 0:
+                    ax.spines['bottom'].set_alpha(0.6)
+                elif ian == 1:
+                    ax.text(
+                        -0.04, ylim[0]+0.3, r'$d = {0}$'.format(dim), fontsize=16,
+                        rotation='90', verticalalignment='top',
+                        transform=ax.transAxes
+                    )
+                    dim_label_flag = False
+                    ax.spines['top'].set_alpha(0.6)
 
             for isrc in xrange(len(data[idim])):
                 src = args.source_ratios[isrc]
@@ -500,10 +523,10 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
                 else:
                     alpha = 0.07
                     col = 'blue'
-                ax.add_patch(patches.Rectangle(
-                    (bote[dim][1], ylim[0]), bote[dim][0]-bote[dim][1], np.diff(ylim),
-                    fill=True, facecolor=col, alpha=alpha, linewidth=0
-                ))
+                # ax.add_patch(patches.Rectangle(
+                #     (bote[dim][1], ylim[0]), bote[dim][0]-bote[dim][1], np.diff(ylim),
+                #     fill=True, facecolor=col, alpha=alpha, linewidth=0
+                # ))
                 bc_limit = best_limits[dim]
                 # ax.axvline(x=np.log10(bc_limit[1]), color=bc_limit[2], alpha=0.7, linewidth=1.5)
 
@@ -581,15 +604,15 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
                  fontsize=19)
     ax.tick_params(axis='x', labelsize=16)
 
-    legend_elements.append(
-        Patch(facecolor=col, alpha=alpha+0.1, edgecolor='k', label='maximum reach')
-    )
+    # legend_elements.append(
+    #     Patch(facecolor=col, alpha=alpha+0.1, edgecolor='k', label='maximum reach')
+    # )
     purple = [0.5019607843137255, 0.0, 0.5019607843137255]
     legend_elements.append(
-        Patch(facecolor=purple+[0.7], edgecolor=purple+[1], label='Planck Scale')
+        Patch(facecolor=purple+[0.7], edgecolor=purple+[1], label='Planck Scale Expectation')
     )
     legend_elements.append(
-        Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube arXiv:1709.03434')
+        Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube, Nature.Phy.14,961(2018)')
     )
 
     legend = first_ax.legend(
@@ -601,18 +624,18 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
     plt.setp(legend.get_title(), fontsize='11')
     legend.get_frame().set_linestyle('-')
 
-    if show_data: ybound = 0.595
-    else: ybound = 0.73
-    if args.data is DataType.REAL and show_data:
-        # fig.text(0.295, 0.684, 'IceCube Preliminary', color='red', fontsize=13,
-        fig.text(0.278, ybound, r'\bf IceCube Preliminary', color='red', fontsize=13,
-                 ha='center', va='center', zorder=11)
-    elif args.data is DataType.REALISATION:
-        fig.text(0.278, ybound-0.05, r'\bf IceCube Simulation', color='red', fontsize=13,
-                 ha='center', va='center', zorder=11)
-    else:
-        fig.text(0.278, ybound, r'\bf IceCube Simulation', color='red', fontsize=13,
-                 ha='center', va='center', zorder=11)
+    # if show_data: ybound = 0.595
+    # else: ybound = 0.73
+    # if args.data is DataType.REAL and show_data:
+    #     # fig.text(0.295, 0.684, 'IceCube Preliminary', color='red', fontsize=13,
+    #     fig.text(0.278, ybound, r'\bf IceCube Preliminary', color='red', fontsize=13,
+    #              ha='center', va='center', zorder=11)
+    # elif args.data is DataType.REALISATION:
+    #     fig.text(0.278, ybound-0.05, r'\bf IceCube Simulation', color='red', fontsize=13,
+    #              ha='center', va='center', zorder=11)
+    # else:
+    #     fig.text(0.278, ybound, r'\bf IceCube Simulation', color='red', fontsize=13,
+    #              ha='center', va='center', zorder=11)
 
     misc_utils.make_dir(outfile)
     for of in outformat:

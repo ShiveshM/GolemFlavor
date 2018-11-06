@@ -72,9 +72,9 @@ def nuisance_argparse(parser):
 
 def process_args(args):
     """Process the input args."""
-    if args.fix_mixing not MixingScenario.NONE and args.fix_scale:
+    if args.fix_mixing is not MixingScenario.NONE and args.fix_scale:
         raise NotImplementedError('Fixed mixing and scale not implemented')
-    if args.fix_mixing not MixingScenario.NONE and args.fix_mixing_almost:
+    if args.fix_mixing is not MixingScenario.NONE and args.fix_mixing_almost:
         raise NotImplementedError(
             '--fix-mixing and --fix-mixing-almost cannot be used together'
         )
@@ -231,8 +231,8 @@ def main():
                 infile += '/gaussian/'
             if args.likelihood is Likelihood.GAUSSIAN:
                 infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
-            # infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/fr_stat'.format(
-            infile += '/DIM{0}/fix_ifr/seed2/{1}/{2}/{3}/fr_stat'.format(
+            infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/fr_stat'.format(
+            # infile += '/DIM{0}/fix_ifr/seed2/{1}/{2}/{3}/fr_stat'.format(
             # infile += '/DIM{0}/fix_ifr/100TeV/{1}/{2}/{3}/fr_stat'.format(
                 dim, *map(misc_utils.parse_enum, [args.stat_method, args.run_method, args.data])
             ) + misc_utils.gen_identifier(argsc)
@@ -279,8 +279,8 @@ def main():
                 base_infile += '/gaussian/'
             if args.likelihood is Likelihood.GAUSSIAN:
                 base_infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
-            # base_infile += '/DIM{0}/fix_ifr'.format(dim)
-            base_infile += '/DIM{0}/fix_ifr/seed2'.format(dim)
+            base_infile += '/DIM{0}/fix_ifr'.format(dim)
+            # base_infile += '/DIM{0}/fix_ifr/seed2'.format(dim)
             # base_infile += '/DIM{0}/fix_ifr/100TeV'.format(dim)
 
             for isrc, src in enumerate(args.source_ratios):

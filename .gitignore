@@ -9,3 +9,5 @@ submitter/logs/
 mnrun_*
 *.png
 mnrun/
+plot_llh/frs
+plot_llh/chains

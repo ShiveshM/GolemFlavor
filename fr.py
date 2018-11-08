@@ -10,6 +10,7 @@ HESE BSM flavour ratio MCMC analysis script
 
 from __future__ import absolute_import, division
 
+import os
 import argparse
 from functools import partial
 
@@ -81,8 +82,8 @@ def nuisance_argparse(parser):
 
 def process_args(args):
     """Process the input args."""
-    if args.fix_mixing is not MixingScenario.NONE and args.fix_scale:
-        raise NotImplementedError('Fixed mixing and scale not implemented')
+    # if args.fix_mixing is not MixingScenario.NONE and args.fix_scale:
+    #     raise NotImplementedError('Fixed mixing and scale not implemented')
     if args.fix_mixing is not MixingScenario.NONE and args.fix_mixing_almost:
         raise NotImplementedError(
             '--fix-mixing and --fix-mixing-almost cannot be used together'
@@ -165,6 +166,12 @@ def main():
                 llh_paramset, nwalkers=args.nwalkers
             )
 
+        if args.save_measured_fr:
+            n = misc_utils.gen_identifier(args) + '.txt'
+            f = args.output_measured_fr + n
+            if os.path.isfile(f):
+                open(f, 'w').close()
+
         samples = mcmc_utils.mcmc(
             p0       = p0,
             ln_prob  = ln_prob,
@@ -172,6 +179,7 @@ def main():
             nwalkers = args.nwalkers,
             burnin   = args.burnin,
             nsteps   = args.nsteps,
+            args     = args,
             threads  = 1
             # TODO(shivesh): broken because you cannot pickle a GolemFitPy object
             # threads      = misc_utils.thread_factors(args.threads)[0]

@@ -248,7 +248,10 @@ def estimate_scale(args):
     """Estimate the scale at which new physics will enter."""
     try: m_eign = args.m3x_2
     except: m_eign = MASS_EIGENVALUES[1]
-    if args.energy_dependance is EnergyDependance.MONO:
+    if args.scale is not None:
+        scale = args.scale
+        scale_region = (scale/args.scale_region, scale*args.scale_region)
+    elif args.energy_dependance is EnergyDependance.MONO:
         scale = np.power(
             10, np.round(np.log10(m_eign/args.energy)) - \
             np.log10(args.energy**(args.dimension-3))
@@ -287,7 +290,7 @@ def fr_argparse(parser):
         help='Type of energy dependance to use in the BSM fit'
     )
     parser.add_argument(
-        '--spectral-index', default=-2, type=int,
+        '--spectral-index', default=-2, type=float,
         help='Spectral index for spectral energy dependance'
     )
     parser.add_argument(
@@ -316,7 +319,7 @@ def fr_argparse(parser):
         help='Fix the new physics scale'
     )
     parser.add_argument(
-        '--scale', type=float, default=1e-30,
+        '--scale', type=float, default=None,
         help='Set the new physics scale'
     )
     parser.add_argument(
@@ -415,6 +418,9 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
             '--fix-mixing and --fix-mixing-almost cannot be used together'
         )
 
+    if not isinstance(theta, list):
+        theta = [theta]
+
     if fix_mixing is MixingScenario.T12:
         s12_2, c13_4, s23_2, dcp, sc2 = 0.5, 1.0, 0.0, 0., theta
     elif fix_mixing is MixingScenario.T13:
@@ -429,7 +435,11 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
         sc2 = np.log10(scale)
     else:
         s12_2, c13_4, s23_2, dcp, sc2 = theta
-    sc2 = np.power(10., sc2)
+
+    if len(theta) != 0:
+        sc2 = np.power(10., sc2)
+    else:
+        sc2 = np.log10(scale)
     sc1 = sc2 / 100.
 
     mass_matrix = np.array(
@@ -515,8 +525,16 @@ def u_to_fr(source_fr, matrix):
         array([ 0.33740075,  0.33176584,  0.33083341])
 
     """
-    composition = np.einsum(
-        'ai, bi, a -> b', np.abs(matrix)**2, np.abs(matrix)**2, source_fr,
-    )
+    try:
+        composition = np.einsum(
+            'ai, bi, a -> b', np.abs(matrix)**2, np.abs(matrix)**2, source_fr,
+        )
+    except:
+        matrix = np.array(matrix, dtype=np.complex256)
+        composition = np.einsum(
+            'ai, bi, a -> b', np.abs(matrix)**2, np.abs(matrix)**2, source_fr,
+        )
+        pass
+
     ratio = composition / np.sum(source_fr)
     return ratio

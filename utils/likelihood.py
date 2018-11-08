@@ -17,7 +17,7 @@ from scipy.stats import multivariate_normal, rv_continuous
 from utils import fr as fr_utils
 from utils import gf as gf_utils
 from utils.enums import EnergyDependance, Likelihood, ParamTag, PriorsCateg
-from utils.misc import enum_parse
+from utils.misc import enum_parse, gen_identifier, parse_bool
 
 
 class Gaussian(rv_continuous):
@@ -40,6 +40,14 @@ def likelihood_argparse(parser):
     parser.add_argument(
         '--sigma-ratio', type=float, default=0.01,
         help='Set the 1 sigma for the measured flavour ratio for a gaussian LLH'
+    )
+    parser.add_argument(
+        '--save-measured-fr', type=parse_bool, default='False',
+        help='Output the measured flavour ratios'
+    )
+    parser.add_argument(
+        '--output-measured-fr', type=str, default='./frs',
+        help='Output of the measured flavour ratios'
     )
 
 
@@ -164,6 +172,14 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
         averaged_measured_flux = (1./(args.binning[-1] - args.binning[0])) * \
             intergrated_measured_flux
         fr = averaged_measured_flux / np.sum(averaged_measured_flux)
+
+    if args.save_measured_fr and args.burnin is False:
+        n = gen_identifier(args) + '.txt'
+        with open(args.output_measured_fr + n, 'a') as f:
+            f.write(r'{0:.3f} {1:.3f} {2:.3f} {3:.1f}'.format(
+                fr[0], fr[1], fr[2], llh_paramset['logLam'].value
+            ))
+            f.write('\n')
 
     flavour_angles = fr_utils.fr_to_angles(fr)
     # print 'flavour_angles', map(float, flavour_angles)

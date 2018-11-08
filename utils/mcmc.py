@@ -20,7 +20,7 @@ from utils.enums import MCMCSeedType
 from utils.misc import enum_parse, make_dir, parse_bool
 
 
-def mcmc(p0, ln_prob, ndim, nwalkers, burnin, nsteps, threads=1):
+def mcmc(p0, ln_prob, ndim, nwalkers, burnin, nsteps, args, threads=1):
     """Run the MCMC."""
     sampler = emcee.EnsembleSampler(
         nwalkers, ndim, ln_prob, threads=threads
@@ -31,6 +31,7 @@ def mcmc(p0, ln_prob, ndim, nwalkers, burnin, nsteps, threads=1):
         pos, prob, state = result
     sampler.reset()
     print "Finished burn-in"
+    args.burnin = False
 
     print "Running"
     for _ in tqdm.tqdm(sampler.sample(pos, iterations=nsteps), total=nsteps):

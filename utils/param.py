@@ -237,7 +237,7 @@ def get_paramsets(args, nuisance_paramset):
     ])
     asimov_paramset = ParamSet(asimov_paramset)
 
-    if args.fix_mixing is not MixingScenario.NONE and not args.fix_mixing_almost:
+    if args.fix_mixing is MixingScenario.NONE and not args.fix_mixing_almost:
         tag = ParamTag.MMANGLES
         llh_paramset.extend([
             Param(name='np_s_12^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{12}^2', tag=tag),

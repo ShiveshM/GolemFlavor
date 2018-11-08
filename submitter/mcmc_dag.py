@@ -8,8 +8,8 @@ full_scan_mfr = [
 ]
 
 fix_sfr_mfr = [
-    (1, 1, 1, 1, 2, 0),
-    (1, 1, 1, 1, 0, 0),
+    # (1, 1, 1, 1, 2, 0),
+    # (1, 1, 1, 1, 0, 0),
     (1, 1, 1, 0, 1, 0),
     # (1, 1, 1, 0, 0, 1),
     # (1, 1, 0, 1, 2, 0),
@@ -44,7 +44,7 @@ GLOBAL_PARAMS.update(dict(
     scale_region      = "1E10",
     energy_dependance = 'spectral',
     spectral_index    = -2,
-    fix_mixing        = 'T23',
+    fix_mixing        = 'T13',
     fix_mixing_almost = 'False',
     fold_index        = 'True'
 ))
@@ -100,24 +100,24 @@ with open(outfile, 'w') as f:
             f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outchains))
             job_number += 1
 
-        for frs in full_scan_mfr:
-            print 'frs', frs
-            outchains = outchain_head + '/full/'
-            if GLOBAL_PARAMS['likelihood'].lower() == 'gaussian':
-                outchains += '{0}/'.format(str(GLOBAL_PARAMS['sigma_ratio']).replace('.', '_'))
-            outchains += 'mcmc_chain'
-            f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))
-            f.write('VARS\tjob{0}\tdimension="{1}"\n'.format(job_number, dim))
-            f.write('VARS\tjob{0}\tmr0="{1}"\n'.format(job_number, frs[0]))
-            f.write('VARS\tjob{0}\tmr1="{1}"\n'.format(job_number, frs[1]))
-            f.write('VARS\tjob{0}\tmr2="{1}"\n'.format(job_number, frs[2]))
-            f.write('VARS\tjob{0}\tfix_source_ratio="{1}"\n'.format(job_number, False))
-            f.write('VARS\tjob{0}\tsr0="{1}"\n'.format(job_number, 0))
-            f.write('VARS\tjob{0}\tsr1="{1}"\n'.format(job_number, 0))
-            f.write('VARS\tjob{0}\tsr2="{1}"\n'.format(job_number, 0))
-            for key in GLOBAL_PARAMS.iterkeys():
-                f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
-            f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outchains))
-            job_number += 1
+        # for frs in full_scan_mfr:
+        #     print 'frs', frs
+        #     outchains = outchain_head + '/full/'
+        #     if GLOBAL_PARAMS['likelihood'].lower() == 'gaussian':
+        #         outchains += '{0}/'.format(str(GLOBAL_PARAMS['sigma_ratio']).replace('.', '_'))
+        #     outchains += 'mcmc_chain'
+        #     f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))
+        #     f.write('VARS\tjob{0}\tdimension="{1}"\n'.format(job_number, dim))
+        #     f.write('VARS\tjob{0}\tmr0="{1}"\n'.format(job_number, frs[0]))
+        #     f.write('VARS\tjob{0}\tmr1="{1}"\n'.format(job_number, frs[1]))
+        #     f.write('VARS\tjob{0}\tmr2="{1}"\n'.format(job_number, frs[2]))
+        #     f.write('VARS\tjob{0}\tfix_source_ratio="{1}"\n'.format(job_number, False))
+        #     f.write('VARS\tjob{0}\tsr0="{1}"\n'.format(job_number, 0))
+        #     f.write('VARS\tjob{0}\tsr1="{1}"\n'.format(job_number, 0))
+        #     f.write('VARS\tjob{0}\tsr2="{1}"\n'.format(job_number, 0))
+        #     for key in GLOBAL_PARAMS.iterkeys():
+        #         f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
+        #     f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, outchains))
+        #     job_number += 1
 
     print 'dag file = {0}'.format(outfile)

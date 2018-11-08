@@ -79,8 +79,8 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, fitter):
         fitter          = fitter
     )
 
-    prefix = './mnrun/DIM{0}/{1}_{2:>010}_'.format(
-        args.dimension, gen_identifier(args), np.random.randint(0, 2**30)
+    prefix = './mnrun/DIM{0}/{1}_{2}_{3:>010}_'.format(
+        args.dimension, args.likelihood, gen_identifier(args), np.random.randint(0, 2**30)
     )
     make_dir(prefix)
     print 'Running evidence calculation for {0}'.format(prefix)

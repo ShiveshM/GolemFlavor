@@ -196,10 +196,10 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset):
         #     )
 
         if args.data is DataType.REAL:
-            fig.text(0.8, 0.7, 'IceCube Preliminary', color='red', fontsize=15,
+            plt.text(0.8, 0.7, 'IceCube Preliminary', color='red', fontsize=15,
                      ha='center', va='center')
         elif args.data in [DataType.ASIMOV, DataType.REALISATION]:
-            fig.text(0.8, 0.7, 'IceCube Simulation', color='red', fontsize=15,
+            plt.text(0.8, 0.7, 'IceCube Simulation', color='red', fontsize=15,
                      ha='center', va='center')
 
         for of in outformat:
@@ -247,14 +247,15 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset):
         g = plot_Tchain(Tchain, trns_axes_labels, trns_ranges)
 
         if args.data is DataType.REAL:
-            fig.text(0.8, 0.7, 'IceCube Preliminary', color='red', fontsize=15,
+            plt.text(0.8, 0.7, 'IceCube Preliminary', color='red', fontsize=15,
                      ha='center', va='center')
         elif args.data in [DataType.ASIMOV, DataType.REALISATION]:
-            fig.text(0.8, 0.7, 'IceCube Simulation', color='red', fontsize=15,
+            plt.text(0.8, 0.7, 'IceCube Simulation', color='red', fontsize=15,
                      ha='center', va='center')
 
         mpl.pyplot.figtext(0.5, 0.7, fig_text, fontsize=15)
         for of in outformat:
+            print 'Saving', outfile+'_elements'+of
             g.export(outfile+'_elements.'+of)
 
 
@@ -281,6 +282,8 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
 
     min_idx = np.argmin(scales)
     null = statistic[min_idx]
+    fig_text += '\nnull lnZ = {0:.2f}'.format(null)
+
     if args.stat_method is StatCateg.BAYESIAN:
         reduced_ev = -(statistic - null)
     elif args.stat_method is StatCateg.FREQUENTIST:

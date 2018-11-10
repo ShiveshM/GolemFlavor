@@ -69,7 +69,8 @@ def steering_params(args):
     # For Tianlu
     # params.years = [999]
 
-    params.minFitEnergy = args.binning[0] # GeV
+    params.minFitEnergy = args.binning[0]  # GeV
+    params.maxFitEnergy = args.binning[-1] # GeV
     params.load_data_from_text_file = False
 
     return params

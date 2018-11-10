@@ -248,10 +248,12 @@ def estimate_scale(args):
     """Estimate the scale at which new physics will enter."""
     try: m_eign = args.m3x_2
     except: m_eign = MASS_EIGENVALUES[1]
-    if args.scale is not None:
-        scale = args.scale
-        scale_region = (scale/args.scale_region, scale*args.scale_region)
-    elif args.energy_dependance is EnergyDependance.MONO:
+    if hasattr(args, 'scale'):
+        if args.scale != 0:
+            scale = args.scale
+            scale_region = (scale/args.scale_region, scale*args.scale_region)
+            return scale, scale_region
+    if args.energy_dependance is EnergyDependance.MONO:
         scale = np.power(
             10, np.round(np.log10(m_eign/args.energy)) - \
             np.log10(args.energy**(args.dimension-3))
@@ -319,7 +321,7 @@ def fr_argparse(parser):
         help='Fix the new physics scale'
     )
     parser.add_argument(
-        '--scale', type=float, default=None,
+        '--scale', type=float, default=0,
         help='Set the new physics scale'
     )
     parser.add_argument(
@@ -418,7 +420,7 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
             '--fix-mixing and --fix-mixing-almost cannot be used together'
         )
 
-    if not isinstance(theta, list):
+    if not isinstance(theta, (list, tuple)):
         theta = [theta]
 
     if fix_mixing is MixingScenario.T12:

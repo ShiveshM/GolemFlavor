@@ -173,6 +173,7 @@ def parse_args(args=None):
 def main():
     args = parse_args()
     process_args(args)
+    args.scale = 0
     misc_utils.print_args(args)
 
     asimov_paramset, llh_paramset = get_paramsets(args, define_nuisance())
@@ -232,6 +233,7 @@ def main():
             if args.likelihood is Likelihood.GAUSSIAN:
                 infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
             infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/fr_stat'.format(
+            # infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/old/fr_stat'.format(
             # infile += '/DIM{0}/fix_ifr/seed2/{1}/{2}/{3}/fr_stat'.format(
             # infile += '/DIM{0}/fix_ifr/100TeV/{1}/{2}/{3}/fr_stat'.format(
                 dim, *map(misc_utils.parse_enum, [args.stat_method, args.run_method, args.data])
@@ -286,6 +288,7 @@ def main():
             for isrc, src in enumerate(args.source_ratios):
                 argsc.source_ratio = src
                 infile = base_infile +'/{0}/{1}/{2}/fr_stat'.format(
+                # infile = base_infile +'/{0}/{1}/{2}/old/fr_stat'.format(
                     *map(misc_utils.parse_enum, [args.stat_method, args.run_method, args.data])
                 ) + misc_utils.gen_identifier(argsc)
                 basename = os.path.dirname(infile)
@@ -353,7 +356,7 @@ def main():
         elif args.run_method in fixed_angle_categ:
             plot_utils.plot_sens_fixed_angle_pretty(
                 data      = data,
-                outfile   = baseoutfile + '/fixed_angle_pretty_1108',
+                outfile   = baseoutfile + '/fixed_angle_pretty',
                 outformat = ['png', 'pdf'],
                 args      = args,
             )

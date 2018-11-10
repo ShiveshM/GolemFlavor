@@ -72,6 +72,8 @@ def lnprior(theta, paramset):
             prior += Gaussian().logpdf(
                 param.nominal_value, param.value, param.std
             )
+            print 'prioring param', param.name, '=', param.value
+            print 'prior', prior
         elif param.prior is PriorsCateg.HALFGAUSS:
             prior += Gaussian().logpdf(
                 param.nominal_value, param.value, param.std
@@ -177,7 +179,8 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
         n = gen_identifier(args) + '.txt'
         with open(args.output_measured_fr + n, 'a') as f:
             f.write(r'{0:.3f} {1:.3f} {2:.3f} {3:.1f}'.format(
-                fr[0], fr[1], fr[2], llh_paramset['logLam'].value
+                float(fr[0]), float(fr[1]), float(fr[2]),
+                llh_paramset['logLam'].value
             ))
             f.write('\n')
 
@@ -202,6 +205,10 @@ def ln_prob(theta, args, asimov_paramset, llh_paramset, fitter):
     lp = lnprior(theta, paramset=llh_paramset)
     if not np.isfinite(lp):
         return -np.inf
+    llh = triangle_llh(
+        theta, args=args, asimov_paramset=asimov_paramset,
+        llh_paramset=llh_paramset, fitter=fitter
+    )
     return lp + triangle_llh(
         theta, args=args, asimov_paramset=asimov_paramset,
         llh_paramset=llh_paramset, fitter=fitter

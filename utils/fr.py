@@ -432,14 +432,14 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
         s23_2, sc2 = theta
     elif fix_scale:
         s12_2, c13_4, s23_2, dcp = theta
-        sc2 = np.log10(scale)
+        sc2 = scale
     else:
         s12_2, c13_4, s23_2, dcp, sc2 = theta
 
     if len(theta) != 0:
         sc2 = np.power(10., sc2)
     else:
-        sc2 = np.log10(scale)
+        sc2 = scale
     sc1 = sc2 / 100.
 
     mass_matrix = np.array(

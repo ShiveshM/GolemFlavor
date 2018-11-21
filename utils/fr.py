@@ -343,12 +343,17 @@ def fr_to_angles(ratios):
     TODO(shivesh)
     """
     fr0, fr1, fr2 = normalise_fr(ratios)
-    sphi4 = (fr2 - 1.0)**2
-    if (fr2 - 1.0) == 0:
-        c2psi = 0
-    else:
-        c2psi = (fr1*2.0 + fr2 - 1.0) * (fr2 - 1.0)
-    return sphi4, c2psi
+
+    cphi2 = fr2
+    sphi2 = (1.0 - cphi2)
+
+    spsi2 = fr1 / sphi2
+    cpsi2 = fr0 / sphi2
+
+    sphi4 = sphi2**2
+    c2psi = COS(ACOS(SQRT(cpsi2))*2)
+
+    return map(float, (sphi4, c2psi))
 
 
 NUFIT_U = angles_to_u((0.307, (1-0.02195)**2, 0.565, 3.97935))

@@ -16,7 +16,7 @@ import numpy as np
 from pymultinest import analyse, run
 
 from utils import likelihood
-from utils.misc import gen_identifier, make_dir
+from utils.misc import gen_identifier, make_dir, solve_ratio
 
 
 def CubePrior(cube, ndim, n_params):
@@ -63,7 +63,8 @@ def mn_argparse(parser):
     )
 
 
-def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, fitter):
+def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, fitter,
+                identifier='mn'):
     """Run the MultiNest algorithm to calculate the evidence."""
     n_params = len(mn_paramset)
 
@@ -79,8 +80,14 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, fitter):
         fitter          = fitter
     )
 
-    prefix = './mnrun/DIM{0}/{1}_{2}_{3:>010}_'.format(
-        args.dimension, args.likelihood, gen_identifier(args), np.random.randint(0, 2**30)
+    # prefix = './mnrun/DIM{0}/{1}_{2}_{3:>010}_'.format(
+    #     args.dimension, args.likelihood, gen_identifier(args), np.random.randint(0, 2**30)
+    # )
+    llh = '{0}'.format(args.likelihood).split('.')[1]
+    data = '{0}'.format(args.data).split('.')[1]
+    sr1, sr2, sr3 = solve_ratio(args.source_ratio)
+    prefix = './mnrun/DIM{0}/{1}/{2}/s{3}{4}{5}/{6}'.format(
+        args.dimension, data, llh, sr1, sr2, sr3, identifier
     )
     make_dir(prefix)
     print 'Running evidence calculation for {0}'.format(prefix)

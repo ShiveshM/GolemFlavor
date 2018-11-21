@@ -72,8 +72,6 @@ def lnprior(theta, paramset):
             prior += Gaussian().logpdf(
                 param.nominal_value, param.value, param.std
             )
-            print 'prioring param', param.name, '=', param.value
-            print 'prior', prior
         elif param.prior is PriorsCateg.HALFGAUSS:
             prior += Gaussian().logpdf(
                 param.nominal_value, param.value, param.std
@@ -175,15 +173,6 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
             intergrated_measured_flux
         fr = averaged_measured_flux / np.sum(averaged_measured_flux)
 
-    if args.save_measured_fr and args.burnin is False:
-        n = gen_identifier(args) + '.txt'
-        with open(args.output_measured_fr + n, 'a') as f:
-            f.write(r'{0:.3f} {1:.3f} {2:.3f} {3:.1f}'.format(
-                float(fr[0]), float(fr[1]), float(fr[2]),
-                llh_paramset['logLam'].value
-            ))
-            f.write('\n')
-
     flavour_angles = fr_utils.fr_to_angles(fr)
     # print 'flavour_angles', map(float, flavour_angles)
     for idx, param in enumerate(hypo_paramset.from_tag(ParamTag.BESTFIT)):
@@ -198,6 +187,18 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
         llh = gf_utils.get_llh(fitter, hypo_paramset)
     elif args.likelihood is Likelihood.GF_FREQ:
         llh = gf_utils.get_llh_freq(fitter, hypo_paramset)
+
+    if args.save_measured_fr and args.burnin is False:
+        n = gen_identifier(args) + '.txt'
+        with open(args.output_measured_fr + n, 'a') as f:
+            f.write(r'{0:.3f} {1:.3f} {2:.3f}'.format(
+                float(fr[0]), float(fr[1]), float(fr[2])
+            ))
+            for p in llh_paramset:
+                f.write(r' {0:.3f}'.format(p.value))
+            f.write('     LLH = {0:.3f}'.format(llh))
+            f.write('\n')
+
     return llh
 
 
@@ -205,10 +206,6 @@ def ln_prob(theta, args, asimov_paramset, llh_paramset, fitter):
     lp = lnprior(theta, paramset=llh_paramset)
     if not np.isfinite(lp):
         return -np.inf
-    llh = triangle_llh(
-        theta, args=args, asimov_paramset=asimov_paramset,
-        llh_paramset=llh_paramset, fitter=fitter
-    )
     return lp + triangle_llh(
         theta, args=args, asimov_paramset=asimov_paramset,
         llh_paramset=llh_paramset, fitter=fitter

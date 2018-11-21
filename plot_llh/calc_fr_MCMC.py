@@ -13,8 +13,8 @@ from utils.enums import MixingScenario
 
 binning = np.logspace(np.log10(6e4), np.log10(1e7), 21)
 dimension = 6
-source = [1, 0, 0]
-scenario = MixingScenario.T23
+source = [0, 1, 0]
+scenario = MixingScenario.T13
 
 def get_fr(theta, source, binning, dimension, scenario):
     sm_mixings = theta[:6]
@@ -56,7 +56,7 @@ def get_fr(theta, source, binning, dimension, scenario):
         intergrated_measured_flux
     fr = averaged_measured_flux / np.sum(averaged_measured_flux)
 
-    return fr
+    return map(float, fr)
 
 if len(sys.argv)< 2:
     print sys.argv

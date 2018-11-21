@@ -29,19 +29,20 @@ GLOBAL_PARAMS.update(dict(
     sens_run      = 'True',
     run_method    = 'fixed_angle', # full, fixed_angle, corr_angle
     stat_method   = 'bayesian',
-    sens_bins     = 20,
+    sens_bins     = 10,
     seed          = None
 ))
 
 # MultiNest
 GLOBAL_PARAMS.update(dict(
     mn_live_points = 1000,
-    mn_tolerance   = 0.1,
+    # mn_tolerance   = 0.1,
+    mn_tolerance   = 0.3,
     mn_output      = './mnrun'
 ))
 
 # FR
-# dimension         = [3]
+# dimension         = [6]
 # dimension         = [3, 6]
 dimension         = [3, 4, 5, 6, 7, 8]
 GLOBAL_PARAMS.update(dict(
@@ -78,6 +79,7 @@ outfile = 'dagman_FR_SENS_{0}_{1}_{2}_{3}'.format(
     GLOBAL_PARAMS['likelihood'], GLOBAL_PARAMS['data']
 )
 # outfile += '_seed2'
+# outfile += '_tol03'
 outfile += '.submit'
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/sens_submit.sub'
@@ -102,6 +104,8 @@ with open(outfile, 'w') as f:
             if GLOBAL_PARAMS['likelihood'].lower() == 'gaussian':
                 output += '{0}/'.format(str(GLOBAL_PARAMS['sigma_ratio']).replace('.', '_'))
             # output += 'seed2/'
+            # output += 'mn_noverlap/'
+            # output += 'tol_03/'
             for r in xrange(sens_runs):
                 print 'run', r
                 f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))
@@ -121,6 +125,7 @@ with open(outfile, 'w') as f:
                     f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
                 f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, output))
                 job_number += 1
+                # break
 
         # for frs in full_scan_mfr:
         #     print 'frs', frs

@@ -19,7 +19,7 @@ except:
     print 'Running without GolemFit'
     pass
 
-from utils.enums import DataType, SteeringCateg
+from utils.enums import DataType, Likelihood, SteeringCateg
 from utils.misc import enum_parse, thread_factors
 from utils.param import ParamSet
 
@@ -62,9 +62,15 @@ def steering_params(args):
     params = gf.SteeringParams(gf.sampleTag.MagicTau)
     params.quiet = False
     params.fastmode = True
+    # params.fastmode = False
     params.simToLoad= steering_categ.name.lower()
     params.evalThreads = args.threads
     # params.evalThreads = thread_factors(args.threads)[1]
+
+    if args.likelihood is Likelihood.GOLEMFIT:
+        params.frequentist = false;
+    elif args.likelihood is Likelihood.GF_FREQ:
+        params.frequentist = true;
 
     # For Tianlu
     # params.years = [999]

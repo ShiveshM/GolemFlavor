@@ -627,18 +627,18 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
     plt.setp(legend.get_title(), fontsize='11')
     legend.get_frame().set_linestyle('-')
 
-    # if show_data: ybound = 0.595
-    # else: ybound = 0.73
-    # if args.data is DataType.REAL and show_data:
-    #     # fig.text(0.295, 0.684, 'IceCube Preliminary', color='red', fontsize=13,
-    #     fig.text(0.278, ybound, r'\bf IceCube Preliminary', color='red', fontsize=13,
-    #              ha='center', va='center', zorder=11)
-    # elif args.data is DataType.REALISATION:
-    #     fig.text(0.278, ybound-0.05, r'\bf IceCube Simulation', color='red', fontsize=13,
-    #              ha='center', va='center', zorder=11)
-    # else:
-    #     fig.text(0.278, ybound, r'\bf IceCube Simulation', color='red', fontsize=13,
-    #              ha='center', va='center', zorder=11)
+    if show_data: ybound = 0.595
+    else: ybound = 0.73
+    if args.data is DataType.REAL and show_data:
+        # fig.text(0.295, 0.684, 'IceCube Preliminary', color='red', fontsize=13,
+        fig.text(0.278, ybound, r'\bf IceCube Preliminary', color='red', fontsize=13,
+                 ha='center', va='center', zorder=11)
+    elif args.data is DataType.REALISATION:
+        fig.text(0.278, ybound-0.05, r'\bf IceCube Simulation', color='red', fontsize=13,
+                 ha='center', va='center', zorder=11)
+    else:
+        fig.text(0.278, ybound, r'\bf IceCube Simulation', color='red', fontsize=13,
+                 ha='center', va='center', zorder=11)
 
     misc_utils.make_dir(outfile)
     for of in outformat:

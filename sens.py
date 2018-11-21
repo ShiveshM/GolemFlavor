@@ -38,7 +38,7 @@ def define_nuisance():
     e = 1e-9
     nuisance.extend([
         Param(name='s_12_2', value=0.307,            seed=[0.26, 0.35],     ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2', prior=g_prior,  tag=tag),
-        Param(name='c_13_4', value=(1-(0.02206))**2, seed=[0.950, 0.961],   ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=g_prior, tag=tag),
+        Param(name='c_13_4', value=(1-(0.02206))**2, seed=[0.950, 0.961],   ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=g_prior,  tag=tag),
         Param(name='s_23_2', value=0.538,            seed=[0.31, 0.75],     ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2', prior=g_prior,  tag=tag),
         Param(name='dcp',    value=4.08404,          seed=[0+e, 2*np.pi-e], ranges=[0., 2*np.pi], std=2.0,     tex=r'\delta_{CP}', tag=tag),
         Param(
@@ -107,6 +107,8 @@ def process_args(args):
     if args.stat_method is StatCateg.FREQUENTIST and \
        args.likelihood is Likelihood.GOLEMFIT:
         args.likelihood = Likelihood.GF_FREQ
+
+    args.burnin = False
 
 
 def parse_args(args=None):
@@ -273,13 +275,17 @@ def main():
                     print '|||| SCALE = {0:.0E}'.format(np.power(10, sc))
                     scale.value = sc
                     if args.stat_method is StatCateg.BAYESIAN:
+                        identifier = 'b{0}_{1}_sce{2}_sca{3}_an{4}'.format(
+                            args.sens_eval_bin, args.sens_bins, idx_scen, sc, idx_an
+                        )
                         try:
                             stat = mn_utils.mn_evidence(
                                 mn_paramset     = sens_paramset,
                                 llh_paramset    = llh_paramset,
                                 asimov_paramset = asimov_paramset,
                                 args            = args,
-                                fitter          = fitter
+                                fitter          = fitter,
+                                identifier      = identifier
                             )
                         except:
                             print 'Failed run, continuing'

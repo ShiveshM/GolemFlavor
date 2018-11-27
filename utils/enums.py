@@ -10,6 +10,10 @@ Define Enums for the BSM flavour ratio analysis
 from enum import Enum
 
 
+def str_enum(x):
+    return '{0}'.format(str(x).split('.')[-1])
+
+
 class DataType(Enum):
     REAL        = 1
     ASIMOV      = 2

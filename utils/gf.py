@@ -20,7 +20,7 @@ except:
     pass
 
 from utils.enums import DataType, Likelihood, SteeringCateg
-from utils.misc import enum_parse, thread_factors
+from utils.misc import enum_parse, parse_bool, thread_factors
 from utils.param import ParamSet
 
 
@@ -61,8 +61,10 @@ def steering_params(args):
     steering_categ = args.ast
     params = gf.SteeringParams(gf.sampleTag.MagicTau)
     params.quiet = False
-    params.fastmode = True
-    # params.fastmode = False
+    if args.debug:
+        params.fastmode = False
+    else:
+        params.fastmode = True
     params.simToLoad= steering_categ.name.lower()
     params.evalThreads = args.threads
     # params.evalThreads = thread_factors(args.threads)[1]
@@ -75,8 +77,12 @@ def steering_params(args):
     # For Tianlu
     # params.years = [999]
 
-    params.minFitEnergy = args.binning[0]  # GeV
-    params.maxFitEnergy = args.binning[-1] # GeV
+    if hasattr(args, 'binning'):
+        params.minFitEnergy = args.binning[0]  # GeV
+        params.maxFitEnergy = args.binning[-1] # GeV
+    else:
+        params.minFitEnergy = 6E4 # GeV
+        params.maxFitEnergy = 1E7 # GeV
     params.load_data_from_text_file = False
 
     return params
@@ -139,6 +145,9 @@ def data_distributions(fitter):
 
 
 def gf_argparse(parser):
+    parser.add_argument(
+        '--debug', default='False', type=parse_bool, help='Run without fastmode'
+    )
     parser.add_argument(
         '--data', default='asimov', type=partial(enum_parse, c=DataType),
         choices=DataType, help='select datatype'

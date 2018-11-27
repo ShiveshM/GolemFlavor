@@ -20,7 +20,8 @@ from utils import gf as gf_utils
 from utils import llh as llh_utils
 from utils import misc as misc_utils
 from utils import plot as plot_utils
-from utils.enums import ParamTag
+from utils.enums import str_enum
+from utils.enums import DataType, Likelihood, ParamTag
 from utils.param import Param, ParamSet, get_paramsets
 
 
@@ -46,6 +47,17 @@ def nuisance_argparse(parser):
             help=parm.name+' to inject'
         )
 
+def process_args(args):
+    """Process the input args."""
+    if args.likelihood is not Likelihood.GOLEMFIT \
+       and args.likelihood is not Likelihood.GF_FREQ:
+        raise AssertionError(
+            'Likelihood method {0} not supported for this '
+            'script!\nChoose either GOLEMFIT or GF_FREQ'.format(
+                str_enum(args.likelihood)
+            )
+        )
+
 
 def parse_args(args=None):
     """Parse command line arguments"""
@@ -56,6 +68,10 @@ def parse_args(args=None):
     parser.add_argument(
         '--injected-ratio', type=float, nargs=3, default=[1, 1, 1],
         help='Set the central value for the injected flavour ratio at IceCube'
+    )
+    parser.add_argument(
+        '--run-scan', type=misc_utils.parse_bool, default='True',
+        help='Do the scan from scratch'
     )
     parser.add_argument(
         '--seed', type=misc_utils.seed_parse, default='25',
@@ -74,20 +90,33 @@ def parse_args(args=None):
     except: pass
     llh_utils.likelihood_argparse(parser)
     nuisance_argparse(parser)
+    misc_utils.remove_option(parser, 'sigma_ratio')
     if args is None: return parser.parse_args()
     else: return parser.parse_args(args.split())
 
 
+def gen_identifier(args):
+    f = '_{0}_{1}'.format(*map(str_enum, (args.likelihood, args.data)))
+    if args.data is not DataType.REAL:
+        ir1, ir2, ir3 = solve_ratio(args.injected_ratio)
+        f += '_INJ_{1:03d}_{2:03d}_{3:03d}'.format(ir1, ir2, ir3)
+    return f
+
+
 def main():
     args = parse_args()
+    process_args(args)
     misc_utils.print_args(args)
 
     if args.seed is not None:
         np.random.seed(args.seed)
 
     asimov_paramset, llh_paramset = get_paramsets(args, define_nuisance())
-    print 'asimov_paramset', asimov_paramset
-    print 'llh_paramset', llh_paramset
+    outfile = args.outfile + gen_identifier(args)
+    print '== {0:<25} = {1}'.format('outfile', outfile)
+
+    if args.run_scan:
+        fitter = gf_utils.setup_fitter(args, asimov_paramset)
 
     print "DONE!"
 

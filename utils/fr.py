@@ -350,7 +350,6 @@ def fr_to_angles(ratios):
     if sphi2 == 0.:
         return (0., 0.)
     else:
-        spsi2 = fr1 / sphi2
         cpsi2 = fr0 / sphi2
 
     sphi4 = sphi2**2

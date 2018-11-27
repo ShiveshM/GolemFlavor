@@ -15,7 +15,7 @@ import numpy as np
 from scipy.stats import multivariate_normal
 
 from utils import fr as fr_utils
-from utils import likelihood as llh_utils
+from utils import llh as llh_utils
 from utils import mcmc as mcmc_utils
 from utils import misc as misc_utils
 from utils.param import Param, ParamSet, get_paramsets

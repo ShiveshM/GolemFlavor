@@ -20,14 +20,14 @@ import numpy.ma as ma
 
 from utils import fr as fr_utils
 from utils import gf as gf_utils
-from utils import likelihood as llh_utils
+from utils import llh as llh_utils
 from utils import misc as misc_utils
 from utils import plot as plot_utils
 from utils.enums import EnergyDependance, Likelihood, MixingScenario, ParamTag
 from utils.enums import PriorsCateg, SensitivityCateg, StatCateg
 from utils.param import Param, ParamSet, get_paramsets
 
-from utils import multinest as mn_utils
+from utils import mn as mn_utils
 
 
 def define_nuisance():

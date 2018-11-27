@@ -68,9 +68,9 @@ def steering_params(args):
     # params.evalThreads = thread_factors(args.threads)[1]
 
     if args.likelihood is Likelihood.GOLEMFIT:
-        params.frequentist = false;
+        params.frequentist = False;
     elif args.likelihood is Likelihood.GF_FREQ:
-        params.frequentist = true;
+        params.frequentist = True;
 
     # For Tianlu
     # params.years = [999]

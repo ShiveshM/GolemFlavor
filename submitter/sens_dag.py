@@ -46,15 +46,17 @@ GLOBAL_PARAMS.update(dict(
 # dimension         = [3, 6]
 dimension         = [3, 4, 5, 6, 7, 8]
 GLOBAL_PARAMS.update(dict(
-    threads           = 1,
-    binning           = '6e4 1e7 20',
-    no_bsm            = 'False',
-    scale_region      = "1E10",
-    energy_dependance = 'spectral',
-    spectral_index    = -2,
-    fix_mixing        = 'None',
-    fix_mixing_almost = 'False',
-    fold_index        = 'True'
+    threads            = 1,
+    binning            = '6e4 1e7 20',
+    no_bsm             = 'False',
+    scale_region       = "1E10",
+    energy_dependance  = 'spectral',
+    spectral_index     = -2,
+    fix_mixing         = 'None',
+    fix_mixing_almost  = 'False',
+    fold_index         = 'True',
+    save_measured_fr   = 'False',
+    output_measured_fr = './frs/'
 ))
 
 # Likelihood

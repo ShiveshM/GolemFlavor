@@ -18,7 +18,7 @@ import numpy as np
 
 from utils import fr as fr_utils
 from utils import gf as gf_utils
-from utils import likelihood as llh_utils
+from utils import llh as llh_utils
 from utils import mcmc as mcmc_utils
 from utils import misc as misc_utils
 from utils import plot as plot_utils

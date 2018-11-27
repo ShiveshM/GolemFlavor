@@ -347,8 +347,11 @@ def fr_to_angles(ratios):
     cphi2 = fr2
     sphi2 = (1.0 - cphi2)
 
-    spsi2 = fr1 / sphi2
-    cpsi2 = fr0 / sphi2
+    if sphi2 == 0.:
+        return (0., 0.)
+    else:
+        spsi2 = fr1 / sphi2
+        cpsi2 = fr0 / sphi2
 
     sphi4 = sphi2**2
     c2psi = COS(ACOS(SQRT(cpsi2))*2)

@@ -15,7 +15,7 @@ import numpy as np
 
 from pymultinest import analyse, run
 
-from utils import likelihood
+from utils import llh as llh_utils
 from utils.misc import gen_identifier, make_dir, solve_ratio
 
 
@@ -37,7 +37,7 @@ def lnProb(cube, ndim, n_params, mn_paramset, llh_paramset, asimov_paramset,
         llh_paramset[pm].value = mn_paramset[pm].value
     theta = llh_paramset.values
     # print 'llh_paramset', llh_paramset
-    llh = likelihood.ln_prob(
+    llh = llh_utils.ln_prob(
         theta=theta,
         args=args,
         asimov_paramset=asimov_paramset,

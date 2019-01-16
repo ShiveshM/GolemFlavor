@@ -11,3 +11,4 @@ mnrun_*
 mnrun/
 plot_llh/frs
 plot_llh/chains
+test/

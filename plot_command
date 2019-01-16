@@ -1,0 +1,1 @@
+python plot_sens.py --data real --dimensions 3 4 5 6 7 8 --fix-source-ratio True --source-ratios 1 2 0 1 0 0 0 1 0 --split-jobs True --stat-method bayesian --run-method fixed_angle --infile /data/user/smandalia/flavour_ratio/data --likelihood golemfit --sens-bins 20

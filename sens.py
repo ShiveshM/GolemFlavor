@@ -194,6 +194,8 @@ def main():
     scan_scales = np.linspace(
         np.log10(args.scale_region[0]), np.log10(args.scale_region[1]), args.sens_bins
     )
+    scan_scales = np.concatenate([[-100.], scan_scales])
+    # scan_scales = np.array([-100.])
 
     corr_angles_categ = [SensitivityCateg.CORR_ANGLE, SensitivityCateg.CORR_ONE_ANGLE]
     fixed_angle_categ = [SensitivityCateg.FIXED_ANGLE, SensitivityCateg.FIXED_ONE_ANGLE]
@@ -270,6 +272,10 @@ def main():
                                     out += '_angle_{0:<04.2}'.format(an)
                         else: continue
 
+                    sc_param = llh_paramset.from_tag(ParamTag.SCALE)[0]
+                    if sc < sc_param.ranges[0]:
+                        sc_param.ranges = (sc, sc_param.ranges[1])
+
                     if idx_sc == 0 or args.sens_eval_bin is not None:
                         print '|||| ANGLE = {0:<04.2}'.format(float(an))
                     print '|||| SCALE = {0:.0E}'.format(np.power(10, sc))
@@ -294,6 +300,7 @@ def main():
                         print '## Evidence = {0}'.format(stat)
                     elif args.stat_method is StatCateg.FREQUENTIST:
                         def fn(x):
+                            # TODO(shivesh): should be seed or ranges?
                             # Force prior ranges to be inside "seed"
                             for el in x:
                                 if el < 0 or el > 1: return np.inf

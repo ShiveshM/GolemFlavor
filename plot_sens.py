@@ -222,6 +222,7 @@ def main():
         scan_scales = np.linspace(
             np.log10(scale_region[0]), np.log10(scale_region[1]), args.sens_bins
         )
+        scan_scales = np.concatenate([[-100.], scan_scales])
 
         for isrc, src in enumerate(args.source_ratios):
             argsc.source_ratio = src
@@ -232,7 +233,8 @@ def main():
                 infile += '/gaussian/'
             if args.likelihood is Likelihood.GAUSSIAN:
                 infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
-            infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/fr_stat'.format(
+            # infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/fr_stat'.format(
+            infile += '/DIM{0}/fix_ifr/prior/{1}/{2}/{3}/fr_stat'.format(
             # infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/old/fr_stat'.format(
             # infile += '/DIM{0}/fix_ifr/seed2/{1}/{2}/{3}/fr_stat'.format(
             # infile += '/DIM{0}/fix_ifr/100TeV/{1}/{2}/{3}/fr_stat'.format(
@@ -281,7 +283,8 @@ def main():
                 base_infile += '/gaussian/'
             if args.likelihood is Likelihood.GAUSSIAN:
                 base_infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
-            base_infile += '/DIM{0}/fix_ifr'.format(dim)
+            # base_infile += '/DIM{0}/fix_ifr'.format(dim)
+            base_infile += '/DIM{0}/fix_ifr/prior'.format(dim)
             # base_infile += '/DIM{0}/fix_ifr/seed2'.format(dim)
             # base_infile += '/DIM{0}/fix_ifr/100TeV'.format(dim)
 

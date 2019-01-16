@@ -35,16 +35,17 @@ GLOBAL_PARAMS.update(dict(
 
 # MultiNest
 GLOBAL_PARAMS.update(dict(
-    mn_live_points = 1000,
+    # mn_live_points = 1000,
+    mn_live_points = 500,
     # mn_tolerance   = 0.1,
     mn_tolerance   = 0.3,
     mn_output      = './mnrun'
 ))
 
 # FR
-# dimension         = [6]
+dimension         = [6]
 # dimension         = [3, 6]
-dimension         = [3, 4, 5, 6, 7, 8]
+# dimension         = [3, 4, 5, 6, 7, 8]
 GLOBAL_PARAMS.update(dict(
     threads            = 1,
     binning            = '6e4 1e7 20',
@@ -82,15 +83,18 @@ outfile = 'dagman_FR_SENS_{0}_{1}_{2}_{3}'.format(
 )
 # outfile += '_seed2'
 # outfile += '_tol03'
+# outfile += '_NULL'
+outfile += '_prior'
 outfile += '.submit'
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/sens_submit.sub'
 
 if sens_eval_bin.lower() != 'all':
     if GLOBAL_PARAMS['run_method'].lower() == 'corr_angle':
+        raise NotImplementedError
         sens_runs = GLOBAL_PARAMS['sens_bins']**2
     else:
-        sens_runs = GLOBAL_PARAMS['sens_bins']
+        sens_runs = GLOBAL_PARAMS['sens_bins'] + 1
 else: sens_runs = 1
 
 with open(outfile, 'w') as f:
@@ -108,6 +112,7 @@ with open(outfile, 'w') as f:
             # output += 'seed2/'
             # output += 'mn_noverlap/'
             # output += 'tol_03/'
+            output += 'prior/'
             for r in xrange(sens_runs):
                 print 'run', r
                 f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))

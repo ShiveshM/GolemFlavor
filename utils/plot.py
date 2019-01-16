@@ -28,16 +28,17 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
 from getdist import plots, mcsamples
+import ternary
 
 from utils import misc as misc_utils
 from utils.enums import DataType, EnergyDependance
 from utils.enums import Likelihood, MixingScenario, ParamTag, StatCateg
 from utils.fr import angles_to_u, angles_to_fr
 
-if os.environ.get('GOLEMSOURCEPATH') is not None:
+if os.path.isfile('./plot_llh/paper.mplstyle'):
+    plt.style.use('./plot_llh/paper.mplstyle')
+elif os.environ.get('GOLEMSOURCEPATH') is not None:
     plt.style.use(os.environ['GOLEMSOURCEPATH']+'/GolemFit/scripts/paper/paper.mplstyle')
-elif os.path.isfile('./paper.mplstyle'):
-    plt.style.use('./paper.mplstyle')
 if 'submitter' in socket.gethostname():
     rc('text', usetex=False)
 
@@ -156,16 +157,24 @@ def gen_figtext(args):
     return t
 
 
-def chainer_plot(infile, outfile, outformat, args, llh_paramset):
+def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None):
     """Make the triangle plot."""
-    if not args.plot_angles and not args.plot_elements:
+    if hasattr(args, 'plot_elements'):
+        if not args.plot_angles and not args.plot_elements:
+            return
+    elif not args.plot_angles:
         return
 
-    raw = np.load(infile)
+    if not isinstance(infile, np.ndarray):
+        raw = np.load(infile)
+    else:
+        raw = infile
     print 'raw.shape', raw.shape
+    print 'raw', raw
 
     misc_utils.make_dir(outfile)
-    fig_text = gen_figtext(args)
+    if fig_text is None:
+        fig_text = gen_figtext(args)
 
     axes_labels = llh_paramset.labels
     ranges = llh_paramset.ranges
@@ -196,14 +205,17 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset):
         #     )
 
         if args.data is DataType.REAL:
-            plt.text(0.8, 0.7, 'IceCube Preliminary', color='red', fontsize=15,
+            plt.text(0.8, 0.9, 'IceCube Preliminary', color='red', fontsize=15,
                      ha='center', va='center')
         elif args.data in [DataType.ASIMOV, DataType.REALISATION]:
-            plt.text(0.8, 0.7, 'IceCube Simulation', color='red', fontsize=15,
+            plt.text(0.8, 0.9, 'IceCube Simulation', color='red', fontsize=15,
                      ha='center', va='center')
 
         for of in outformat:
             g.export(outfile+'_angles.'+of)
+
+    if not hasattr(args, 'plot_elements'):
+        return
 
     if args.plot_elements:
         print "Making triangle plots"
@@ -275,19 +287,21 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     print 'data', data
     print 'data.shape', data.shape
     scales, statistic = ma.compress_rows(data).T
-    tck, u = interpolate.splprep([scales, statistic], s=0)
-    scales, statistic = interpolate.splev(np.linspace(0, 1, 1000), tck)
-    print 'scales', scales
-    print 'statistic', statistic
+    scales_rm = scales[1:]
+    statistic_rm = statistic[1:]
+    tck, u = interpolate.splprep([scales_rm, statistic_rm], s=0)
+    scales_rm, statistic_rm = interpolate.splev(np.linspace(0, 1, 1000), tck)
+    print 'scales_rm', scales_rm
+    print 'statistic_rm', statistic_rm
 
     min_idx = np.argmin(scales)
     null = statistic[min_idx]
     fig_text += '\nnull lnZ = {0:.2f}'.format(null)
 
     if args.stat_method is StatCateg.BAYESIAN:
-        reduced_ev = -(statistic - null)
+        reduced_ev = -(statistic_rm - null)
     elif args.stat_method is StatCateg.FREQUENTIST:
-        reduced_ev = -2*(statistic - null)
+        reduced_ev = -2*(statistic_rm - null)
 
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
@@ -300,7 +314,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     elif args.stat_method is StatCateg.FREQUENTIST:
         ax.set_ylabel(r'$-2\Delta {\rm LLH}$')
 
-    ax.plot(scales, reduced_ev)
+    ax.plot(scales_rm, reduced_ev)
 
     ax.axhline(y=np.log(10**(3/2.)), color='red', alpha=1., linewidth=1.3)
 
@@ -551,16 +565,18 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
                         ax.axvline(x=ps, color='purple', alpha=1., linewidth=1.5)
 
                 scales, statistic = ma.compress_rows(data[idim][isrc][ian]).T
-                tck, u = interpolate.splprep([scales, statistic], s=0)
-                scales, statistic = interpolate.splev(np.linspace(0, 1, 1000), tck)
+                scales_rm = scales[1:]
+                statistic_rm = statistic[1:]
+                tck, u = interpolate.splprep([scales_rm, statistic_rm], s=0)
+                scales_rm, statistic_rm = interpolate.splev(np.linspace(0, 1, 1000), tck)
                 min_idx = np.argmin(scales)
                 null = statistic[min_idx]
                 if args.stat_method is StatCateg.BAYESIAN:
-                    reduced_ev = -(statistic - null)
-                    al = scales[reduced_ev > np.log(10**(3/2.))] # Strong degree of belief
+                    reduced_ev = -(statistic_rm - null)
+                    al = scales_rm[reduced_ev > np.log(10**(3/2.))] # Strong degree of belief
                 elif args.stat_method is StatCateg.FREQUENTIST:
-                    reduced_ev = -2*(statistic - null)
-                    al = scales[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
+                    reduced_ev = -2*(statistic_rm - null)
+                    al = scales_rm[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
                 if len(al) == 0:
                     print 'No points for DIM {0} FRS {1}!'.format(dim, src)
                     continue
@@ -924,3 +940,107 @@ def plot_sens_corr_angle(data, outfile, outformat, args):
                 for of in outformat:
                     print 'Saving plot as {0}'.format(out+'.'+of)
                     fig.savefig(out+'.'+of, bbox_inches='tight', dpi=150)
+
+
+def cmap_discretize(cmap, N):
+    colors_i = np.concatenate((np.linspace(0, 1., N), (0.,0.,0.,0.)))
+    colors_rgba = cmap(colors_i)
+    indices = np.linspace(0, 1., N+1)
+    cdict = {}
+    for ki,key in enumerate(('red','green','blue')):
+        cdict[key] = [ (indices[i], colors_rgba[i-1,ki], colors_rgba[i,ki]) for i in xrange(N+1) ]
+    # Return colormap object.
+    return mpl.colors.LinearSegmentedColormap(cmap.name + "_%d"%N, cdict, 1024)
+
+
+def triangle_project(frs, llh, outfile, outformat, args, llh_paramset, fig_text):
+    print 'Making triangle projection'
+    fontsize = 23
+
+    def alp(x):
+        y = list(x)
+        y[-1] = 0.4
+        return y
+
+    cmap = plt.get_cmap('jet', 10)
+    cmap_g = cmap_discretize(
+        mpl.colors.LinearSegmentedColormap.from_list(
+            "", ["lime", "gold", "darkorange"]),
+        10
+    )
+    cmap_b = cmap_discretize(
+        mpl.colors.LinearSegmentedColormap.from_list(
+            "", ["blue", "fuchsia", "darkmagenta"]),
+        10
+    )
+
+    mean = np.mean(llh)
+    sig = np.std(llh)
+    min_scale = np.min(llh)
+    max_scale = np.max(mean+sig)
+    norm = mpl.colors.Normalize(vmin=min_scale, vmax=max_scale)
+
+    colour = map(alp, map(cmap, map(norm, llh)))
+    # colour = map(alp, map(cmap_g, map(norm, llh)))
+    # colour = map(alp, map(cmap_b, map(norm, llh)))
+
+    # Figure
+    fig = plt.figure(figsize=(8, 8))
+    gs = gridspec.GridSpec(1, 2, width_ratios=[40, 1])
+    gs.update(hspace=0.3, wspace=0.15)
+
+    ax = fig.add_subplot(gs[0])
+    ax.set_aspect('equal')
+
+    # Boundary and Gridlines
+    scale = 1
+    fig, tax = ternary.figure(ax=ax, scale=scale)
+
+    # Draw Boundary and Gridlines
+    tax.boundary(linewidth=2.0)
+    tax.gridlines(color='grey', multiple=scale/5., linewidth=1.0, alpha=0.4, ls='--')
+    tax.gridlines(color='grey', multiple=scale/10., linewidth=0.5, alpha=0.4, ls=':')
+
+    # Set Axis labels and Title
+    fontsize = 23
+    tax.left_axis_label(r"$f_{\tau}$", fontsize=fontsize+8, offset=0.2, rotation=0)
+    tax.right_axis_label(r"$f_{\mu}$", fontsize=fontsize+8, offset=0.2, rotation=0)
+    tax.bottom_axis_label(r"$f_{e}$", fontsize=fontsize+8, position=(0.55, -0.20/2, 0.5), rotation=0)
+
+    # Remove default Matplotlib axis
+    tax.get_axes().axis('off')
+    tax.clear_matplotlib_ticks()
+
+    # Plot
+    tax.scatter(frs, marker='o', s=0.1, color=colour)
+
+    # Contour TODO(shivesh)
+    # tax.plot(contour_68_upper, linewidth=2.3, color='grey', zorder=0, alpha=0.6)
+    # tax.plot(contour_68_lower, linewidth=2.3, color='grey', zorder=0, alpha=0.6)
+    # tax.plot(contour_90_upper, linewidth=2.3, color='darkgrey', zorder=0, alpha=0.6)
+    # tax.plot(contour_90_lower, linewidth=2.3, color='darkgrey', zorder=0, alpha=0.6)
+
+    # Lines
+    marker_style = dict(
+        linestyle=' ', color='darkorange', linewidth=1.2,
+        markersize=14, zorder=0
+    )
+
+    # Colorbar
+    ax0 = fig.add_subplot(gs[1])
+    cb = mpl.colorbar.ColorbarBase(ax0, cmap=cmap, norm=norm,
+                                   orientation='vertical')
+    cb.ax.tick_params(labelsize=fontsize-5)
+    cb.set_label(r'$LLH$', fontsize=fontsize+5, labelpad=20,
+                 horizontalalignment='center')
+
+    # Set ticks
+    tax.ticks(axis='blr', multiple=scale/5., linewidth=1, offset=0.03,
+              fontsize=fontsize, tick_formats='%.1f')
+
+    tax._redraw_labels()
+
+    misc_utils.make_dir(outfile)
+    for of in outformat:
+        print 'Saving plot as {0}'.format(outfile+'.'+of)
+        fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)

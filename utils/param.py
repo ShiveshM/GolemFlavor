@@ -212,6 +212,14 @@ class ParamSet(Sequence):
                 rm_paramset.append(parm)
         return ParamSet(rm_paramset)
 
+    def extend(self, p):
+        param_sequence = self.params
+        if isinstance(p, Param):
+            param_sequence.append(p)
+        elif isinstance(p, ParamSet):
+            param_sequence.extend(p.params)
+        return ParamSet(param_sequence)
+
 
 def get_paramsets(args, nuisance_paramset):
     """Make the paramsets for generating the Asmimov MC sample and also running
@@ -269,8 +277,8 @@ def get_paramsets(args, nuisance_paramset):
         if not args.fix_source_ratio:
             tag = ParamTag.SRCANGLES
             llh_paramset.extend([
-                Param(name='s_phi4', value=0.5, ranges=[0., 1.], std=0.2, tex=r'sin^4(\phi)', tag=tag),
-                Param(name='c_2psi', value=0.5, ranges=[0., 1.], std=0.2, tex=r'cos(2\psi)', tag=tag)
+                Param(name='s_phi4', value=0.5, ranges=[0., 1.],  std=0.2, tex=r'sin^4(\phi)', tag=tag),
+                Param(name='c_2psi', value=0.5, ranges=[-1., 1.], std=0.2, tex=r'cos(2\psi)', tag=tag)
             ])
     llh_paramset = ParamSet(llh_paramset)
     return asimov_paramset, llh_paramset

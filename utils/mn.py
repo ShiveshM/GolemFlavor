@@ -30,13 +30,12 @@ def lnProb(cube, ndim, n_params, mn_paramset, llh_paramset, asimov_paramset,
             'Length of MultiNest scan paramset is not the same as the input '
             'params\ncube={0}\nmn_paramset]{1}'.format(cube, mn_paramset)
         )
-    pranges = mn_paramset.seeds
+    pranges = mn_paramset.ranges
     for i in xrange(ndim):
         mn_paramset[i].value = (pranges[i][1]-pranges[i][0])*cube[i] + pranges[i][0]
     for pm in mn_paramset.names:
         llh_paramset[pm].value = mn_paramset[pm].value
     theta = llh_paramset.values
-    # print 'llh_paramset', llh_paramset
     llh = llh_utils.ln_prob(
         theta=theta,
         args=args,
@@ -44,7 +43,6 @@ def lnProb(cube, ndim, n_params, mn_paramset, llh_paramset, asimov_paramset,
         llh_paramset=llh_paramset,
         fitter=fitter
     )
-    # print 'llh', llh
     return llh
 
 
@@ -80,9 +78,6 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, fitter,
         fitter          = fitter
     )
 
-    # prefix = './mnrun/DIM{0}/{1}_{2}_{3:>010}_'.format(
-    #     args.dimension, args.likelihood, gen_identifier(args), np.random.randint(0, 2**30)
-    # )
     llh = '{0}'.format(args.likelihood).split('.')[1]
     data = '{0}'.format(args.data).split('.')[1]
     sr1, sr2, sr3 = solve_ratio(args.source_ratio)

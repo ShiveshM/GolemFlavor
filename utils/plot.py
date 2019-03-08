@@ -15,7 +15,8 @@ from copy import deepcopy
 
 import numpy as np
 import numpy.ma as ma
-from scipy import interpolate
+from scipy.interpolate import splev, splprep
+from scipy.ndimage.filters import gaussian_filter
 
 import matplotlib as mpl
 mpl.use('Agg')
@@ -28,12 +29,17 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
 from getdist import plots, mcsamples
+
 import ternary
+from ternary.heatmapping import polygon_generator
+
+import shapely.geometry as geometry
 
 from utils import misc as misc_utils
 from utils.enums import DataType, EnergyDependance
 from utils.enums import Likelihood, MixingScenario, ParamTag, StatCateg
 from utils.fr import angles_to_u, angles_to_fr
+
 
 if os.path.isfile('./plot_llh/paper.mplstyle'):
     plt.style.use('./plot_llh/paper.mplstyle')
@@ -287,12 +293,13 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     print 'data', data
     print 'data.shape', data.shape
     scales, statistic = ma.compress_rows(data).T
-    scales_rm = scales[1:]
-    statistic_rm = statistic[1:]
-    tck, u = interpolate.splprep([scales_rm, statistic_rm], s=0)
-    scales_rm, statistic_rm = interpolate.splev(np.linspace(0, 1, 1000), tck)
-    print 'scales_rm', scales_rm
-    print 'statistic_rm', statistic_rm
+    try:
+        tck, u = splprep([scales, statistic], s=0)
+    except:
+        return
+    sc, st = splev(np.linspace(0, 1, 10000), tck)
+    scales_rm = sc[sc >= scales[1]]
+    statistic_rm = st[sc >= scales[1]]
 
     min_idx = np.argmin(scales)
     null = statistic[min_idx]
@@ -313,6 +320,10 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
         ax.set_ylabel(r'log(Bayes Factor)')
     elif args.stat_method is StatCateg.FREQUENTIST:
         ax.set_ylabel(r'$-2\Delta {\rm LLH}$')
+
+    # ymin = np.round(np.min(reduced_ev) - 1.5)
+    # ymax = np.round(np.max(reduced_ev) + 1.5)
+    # ax.set_ylim((ymin, ymax))
 
     ax.plot(scales_rm, reduced_ev)
 
@@ -565,10 +576,14 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
                         ax.axvline(x=ps, color='purple', alpha=1., linewidth=1.5)
 
                 scales, statistic = ma.compress_rows(data[idim][isrc][ian]).T
-                scales_rm = scales[1:]
-                statistic_rm = statistic[1:]
-                tck, u = interpolate.splprep([scales_rm, statistic_rm], s=0)
-                scales_rm, statistic_rm = interpolate.splev(np.linspace(0, 1, 1000), tck)
+                try:
+                    tck, u = splprep([scales, statistic], s=0)
+                except:
+                    return
+                sc, st = splev(np.linspace(0, 1, 10000), tck)
+                scales_rm = sc[sc >= scales[1]]
+                statistic_rm = st[sc >= scales[1]]
+
                 min_idx = np.argmin(scales)
                 null = statistic[min_idx]
                 if args.stat_method is StatCateg.BAYESIAN:
@@ -708,8 +723,8 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
             for ian in xrange(len(data[idim][isrc])):
                 print '=== an', ian
                 scales, statistic = data[idim][isrc][ian].T
-                tck, u = interpolate.splprep([scales, statistic], s=0)
-                scales, statistic = interpolate.splev(np.linspace(0, 1, 1000), tck)
+                tck, u = splprep([scales, statistic], s=0)
+                scales, statistic = splev(np.linspace(0, 1, 1000), tck)
                 min_idx = np.argmin(scales)
                 null = statistic[min_idx]
                 if args.stat_method is StatCateg.BAYESIAN:
@@ -861,7 +876,7 @@ def plot_sens_corr_angle(data, outfile, outformat, args):
                 print uni, c
                 print len(uni)
                 print np.unique(c)
-                
+
                 n = len(uni)
                 assert len(np.unique(c)) == 1
                 c = c[0]
@@ -872,7 +887,7 @@ def plot_sens_corr_angle(data, outfile, outformat, args):
                 sep_arrays = []
                 for x_i in xrange(n):
                     sep_arrays.append(col_array[:,x_i])
-                
+
                 print len(sep_arrays)
                 sep_arrays = sep_arrays[0][:3]
                 print sep_arrays
@@ -891,7 +906,7 @@ def plot_sens_corr_angle(data, outfile, outformat, args):
                 ax.set_xlim((mini, maxi))
                 ax.set_ylim(0, 1)
                 ax.grid(b=False)
-                
+
                 x_v = reduced_pdat[0].round(decimals=4)
                 y_v = reduced_pdat[1].round(decimals=4)
                 uniques = np.unique(x_v)
@@ -924,8 +939,8 @@ def plot_sens_corr_angle(data, outfile, outformat, args):
                     print 'p_x', p_x
                     print 'p_y', p_y
                     try:
-                        tck, u = interpolate.splprep([p_x, p_y], s=1e-5, per=True)
-                        xi, yi = interpolate.splev(np.linspace(0, 1, 1000), tck)
+                        tck, u = splprep([p_x, p_y], s=1e-5, per=True)
+                        xi, yi = splev(np.linspace(0, 1, 1000), tck)
                     except:
                         xi, yi = p_x, p_y
                     ax.fill(xi, yi, 'r', edgecolor='r', linewidth=1)
@@ -953,6 +968,36 @@ def cmap_discretize(cmap, N):
     return mpl.colors.LinearSegmentedColormap(cmap.name + "_%d"%N, cdict, 1024)
 
 
+def get_tax(ax, scale):
+    ax.set_aspect('equal')
+
+    # Boundary and Gridlines
+    fig, tax = ternary.figure(ax=ax, scale=scale)
+
+    # Draw Boundary and Gridlines
+    tax.boundary(linewidth=2.0)
+    tax.gridlines(color='grey', multiple=scale/5., linewidth=1.0, alpha=0.4, ls='--')
+    tax.gridlines(color='grey', multiple=scale/10., linewidth=0.5, alpha=0.4, ls=':')
+
+    # Set Axis labels and Title
+    fontsize = 23
+    tax.left_axis_label(r"$f_{\tau}$", fontsize=fontsize+8, offset=0.2, rotation=0)
+    tax.right_axis_label(r"$f_{\mu}$", fontsize=fontsize+8, offset=0.2, rotation=0)
+    tax.bottom_axis_label(r"$f_{e}$", fontsize=fontsize+8, position=(0.55, -0.20/2, 0.5), rotation=0)
+
+    # Remove default Matplotlib axis
+    tax.get_axes().axis('off')
+    tax.clear_matplotlib_ticks()
+
+    # Set ticks
+    ticks = np.linspace(0, 1, 6)
+    tax.ticks(ticks=ticks, locations=ticks*scale, axis='blr', linewidth=1,
+              offset=0.03, fontsize=fontsize, tick_formats='%.1f')
+
+    tax._redraw_labels()
+
+    return tax
+
 def triangle_project(frs, llh, outfile, outformat, args, llh_paramset, fig_text):
     print 'Making triangle projection'
     fontsize = 23
@@ -976,8 +1021,8 @@ def triangle_project(frs, llh, outfile, outformat, args, llh_paramset, fig_text)
 
     mean = np.mean(llh)
     sig = np.std(llh)
-    min_scale = np.min(llh)
-    max_scale = np.max(mean+sig)
+    max_scale = np.max(llh)
+    min_scale = np.min(mean-sig)
     norm = mpl.colors.Normalize(vmin=min_scale, vmax=max_scale)
 
     colour = map(alp, map(cmap, map(norm, llh)))
@@ -990,26 +1035,7 @@ def triangle_project(frs, llh, outfile, outformat, args, llh_paramset, fig_text)
     gs.update(hspace=0.3, wspace=0.15)
 
     ax = fig.add_subplot(gs[0])
-    ax.set_aspect('equal')
-
-    # Boundary and Gridlines
-    scale = 1
-    fig, tax = ternary.figure(ax=ax, scale=scale)
-
-    # Draw Boundary and Gridlines
-    tax.boundary(linewidth=2.0)
-    tax.gridlines(color='grey', multiple=scale/5., linewidth=1.0, alpha=0.4, ls='--')
-    tax.gridlines(color='grey', multiple=scale/10., linewidth=0.5, alpha=0.4, ls=':')
-
-    # Set Axis labels and Title
-    fontsize = 23
-    tax.left_axis_label(r"$f_{\tau}$", fontsize=fontsize+8, offset=0.2, rotation=0)
-    tax.right_axis_label(r"$f_{\mu}$", fontsize=fontsize+8, offset=0.2, rotation=0)
-    tax.bottom_axis_label(r"$f_{e}$", fontsize=fontsize+8, position=(0.55, -0.20/2, 0.5), rotation=0)
-
-    # Remove default Matplotlib axis
-    tax.get_axes().axis('off')
-    tax.clear_matplotlib_ticks()
+    tax = get_tax(ax, scale=1)
 
     # Plot
     tax.scatter(frs, marker='o', s=0.1, color=colour)
@@ -1034,13 +1060,92 @@ def triangle_project(frs, llh, outfile, outformat, args, llh_paramset, fig_text)
     cb.set_label(r'$LLH$', fontsize=fontsize+5, labelpad=20,
                  horizontalalignment='center')
 
-    # Set ticks
-    tax.ticks(axis='blr', multiple=scale/5., linewidth=1, offset=0.03,
-              fontsize=fontsize, tick_formats='%.1f')
-
-    tax._redraw_labels()
-
     misc_utils.make_dir(outfile)
     for of in outformat:
         print 'Saving plot as {0}'.format(outfile+'.'+of)
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
+
+
+def heatmap(data, scale, vmin=None, vmax=None, style='triangular'):
+    for k, v in data.items():
+        data[k] = np.array(v)
+    style = style.lower()[0]
+    if style not in ["t", "h", 'd']:
+        raise ValueError("Heatmap style must be 'triangular', 'dual-triangular', or 'hexagonal'")
+
+    vertices_values = polygon_generator(data, scale, style)
+
+    vertices = []
+    for v, value in vertices_values:
+        vertices.append(v)
+    return vertices
+
+
+def flavour_contour(frs, ax, nbins, coverage, linewidth=2, color='black'):
+    """Plot the flavour contour for a specified coverage."""
+    # Histogram in flavour space
+    H, b = np.histogramdd(
+        (frs[:,0], frs[:,1], frs[:,2]),
+        bins=(nbins+1, nbins+1, nbins+1), range=((0, 1), (0, 1), (0, 1))
+    )
+    H = H / np.sum(H)
+
+    # 3D smoothing
+    smoothing = 0.05
+    H_s = gaussian_filter(H, sigma=smoothing)
+
+    # Finding coverage
+    H_r = np.ravel(H_s)
+    H_rs = np.argsort(H_r)[::-1]
+    H_crs = np.cumsum(H_r[H_rs])
+    thres = np.searchsorted(H_crs, coverage/100.)
+    mask_r = np.zeros(H_r.shape)
+    mask_r[H_rs[:thres]] = 1
+    mask = mask_r.reshape(H_s.shape)
+
+    # Get vertices inside covered region
+    binx = np.linspace(0, 1, nbins+1)
+    interp_dict = {}
+    for i in xrange(len(binx)):
+        for j in xrange(len(binx)):
+            for k in xrange(len(binx)):
+                if mask[i][j][k] == 1:
+                    interp_dict[(i, j, k)] = H_s[i, j, k]
+    vertices = np.array(heatmap(interp_dict, nbins))
+    points = vertices.reshape((len(vertices)*3, 2))
+
+    # Convex full to find points forming exterior bound
+    pc = geometry.MultiPoint(points)
+    polygon = pc.convex_hull
+    ex_cor = np.array(list(polygon.exterior.coords))
+
+    # Join points with a spline
+    tck, u = splprep([ex_cor.T[0], ex_cor.T[1]], s=0., per=1, k=1)
+    xi, yi = map(np.array, splev(np.linspace(0, 1, 300), tck))
+
+    # Spline again to smooth
+    tck, u = splprep([xi, yi], s=0.4, per=1, k=3)
+    xi, yi = map(np.array, splev(np.linspace(0, 1, 300), tck))
+    ev_polygon = np.dstack((xi, yi))[0]
+
+    def project_toflavour(p):
+        """Convert from cartesian to flavour space."""
+        x, y = p
+        b = y / (np.sqrt(3)/2.)
+        a = x - b/2.
+        return [a, b, nbins-a-b]
+
+    # Remove points interpolated outside flavour triangle
+    f_ev_polygon = np.array(map(project_toflavour, ev_polygon))
+    xf, yf, zf = f_ev_polygon.T
+    mask = np.array((xf < 0) | (yf < 0) | (zf < 0) | (xf > nbins) |
+                    (yf > nbins) | (zf > nbins))
+    ev_polygon = np.dstack((xi[~mask], yi[~mask]))[0]
+
+    # Plot
+    ax.plot(
+        ev_polygon.T[0], ev_polygon.T[1], linewidth=linewidth, color=color,
+        zorder=2, alpha=0.6, label=r'{0}\%'.format(int(coverage))
+    )
+    ax.scatter(points.T[0], points.T[1], marker='o', s=2, alpha=1, color=color,
+               zorder=3)

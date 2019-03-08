@@ -12,7 +12,8 @@ from __future__ import absolute_import, division
 from functools import partial
 
 import numpy as np
-from scipy.stats import multivariate_normal, rv_continuous
+import scipy
+from scipy.stats import multivariate_normal, truncnorm
 
 from utils import fr as fr_utils
 from utils import gf as gf_utils
@@ -20,10 +21,11 @@ from utils.enums import EnergyDependance, Likelihood, ParamTag, PriorsCateg
 from utils.misc import enum_parse, gen_identifier, parse_bool
 
 
-class Gaussian(rv_continuous):
-    """Gaussian for one dimension."""
-    def _pdf(self, x, mu, sig):
-        return (1./np.sqrt(2*np.pi*sig**2))*np.exp(-((x-mu)**2)/(2*sig**2))
+def GaussianBoundedRV(loc=0., sigma=1., lower=-np.inf, upper=np.inf):
+    """Normalised gaussian bounded between lower and upper values"""
+    low, up = (lower - loc) / sigma, (upper - loc) / sigma
+    g = scipy.stats.truncnorm(loc=loc, scale=sigma, a=low, b=up)
+    return g
 
 
 def multi_gaussian(fr, fr_bf, sigma, offset=-320):
@@ -69,13 +71,14 @@ def lnprior(theta, paramset):
     prior = 0
     for param in paramset:
         if param.prior is PriorsCateg.GAUSSIAN:
-            prior += Gaussian().logpdf(
-                param.nominal_value, param.value, param.std
-            )
-        elif param.prior is PriorsCateg.HALFGAUSS:
-            prior += Gaussian().logpdf(
-                param.nominal_value, param.value, param.std
-            ) + Gaussian().logcdf(1, param.value, param.std)
+            prior += GaussianBoundedRV(
+                loc=param.nominal_value, sigma=param.std
+            ).logpdf(param.value)
+        elif param.prior is PriorsCateg.LIMITEDGAUSS:
+            prior += GaussianBoundedRV(
+                loc=param.nominal_value, sigma=param.std,
+                lower=param.ranges[0], upper=param.ranges[1]
+            ).logpdf(param.value)
     return prior
 
 

@@ -10,6 +10,7 @@ HESE flavour ratio contour
 
 from __future__ import absolute_import, division
 
+import os
 import argparse
 from functools import partial
 
@@ -22,7 +23,7 @@ from utils import misc as misc_utils
 from utils import mn as mn_utils
 from utils import plot as plot_utils
 from utils.enums import str_enum
-from utils.enums import DataType, Likelihood, ParamTag
+from utils.enums import DataType, Likelihood, ParamTag, PriorsCateg
 from utils.param import Param, ParamSet, get_paramsets
 
 from pymultinest import Analyzer, run
@@ -32,12 +33,13 @@ def define_nuisance():
     """Define the nuisance parameters."""
     nuisance = []
     tag = ParamTag.NUISANCE
+    lg_prior = PriorsCateg.LIMITEDGAUSS
     nuisance.extend([
-        Param(name='convNorm',        value=1.,  seed=[0.5, 2. ], ranges=[0. , 50.], std=0.3,  tag=tag),
-        Param(name='promptNorm',      value=0.,  seed=[0. , 6. ], ranges=[0. , 50.], std=0.05, tag=tag),
-        Param(name='muonNorm',        value=1.,  seed=[0.1, 2. ], ranges=[0. , 50.], std=0.1,  tag=tag),
-        Param(name='astroNorm',       value=6.9, seed=[0.1, 10.], ranges=[0. , 50.], std=0.1,  tag=tag),
-        Param(name='astroDeltaGamma', value=2.5, seed=[2.4, 3. ], ranges=[-5., 5. ], std=0.1,  tag=tag)
+        Param(name='convNorm',        value=1.,  seed=[0.5, 2. ], ranges=[0.1, 10.], std=0.4, prior=lg_prior, tag=tag),
+        Param(name='promptNorm',      value=0.,  seed=[0. , 6. ], ranges=[0. , 20.], std=2.4, prior=lg_prior, tag=tag),
+        Param(name='muonNorm',        value=1.,  seed=[0.1, 2. ], ranges=[0. , 10.], std=0.1, tag=tag),
+        Param(name='astroNorm',       value=6.9, seed=[0.,  5. ], ranges=[0. , 20.], std=1.5, tag=tag),
+        Param(name='astroDeltaGamma', value=2.5, seed=[2.4, 3. ], ranges=[-5., 5. ], std=0.1, tag=tag)
     ])
     return ParamSet(nuisance)
 
@@ -120,12 +122,12 @@ def gen_identifier(args):
 def gen_figtext(args, asimov_paramset):
     f = ''
     if args.data is DataType.REAL:
-        f += 'IceCube Preliminary\n'
+        f += 'IceCube Preliminary'
     else:
         ir1, ir2, ir3 = misc_utils.solve_ratio(args.injected_ratio)
-        f += 'Injected ratio = [{0}, {1}, {2}]\n'.format(ir1, ir2, ir3)
+        f += 'Injected ratio = [{0}, {1}, {2}]'.format(ir1, ir2, ir3)
         for param in asimov_paramset:
-            f += 'Injected {0} = {1:.3f}\n'.format(
+            f += '\nInjected {0:20s} = {1:.3f}'.format(
                 param.name, param.nominal_value
             )
     return f
@@ -210,6 +212,9 @@ def main():
             fitter         = fitter
         )
 
+        cwd = os.getcwd()
+        os.chdir(prefix[:-len(os.path.basename(prefix))])
+
         print 'Running evidence calculation for {0}'.format(prefix)
         run(
             LogLikelihood              = lnProbEval,
@@ -217,11 +222,13 @@ def main():
             n_dims                     = n_params,
             n_live_points              = args.mn_live_points,
             evidence_tolerance         = args.mn_tolerance,
-            outputfiles_basename       = prefix,
+            outputfiles_basename       = prefix[-len(os.path.basename(prefix)):],
             importance_nested_sampling = True,
             resume                     = False,
             verbose                    = True
         )
+
+        os.chdir(cwd)
 
     # Analyze
     analyser = Analyzer(
@@ -230,38 +237,53 @@ def main():
     print analyser
 
     pranges = hypo_paramset.ranges
-    fig_text = gen_figtext(args, asimov_paramset)
 
-    if args.plot_chains:
+    bf = analyser.get_best_fit()['parameters']
+    for i in xrange(len(bf)):
+        bf[i] = (pranges[i][1]-pranges[i][0])*bf[i] + pranges[i][0]
+    print 'bestfit = ', bf
+    print 'bestfit log_likelihood', analyser.get_best_fit()['log_likelihood']
+
+    print
+    print '{0:50} = {1}'.format('global evidence', analyser.get_stats()['global evidence'])
+    print
+
+    fig_text = gen_figtext(args, asimov_paramset)
+    fig_text += '\nBestfit LLH = {0}'.format(analyser.get_best_fit()['log_likelihood'])
+    fig_text += '\nBestfits = '
+    for x in bf: fig_text += '{0:.2f} '.format(x)
+
+    if args.plot_chains or args.plot_triangle:
         chains = analyser.get_data()[:,2:]
         for x in chains:
             for i in xrange(len(x)):
                 x[i] = (pranges[i][1]-pranges[i][0])*x[i] + pranges[i][0]
+
+    if args.plot_chains:
+        of = outfile[:5]+outfile[5:].replace('data', 'plots')+'_posterior'
         plot_utils.chainer_plot(
             infile       = chains,
-            outfile      = outfile[:5]+outfile[5:].replace('data', 'plots')+'_posterior',
-            outformat    = ['pdf'],
+            outfile      = of,
+            outformat    = ['png'],
             args         = args,
             llh_paramset = hypo_paramset,
             fig_text     = fig_text
         )
+        print 'Saved plot', of
 
     if args.plot_triangle:
-        llh = analyser.get_data()[:,1]
+        llh = -0.5 * analyser.get_data()[:,1]
 
-        chains = analyser.get_data()[:,2:]
-        for x in chains:
-            for i in xrange(len(x)):
-                x[i] = (pranges[i][1]-pranges[i][0])*x[i] + pranges[i][0]
         flavour_angles = chains[:,-2:]
         flavour_ratios = np.array(
-            map(fr_utils.angles_to_fr, flavour_angles), dtype=np.float
+            map(fr_utils.angles_to_fr, flavour_angles)
         )
 
+        of = outfile[:5]+outfile[5:].replace('data', 'plots')+'_triangle'
         plot_utils.triangle_project(
             frs          = flavour_ratios,
             llh          = llh,
-            outfile      = outfile[:5]+outfile[5:].replace('data', 'plots')+'_triangle',
+            outfile      = of,
             outformat    = ['png'],
             args         = args,
             llh_paramset = hypo_paramset,

@@ -85,6 +85,11 @@ def steering_params(args):
         params.maxFitEnergy = 1E7 # GeV
     params.load_data_from_text_file = False
 
+    params.sampleToLoad = gf.sampleTag.MagicTau
+    params.use_legacy_selfveto_calculation = False
+    params.spline_hole_ice = False
+    params.spline_dom_efficiency = False
+
     return params
 
 

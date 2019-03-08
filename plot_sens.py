@@ -34,13 +34,13 @@ def define_nuisance():
     """Define the nuisance parameters."""
     tag = ParamTag.SM_ANGLES
     g_prior = PriorsCateg.GAUSSIAN
-    hg_prior = PriorsCateg.HALFGAUSS
+    lg_prior = PriorsCateg.LIMITEDGAUSS
     e = 1e-9
     nuisance = [
-        Param(name='s_12_2', value=0.307,          seed=[0.26, 0.35],     ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2', prior=g_prior,  tag=tag),
-        Param(name='c_13_4', value=1-(0.02206)**2, seed=[0.995, 1-e],     ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=hg_prior, tag=tag),
-        Param(name='s_23_2', value=0.538,          seed=[0.31, 0.75],     ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2', prior=g_prior,  tag=tag),
-        Param(name='dcp',    value=4.08404,        seed=[0+e, 2*np.pi-e], ranges=[0., 2*np.pi], std=2.0,     tex=r'\delta_{CP}', tag=tag),
+        Param(name='s_12_2', value=0.307,            seed=[0.26, 0.35],     ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2', prior=lg_prior,  tag=tag),
+        Param(name='c_13_4', value=(1-(0.02206))**2, seed=[0.950, 0.961],   ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=lg_prior,  tag=tag),
+        Param(name='s_23_2', value=0.538,            seed=[0.31, 0.75],     ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2', prior=lg_prior,  tag=tag),
+        Param(name='dcp',    value=4.08404,          seed=[0+e, 2*np.pi-e], ranges=[0., 2*np.pi], std=2.0,     tex=r'\delta_{CP}', tag=tag),
         Param(
             name='m21_2', value=7.40E-23, seed=[7.2E-23, 7.6E-23], ranges=[6.80E-23, 8.02E-23],
             std=2.1E-24, tex=r'\Delta m_{21}^2{\rm GeV}^{-2}', prior=g_prior, tag=tag
@@ -52,11 +52,11 @@ def define_nuisance():
     ]
     tag = ParamTag.NUISANCE
     nuisance.extend([
-        Param(name='convNorm',        value=1.,  seed=[0.5, 2. ], ranges=[0. , 50.], std=0.3,  tag=tag),
-        Param(name='promptNorm',      value=0.,  seed=[0. , 6. ], ranges=[0. , 50.], std=0.05, tag=tag),
-        Param(name='muonNorm',        value=1.,  seed=[0.1, 2. ], ranges=[0. , 50.], std=0.1,  tag=tag),
-        Param(name='astroNorm',       value=6.9, seed=[0.1, 10.], ranges=[0. , 50.], std=0.1,  tag=tag),
-        Param(name='astroDeltaGamma', value=2.5, seed=[1. , 3. ], ranges=[-5., 5. ], std=0.1,  tag=tag)
+        Param(name='convNorm',        value=1.,  seed=[0.5, 2. ], ranges=[0.1, 10.], std=0.4, prior=lg_prior, tag=tag),
+        Param(name='promptNorm',      value=0.,  seed=[0. , 6. ], ranges=[0. , 20.], std=2.4, prior=lg_prior, tag=tag),
+        Param(name='muonNorm',        value=1.,  seed=[0.1, 2. ], ranges=[0. , 10.], std=0.1, tag=tag),
+        Param(name='astroNorm',       value=6.9, seed=[0.,  5. ], ranges=[0. , 20.], std=1.5, tag=tag),
+        Param(name='astroDeltaGamma', value=2.5, seed=[2.4, 3. ], ranges=[-5., 5. ], std=0.1, tag=tag)
     ])
     return ParamSet(nuisance)
 
@@ -233,11 +233,13 @@ def main():
                 infile += '/gaussian/'
             if args.likelihood is Likelihood.GAUSSIAN:
                 infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
-            # infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/fr_stat'.format(
-            infile += '/DIM{0}/fix_ifr/prior/{1}/{2}/{3}/fr_stat'.format(
+            infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/fr_stat'.format(
+            # infile += '/DIM{0}/fix_ifr/prior/{1}/{2}/{3}/fr_stat'.format(
             # infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/old/fr_stat'.format(
             # infile += '/DIM{0}/fix_ifr/seed2/{1}/{2}/{3}/fr_stat'.format(
             # infile += '/DIM{0}/fix_ifr/100TeV/{1}/{2}/{3}/fr_stat'.format(
+            # infile += '/DIM{0}/fix_ifr/strictprior/{1}/{2}/{3}/fr_stat'.format(
+            # infile += '/DIM{0}/fix_ifr/noprior/{1}/{2}/{3}/fr_stat'.format(
                 dim, *map(misc_utils.parse_enum, [args.stat_method, args.run_method, args.data])
             ) + misc_utils.gen_identifier(argsc)
             print '== {0:<25} = {1}'.format('infile', infile)
@@ -283,10 +285,12 @@ def main():
                 base_infile += '/gaussian/'
             if args.likelihood is Likelihood.GAUSSIAN:
                 base_infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
-            # base_infile += '/DIM{0}/fix_ifr'.format(dim)
-            base_infile += '/DIM{0}/fix_ifr/prior'.format(dim)
+            base_infile += '/DIM{0}/fix_ifr'.format(dim)
+            # base_infile += '/DIM{0}/fix_ifr/prior'.format(dim)
             # base_infile += '/DIM{0}/fix_ifr/seed2'.format(dim)
             # base_infile += '/DIM{0}/fix_ifr/100TeV'.format(dim)
+            # base_infile += '/DIM{0}/fix_ifr/strictprior'.format(dim)
+            # base_infile += '/DIM{0}/fix_ifr/noprior'.format(dim)
 
             for isrc, src in enumerate(args.source_ratios):
                 argsc.source_ratio = src

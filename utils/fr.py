@@ -97,9 +97,9 @@ def angles_to_fr(src_angles):
     spsi2 = SIN(psi)**2
     cspi2 = 1. - spsi2
 
-    x = sphi2*cspi2
-    y = sphi2*spsi2
-    z = cphi2
+    x = float(abs(sphi2*cspi2))
+    y = float(abs(sphi2*spsi2))
+    z = float(abs(cphi2))
     return x, y, z
 
 

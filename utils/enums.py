@@ -50,9 +50,9 @@ class ParamTag(Enum):
 
 
 class PriorsCateg(Enum):
-    UNIFORM   = 1
-    GAUSSIAN  = 2
-    HALFGAUSS = 3
+    UNIFORM      = 1
+    GAUSSIAN     = 2
+    LIMITEDGAUSS = 3
 
 
 class MCMCSeedType(Enum):

@@ -363,7 +363,7 @@ def main():
         elif args.run_method in fixed_angle_categ:
             plot_utils.plot_sens_fixed_angle_pretty(
                 data      = data,
-                outfile   = baseoutfile + '/fixed_angle_pretty',
+                outfile   = baseoutfile + '/fixed_angle_pretty_substantial',
                 outformat = ['png', 'pdf'],
                 args      = args,
             )

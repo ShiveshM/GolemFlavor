@@ -99,41 +99,16 @@ def main():
     n_params = len(paramset)
     print n_params
 
-    # Data
-    data_path = '{0}/{1}/real'.format(
-        args.contour_dir, str_enum(args.likelihood).lower()
-    )
-    prefix = '{0}/_{1}_REAL_mn_'.format(data_path, str_enum(args.likelihood))
-    analyser = Analyzer(
-        outputfiles_basename=prefix, n_params=n_params
-    )
-    print analyser
+    chains = np.load('/data/user/smandalia/flavour_ratio/data/contour_emcee/golemfit/real/_GOLEMFIT_REAL_emcee_.npy')
+    # chains = np.load('/data/user/smandalia/flavour_ratio/data/contour_emcee/golemfit/real/more_sys_flat/_GOLEMFIT_REAL_emcee_.npy')
 
-    pranges = paramset.ranges
-
-    bf = analyser.get_best_fit()['parameters']
-    for i in xrange(len(bf)):
-        bf[i] = (pranges[i][1]-pranges[i][0])*bf[i] + pranges[i][0]
-    print 'bestfit = ', bf
-    print 'bestfit log_likelihood', analyser.get_best_fit()['log_likelihood']
-
-    print
-    print '{0:50} = {1}'.format('global evidence', analyser.get_stats()['global evidence'])
-    print
-
-    chains = analyser.get_data()[:,2:]
-    for x in chains:
-        for i in xrange(len(x)):
-            x[i] = (pranges[i][1]-pranges[i][0])*x[i] + pranges[i][0]
-
-    llh = -0.5 * analyser.get_data()[:,1]
-
+    print chains
     flavour_angles = chains[:,-2:]
     flavour_ratios = np.array(
         map(fr_utils.angles_to_fr, flavour_angles)
     )
 
-    nbins = 25
+    nbins = 15
 
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111)
@@ -168,7 +143,7 @@ def main():
 
     ax.legend()
 
-    fig.savefig('test.png', bbox_inches='tight', dpi=150)
+    fig.savefig('test_emcee_moresys_flat.png', bbox_inches='tight', dpi=150)
 
     print "DONE!"
 

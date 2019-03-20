@@ -101,7 +101,8 @@ def main():
     print n_params
 
     # Data
-    data_path = '/home/aschneider/programs/GOLEMSPACE/sources/GolemFit/scripts/diffuse/mcmcs/results/dpl_numu_prior_flavor_20190302-162221-a747f528-8aa6-4488-8c80-059572c099fe.json'
+    # data_path = '/home/aschneider/programs/GOLEMSPACE/sources/GolemFit/scripts/diffuse/mcmcs/results/dpl_numu_prior_flavor_20190302-162221-a747f528-8aa6-4488-8c80-059572c099fe.json'
+    data_path = '/home/aschneider/programs/GOLEMSPACE/sources/GolemFit/scripts/diffuse/mcmcs/results/spl_flavor_20190311-170924-5297d736-3c6e-447f-8de7-4a0653a51bb6.json'
     with open(data_path) as f:
         d_json = json.load(f)
 
@@ -110,7 +111,7 @@ def main():
     print 'names', names
     print 'chains.shape', chains.shape
 
-    flavour_angles = chains[:,5:7]
+    flavour_angles = chains[:,4:6]
     flavour_ratios = np.array(
         map(fr_utils.angles_to_fr, flavour_angles)
     )

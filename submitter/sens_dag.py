@@ -35,8 +35,8 @@ GLOBAL_PARAMS.update(dict(
 
 # MultiNest
 GLOBAL_PARAMS.update(dict(
-    mn_live_points = 1000,
-    # mn_live_points = 500,
+    # mn_live_points = 1000,
+    mn_live_points = 600,
     # mn_live_points = 300,
     # mn_tolerance   = 0.1,
     mn_tolerance   = 0.3,

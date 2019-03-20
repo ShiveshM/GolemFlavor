@@ -41,6 +41,12 @@ from utils.enums import Likelihood, MixingScenario, ParamTag, StatCateg
 from utils.fr import angles_to_u, angles_to_fr
 
 
+bayes_K = 1.   # Substantial degree of belief.
+# bayes_K = 3/2. # Strong degree of belief.
+# bayes_K = 2.   # Very strong degree of belief
+# bayes_K = 5/2. # Decisive degree of belief
+
+
 if os.path.isfile('./plot_llh/paper.mplstyle'):
     plt.style.use('./plot_llh/paper.mplstyle')
 elif os.environ.get('GOLEMSOURCEPATH') is not None:
@@ -218,6 +224,7 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None):
                      ha='center', va='center')
 
         for of in outformat:
+            print 'Saving', outfile+'_angles.'+of
             g.export(outfile+'_angles.'+of)
 
     if not hasattr(args, 'plot_elements'):
@@ -327,7 +334,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
 
     ax.plot(scales_rm, reduced_ev)
 
-    ax.axhline(y=np.log(10**(3/2.)), color='red', alpha=1., linewidth=1.3)
+    ax.axhline(y=np.log(10**(bayes_K)), color='red', alpha=1., linewidth=1.3)
 
     for ymaj in ax.yaxis.get_majorticklocs():
         ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.3, linewidth=1)
@@ -384,7 +391,7 @@ def plot_sens_full(data, outfile, outformat, args):
             null = statistic[min_idx]
             if args.stat_method is StatCateg.BAYESIAN:
                 reduced_ev = -(statistic - null)
-                al = scales[reduced_ev > np.log(10**(3/2.))] # Strong degree of belief
+                al = scales[reduced_ev > np.log(10**(bayes_K))] # Strong degree of belief
                 # al = scales[reduced_ev > 0.4] # Testing
             elif args.stat_method is StatCateg.FREQUENTIST:
                 reduced_ev = -2*(statistic - null)
@@ -468,7 +475,7 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
         8: (-21-(en[0]*6), -21-(en[1]+en[1]*6))
     }
 
-    angles = 2
+    angles = 3
 
     colour = {0:'red', 1:'blue', 2:'green'}
     rgb_co = {0:[1,0,0], 1:[0,0,1], 2:[0.0, 0.5019607843137255, 0.0]}
@@ -588,14 +595,14 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
                 null = statistic[min_idx]
                 if args.stat_method is StatCateg.BAYESIAN:
                     reduced_ev = -(statistic_rm - null)
-                    al = scales_rm[reduced_ev > np.log(10**(3/2.))] # Strong degree of belief
+                    al = scales_rm[reduced_ev > np.log(10**(bayes_K))] # Strong degree of belief
                 elif args.stat_method is StatCateg.FREQUENTIST:
                     reduced_ev = -2*(statistic_rm - null)
                     al = scales_rm[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
                 if len(al) == 0:
                     print 'No points for DIM {0} FRS {1}!'.format(dim, src)
                     continue
-                if reduced_ev[-1] < np.log(10**(3/2.)) - 0.1:
+                if reduced_ev[-1] < np.log(10**(bayes_K)) - 0.1:
                     print 'Peaked contour does not exclude large scales! For ' \
                         'DIM {0} FRS{1}!'.format(dim, src)
                     continue
@@ -729,14 +736,14 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                 null = statistic[min_idx]
                 if args.stat_method is StatCateg.BAYESIAN:
                     reduced_ev = -(statistic - null)
-                    al = scales[reduced_ev > np.log(10**(3/2.))] # Strong degree of belief
+                    al = scales[reduced_ev > np.log(10**(bayes_K))] # Strong degree of belief
                 elif args.stat_method is StatCateg.FREQUENTIST:
                     reduced_ev = -2*(statistic - null)
                     al = scales[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
                 if len(al) == 0:
                     print 'No points for DIM {0} FRS {1}!'.format(dim, src)
                     continue
-                if reduced_ev[-1] < np.log(10**(3/2.)) - 0.1:
+                if reduced_ev[-1] < np.log(10**(bayes_K)) - 0.1:
                     print 'Peaked contour does not exclude large scales! For ' \
                         'DIM {0} FRS{1}!'.format(dim, src)
                     continue
@@ -893,7 +900,7 @@ def plot_sens_corr_angle(data, outfile, outformat, args):
                 print sep_arrays
 
                 if args.stat_method is StatCateg.BAYESIAN:
-                    reduced_pdat_mask = (sep_arrays[2] > np.log(10**(3/2.))) # Strong degree of belief
+                    reduced_pdat_mask = (sep_arrays[2] > np.log(10**(bayes_K))) # Strong degree of belief
                 elif args.stat_method is StatCateg.FREQUENTIST:
                     reduced_pdat_mask = (sep_arrays[2] > 4.61) # 90% CL for 2 DOFS via Wilks
                 reduced_pdat = sep_arrays.T[reduced_pdat_mask].T

@@ -87,8 +87,10 @@ def steering_params(args):
 
     params.sampleToLoad = gf.sampleTag.MagicTau
     params.use_legacy_selfveto_calculation = False
-    params.spline_hole_ice = False
-    params.spline_dom_efficiency = False
+    # params.spline_hole_ice = False
+    # params.spline_dom_efficiency = False
+    params.spline_hole_ice = True
+    params.spline_dom_efficiency = True
 
     return params
 

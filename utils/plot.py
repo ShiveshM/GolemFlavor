@@ -32,12 +32,15 @@ from getdist import plots, mcsamples
 
 import ternary
 from ternary.heatmapping import polygon_generator
+# print ternary.__file__
+# assert 0
 
 import shapely.geometry as geometry
 
 from utils import misc as misc_utils
-from utils.enums import DataType, EnergyDependance
+from utils.enums import DataType, EnergyDependance, str_enum
 from utils.enums import Likelihood, MixingScenario, ParamTag, StatCateg
+from utils.enums import Texture
 from utils.fr import angles_to_u, angles_to_fr
 
 
@@ -595,7 +598,7 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
                 null = statistic[min_idx]
                 if args.stat_method is StatCateg.BAYESIAN:
                     reduced_ev = -(statistic_rm - null)
-                    al = scales_rm[reduced_ev > np.log(10**(bayes_K))] # Strong degree of belief
+                    al = scales_rm[reduced_ev > np.log(10**(bayes_K))]
                 elif args.stat_method is StatCateg.FREQUENTIST:
                     reduced_ev = -2*(statistic_rm - null)
                     al = scales_rm[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
@@ -997,9 +1000,10 @@ def get_tax(ax, scale, ax_labels):
     tax.clear_matplotlib_ticks()
 
     # Set ticks
-    ticks = np.linspace(0, 1, 6)
-    tax.ticks(ticks=ticks, locations=ticks*scale, axis='blr', linewidth=1,
-              offset=0.03, fontsize=fontsize, tick_formats='%.1f')
+    # ticks = np.linspace(0, 1, 6)
+    # tax.ticks(ticks=ticks, locations=ticks*scale, axis='blr', linewidth=1,
+    #           offset=0.03, fontsize=fontsize, tick_formats='%.1f')
+    tax.ticks()
 
     tax._redraw_labels()
 
@@ -1154,3 +1158,178 @@ def flavour_contour(frs, ax, nbins, coverage, **kwargs):
         ev_polygon.T[0], ev_polygon.T[1], label=r'{0}\%'.format(int(coverage)),
         **kwargs
     )
+    ax.scatter(points.T[0], points.T[1], marker='o', s=2, alpha=1, color=color,
+               zorder=3)
+
+def plot_source_ternary(data, outfile, outformat, args):
+    """Ternary plot in the source flavour space for each operator texture."""
+    r_data = np.full((data.shape[0], data.shape[2], data.shape[1], data.shape[3], data.shape[4]), np.nan)
+    for idim in xrange(data.shape[0]):
+        for isrc in xrange(data.shape[1]):
+            for isce in xrange(data.shape[2]):
+                r_data[idim][isce][isrc] = data[idim][isrc][isce]
+    r_data = ma.masked_invalid(r_data)
+    print r_data.shape, 'r_data.shape'
+    nsrcs = int(len(args.source_ratios) / 3)
+
+    for idim, dim in enumerate(args.dimensions):
+        print '|||| DIM = {0}, {1}'.format(idim, dim)
+        for isce in xrange(r_data.shape[1]):
+            print '|||| SCEN = {0}'.format(str_enum(Texture(isce)))
+            fig = plt.figure(figsize=(8, 8))
+            ax  = fig.add_subplot(111)
+            tax = get_tax(ax, scale=nsrcs)
+            interp_dict = {}
+            for isrc, src in enumerate(args.source_ratios):
+                src_sc = tuple(np.array(src)*(nsrcs-1))
+                print '|||| SRC = {0}'.format(src)
+                scales, statistic = ma.compress_rows(r_data[idim][isce][isrc]).T
+                print 'scales', scales
+                print 'statistic', statistic
+
+                try:
+                    tck, u = splprep([scales, statistic], s=0)
+                except:
+                    interp_dict[src_sc] = -60
+                    continue
+                # sc, st = splev(np.linspace(0, 1, 10000), tck)
+                sc, st = splev(np.linspace(0, 1, 20), tck)
+                scales_rm = sc[sc >= scales[1]]
+                statistic_rm = st[sc >= scales[1]]
+                # scales_rm = sc
+                # statistic_rm = st
+
+                min_idx = np.argmin(scales)
+                null = statistic[min_idx]
+                if args.stat_method is StatCateg.BAYESIAN:
+                    reduced_ev = -(statistic_rm - null)
+                    print 'reduced_ev', reduced_ev
+                    al = scales_rm[reduced_ev > np.log(10**(bayes_K))]
+                else:
+                    assert 0
+                if len(al) == 0:
+                    print 'No points for DIM {0} FRS {1}!'.format(dim, src)
+                    interp_dict[src_sc] = -60
+                    continue
+                if reduced_ev[-1] < np.log(10**(bayes_K)) - 0.1:
+                    print 'Peaked contour does not exclude large scales! For ' \
+                        'DIM {0} FRS{1}!'.format(dim, src)
+                    interp_dict[src_sc] = -60
+                    continue
+                lim = al[0]
+                print 'limit = {0}'.format(lim)
+
+                interp_dict[src_sc] = lim
+            print 'interp_dict', interp_dict
+            print
+            print 'vertices', heatmap(interp_dict, nsrcs)
+            print
+            tax.heatmap(interp_dict, scale=nsrcs, vmin=-60, vmax=-30)
+            misc_utils.make_dir(outfile)
+            for of in outformat:
+                print 'Saving plot as {0}'.format(outfile+'_SCEN{0}.'.format(isce)+of)
+                fig.savefig(outfile+'_SCEN{0}.'.format(isce)+of, bbox_inches='tight', dpi=150)
+            print 'nsrcs', nsrcs
+            assert 0
+
+
+def texture_label(x):
+    if x == Texture.OEU:
+        return r'$\mathcal{O}_{e\mu}$'
+    elif x == Texture.OET:
+        return r'$\mathcal{O}_{e\tau}$'
+    elif x == Texture.OUT:
+        return r'$\mathcal{O}_{\mu\tau}$'
+    else:
+        raise AssertionError
+
+
+def plot_source_ternary_1D(data, outfile, outformat, args):
+    """Ternary plot in the source flavour space for each operator texture."""
+    sources = args.source_ratios
+    x_1D = []
+    i_src_1D = []
+    for i, s in enumerate(sources):
+        if s[2] != 0: continue
+        x_1D.append(s[0])
+        i_src_1D.append(i)
+    i_src_1D = list(reversed(i_src_1D))
+    x_1D = list(reversed(x_1D))
+    print 'x_1D', x_1D
+    def get_edges_from_cen(bincen):
+        hwidth = 0.5*(bincen[1] - bincen[0])
+        return np.append([bincen[0]-hwidth], bincen[:]+hwidth)
+    be = get_edges_from_cen(x_1D)
+
+    r_data = np.full((data.shape[0], data.shape[2], len(i_src_1D), data.shape[3], data.shape[4]), np.nan)
+    for idim in xrange(data.shape[0]):
+        for i1D, isrc in enumerate(i_src_1D):
+            for isce in xrange(data.shape[2]):
+                r_data[idim][isce][i1D] = data[idim][isrc][isce]
+    r_data = ma.masked_invalid(r_data)
+    print r_data.shape, 'r_data.shape'
+
+    for idim, dim in enumerate(args.dimensions):
+        print '|||| DIM = {0}, {1}'.format(idim, dim)
+        fig = plt.figure(figsize=(4, 4))
+        ax  = fig.add_subplot(111)
+        ax.tick_params(axis='x', labelsize=12)
+        ax.tick_params(axis='y', labelsize=12)
+        ax.set_xlabel(r'$x$', fontsize=18)
+        ax.set_ylabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda_{d=6}^{-1}\:/\:{\rm GeV}^{-2})\: ]$', fontsize=18)
+        ax.set_xlim(0, 1)
+        for isce in xrange(r_data.shape[1]):
+            print '|||| SCEN = {0}'.format(str_enum(Texture(isce)))
+            H = np.full(len(x_1D), np.nan)
+            for ix, x in enumerate(x_1D):
+                print '|||| X = {0}'.format(x)
+                scales, statistic = ma.compress_rows(r_data[idim][isce][ix]).T
+                print 'scales', scales
+                print 'statistic', statistic
+
+                try:
+                    tck, u = splprep([scales, statistic], s=0)
+                except:
+                    continue
+                # sc, st = splev(np.linspace(0, 1, 10000), tck)
+                sc, st = splev(np.linspace(0, 1, 20), tck)
+                scales_rm = sc[sc >= scales[1]]
+                statistic_rm = st[sc >= scales[1]]
+                # scales_rm = sc
+                # statistic_rm = st
+
+                min_idx = np.argmin(scales)
+                null = statistic[min_idx]
+                if args.stat_method is StatCateg.BAYESIAN:
+                    reduced_ev = -(statistic_rm - null)
+                    print 'reduced_ev', reduced_ev
+                    al = scales_rm[reduced_ev > np.log(10**(bayes_K))]
+                else:
+                    assert 0
+                if len(al) == 0:
+                    print 'No points for DIM {0} X {1}!'.format(dim, x)
+                    continue
+                if reduced_ev[-1] < np.log(10**(bayes_K)) - 0.1:
+                    print 'Peaked contour does not exclude large scales! For ' \
+                        'DIM {0} X {1}!'.format(dim, x)
+                    continue
+                lim = al[0]
+                print 'limit = {0}'.format(lim)
+
+                H[ix] = lim
+            H = ma.masked_invalid(H)
+            H_0 = np.concatenate([[H[0]], H])
+            ax.step(be, H_0, linewidth=2,
+                    label=texture_label(Texture(isce)), linestyle='-',
+                    drawstyle='steps-pre')
+            print 'H', H
+            print
+        for ymaj in ax.yaxis.get_majorticklocs():
+            ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.3, linewidth=1)
+        for xmaj in be:
+            ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.3, linewidth=1)
+        ax.legend()
+        misc_utils.make_dir(outfile)
+        for of in outformat:
+            print 'Saving plot as {0}'.format(outfile+'_DIM{0}.'.format(dim)+of)
+            fig.savefig(outfile+'_DIM{0}.'.format(dim)+of, bbox_inches='tight', dpi=150)

@@ -108,7 +108,7 @@ def main():
         map(fr_utils.angles_to_fr, flavour_angles)
     )
 
-    nbins = 15
+    nbins = 25
 
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111)

@@ -975,7 +975,7 @@ def cmap_discretize(cmap, N):
     return mpl.colors.LinearSegmentedColormap(cmap.name + "_%d"%N, cdict, 1024)
 
 
-def get_tax(ax, scale):
+def get_tax(ax, scale, ax_labels):
     ax.set_aspect('equal')
 
     # Boundary and Gridlines
@@ -988,9 +988,9 @@ def get_tax(ax, scale):
 
     # Set Axis labels and Title
     fontsize = 23
-    tax.left_axis_label(r"$f_{\tau}$", fontsize=fontsize+8, offset=0.2, rotation=0)
-    tax.right_axis_label(r"$f_{\mu}$", fontsize=fontsize+8, offset=0.2, rotation=0)
-    tax.bottom_axis_label(r"$f_{e}$", fontsize=fontsize+8, position=(0.55, -0.20/2, 0.5), rotation=0)
+    tax.bottom_axis_label(ax_labels[0], fontsize=fontsize+8, position=(0.55, -0.20/2, 0.5), rotation=0)
+    tax.right_axis_label(ax_labels[1], fontsize=fontsize+8, offset=0.2, rotation=0)
+    tax.left_axis_label(ax_labels[2], fontsize=fontsize+8, offset=0.2, rotation=0)
 
     # Remove default Matplotlib axis
     tax.get_axes().axis('off')
@@ -1088,7 +1088,7 @@ def heatmap(data, scale, vmin=None, vmax=None, style='triangular'):
     return vertices
 
 
-def flavour_contour(frs, ax, nbins, coverage, linewidth=2, color='black'):
+def flavour_contour(frs, ax, nbins, coverage, **kwargs):
     """Plot the flavour contour for a specified coverage."""
     # Histogram in flavour space
     H, b = np.histogramdd(
@@ -1151,8 +1151,6 @@ def flavour_contour(frs, ax, nbins, coverage, linewidth=2, color='black'):
 
     # Plot
     ax.plot(
-        ev_polygon.T[0], ev_polygon.T[1], linewidth=linewidth, color=color,
-        zorder=2, alpha=0.6, label=r'{0}\%'.format(int(coverage))
+        ev_polygon.T[0], ev_polygon.T[1], label=r'{0}\%'.format(int(coverage)),
+        **kwargs
     )
-    ax.scatter(points.T[0], points.T[1], marker='o', s=2, alpha=1, color=color,
-               zorder=3)

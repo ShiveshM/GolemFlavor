@@ -76,3 +76,9 @@ class StatCateg(Enum):
 class SteeringCateg(Enum):
     P2_0 = 1
     P2_1 = 2
+
+
+class Texture(Enum):
+    OEU = 0
+    OET = 1
+    OUT = 2

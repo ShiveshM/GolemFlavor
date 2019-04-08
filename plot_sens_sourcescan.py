@@ -84,11 +84,11 @@ def process_args(args):
         )
 
     args.measured_ratio = fr_utils.normalise_fr(args.measured_ratio)
-    if args.fix_source_ratio:
-        assert len(args.source_ratios) % 3 == 0
-        srs = [args.source_ratios[3*x:3*x+3]
-               for x in range(int(len(args.source_ratios)/3))]
-        args.source_ratios = map(fr_utils.normalise_fr, srs)
+    # if args.fix_source_ratio:
+    #     assert len(args.source_ratios) % 3 == 0
+    #     srs = [args.source_ratios[3*x:3*x+3]
+    #            for x in range(int(len(args.source_ratios)/3))]
+    #     args.source_ratios = map(fr_utils.normalise_fr, srs)
 
     if args.energy_dependance is EnergyDependance.SPECTRAL:
         args.binning = np.logspace(
@@ -163,8 +163,8 @@ def parse_args(args=None):
         help='Set the new physics dimensions to consider'
     )
     parser.add_argument(
-        '--source-ratios', type=int, nargs='*', default=[1, 2, 0],
-        help='Set the source flavour ratios for the case when you want to fix it'
+        '--source-bins', type=int, default=5,
+        help='Binning in source flavour space'
     )
     if args is None: return parser.parse_args()
     else: return parser.parse_args(args.split())
@@ -203,7 +203,19 @@ def main():
     print 'scan_angles', scan_angles
 
     dims = len(args.dimensions)
-    srcs = len(args.source_ratios)
+    binning = np.linspace(0, 1, args.source_bins)
+    grid = np.dstack(np.meshgrid(binning, binning)).reshape(
+        args.source_bins*args.source_bins, 2
+    )
+    source_ratios = []
+    for x in grid:
+        if x[0]+x[1] > 1:
+            continue
+        source_ratios.append([x[0], x[1], 1-x[0]-x[1]])
+    args.source_ratios = source_ratios
+    n_source_ratios = map(fr_utils.normalise_fr, source_ratios)
+
+    srcs = len(n_source_ratios)
     if args.run_method is SensitivityCateg.FULL:
         statistic_arr = np.full((dims, srcs, args.sens_bins, 2), np.nan)
     elif args.run_method in fixed_angle_categ:
@@ -224,7 +236,7 @@ def main():
         )
         scan_scales = np.concatenate([[-100.], scan_scales])
 
-        for isrc, src in enumerate(args.source_ratios):
+        for isrc, src in enumerate(n_source_ratios):
             argsc.source_ratio = src
             infile = args.infile
             if args.likelihood is Likelihood.GOLEMFIT:
@@ -233,7 +245,8 @@ def main():
                 infile += '/gaussian/'
             if args.likelihood is Likelihood.GAUSSIAN:
                 infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
-            infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/fr_stat'.format(
+            # infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/fr_stat'.format(
+            infile += '/DIM{0}/fix_ifr/sourcescan/{1}/{2}/{3}/fr_stat'.format(
             # infile += '/DIM{0}/fix_ifr/prior/{1}/{2}/{3}/fr_stat'.format(
             # infile += '/DIM{0}/fix_ifr/{1}/{2}/{3}/old/fr_stat'.format(
             # infile += '/DIM{0}/fix_ifr/seed2/{1}/{2}/{3}/fr_stat'.format(
@@ -270,7 +283,9 @@ def main():
     data = ma.masked_invalid(statistic_arr)
 
     print 'data', data
+    print 'data.shape', data.shape
     if args.plot_statistic:
+        assert 0
         print 'Plotting statistic'
 
         argsc = deepcopy(args)
@@ -285,14 +300,15 @@ def main():
                 base_infile += '/gaussian/'
             if args.likelihood is Likelihood.GAUSSIAN:
                 base_infile += '{0}/'.format(str(args.sigma_ratio).replace('.', '_'))
-            base_infile += '/DIM{0}/fix_ifr'.format(dim)
+            # base_infile += '/DIM{0}/fix_ifr'.format(dim)
+            base_infile += '/DIM{0}/fix_ifr/sourcescan'.format(dim)
             # base_infile += '/DIM{0}/fix_ifr/prior'.format(dim)
             # base_infile += '/DIM{0}/fix_ifr/seed2'.format(dim)
             # base_infile += '/DIM{0}/fix_ifr/100TeV'.format(dim)
             # base_infile += '/DIM{0}/fix_ifr/strictprior'.format(dim)
             # base_infile += '/DIM{0}/fix_ifr/noprior'.format(dim)
 
-            for isrc, src in enumerate(args.source_ratios):
+            for isrc, src in enumerate(n_source_ratios):
                 argsc.source_ratio = src
                 infile = base_infile +'/{0}/{1}/{2}/fr_stat'.format(
                 # infile = base_infile +'/{0}/{1}/{2}/old/fr_stat'.format(
@@ -361,18 +377,24 @@ def main():
                 args      = args,
             )
         elif args.run_method in fixed_angle_categ:
-            plot_utils.plot_sens_fixed_angle_pretty(
-                data      = data,
-                outfile   = baseoutfile + '/fixed_angle_pretty_substantial',
-                outformat = ['png', 'pdf'],
-                args      = args,
-            )
+            # plot_utils.plot_sens_fixed_angle_pretty(
+            #     data      = data,
+            #     outfile   = baseoutfile + '/fixed_angle_pretty_substantial',
+            #     outformat = ['png', 'pdf'],
+            #     args      = args,
+            # )
             # plot_utils.plot_sens_fixed_angle(
             #     data      = data,
             #     outfile   = baseoutfile + '/FIXED_ANGLE',
             #     outformat = ['png'],
             #     args      = args,
             # )
+            plot_utils.plot_source_ternary_1D(
+                data      = data,
+                outfile   = baseoutfile + '/source_ternary',
+                outformat = ['png'],
+                args      = args,
+            )
         elif args.run_method in corr_angles_categ:
             plot_utils.plot_sens_corr_angle(
                 data      = data,

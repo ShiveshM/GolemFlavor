@@ -19,7 +19,8 @@ from operator import attrgetter
 
 import numpy as np
 
-from utils.enums import Likelihood, MixingScenario
+from utils.enums import str_enum
+from utils.enums import Likelihood, Texture
 
 
 class SortingHelpFormatter(argparse.HelpFormatter):
@@ -31,30 +32,20 @@ class SortingHelpFormatter(argparse.HelpFormatter):
 
 def solve_ratio(fr):
     denominator = reduce(gcd, fr)
-    return [int(x/denominator) for x in fr]
+    f = [int(x/denominator) for x in fr]
+    if f[0] > 1E3 or f[1] > 1E3 or f[2] > 1E3:
+        return '{0:.2f}_{1:.2f}_{2:.2f}'.format(fr[0], fr[1], fr[2])
+    else:
+        return '{0}_{1}_{2}'.format(f[0], f[1], f[2])
 
 
 def gen_identifier(args):
     f = '_DIM{0}'.format(args.dimension)
-    mr1, mr2, mr3 = solve_ratio(args.measured_ratio)
-    if args.fix_source_ratio:
-        sr1, sr2, sr3 = solve_ratio(args.source_ratio)
-        f += '_sfr_{0:G}_{1:G}_{2:G}_mfr_{3:G}_{4:G}_{5:G}'.format(
-            sr1, sr2, sr3, mr1, mr2, mr3
-        )
-    else:
-        f += '_mfr_{3:03d}_{4:03d}_{5:03d}'.format(mr1, mr2, mr3)
-
-    if args.fix_mixing is not MixingScenario.NONE:
-        f += '_{0}'.format(args.fix_mixing)
-    elif args.fix_mixing_almost:
-        f += '_fix_mixing_almost'
-    elif args.fix_scale:
-        f += '_fix_scale_{0}'.format(args.scale)
-
-    if args.likelihood is Likelihood.FLAT: f += '_flat'
-    elif args.likelihood is Likelihood.GAUSSIAN:
-        f += '_sigma_{0:03d}'.format(int(args.sigma_ratio*1000))
+    f += '_sfr_' + solve_ratio(args.source_ratio)
+    if args.data in [DataType.ASIMOV, DataType.REALISATION]:
+        f += '_mfr_' + solve_ratio(args.injected_ratio)
+    if args.Texture is not Texture.NONE:
+        f += '_{0}'.format(str_enum(args.texture))
     return f
 
 
@@ -162,4 +153,72 @@ def thread_factors(t):
     for x in reversed(range(int(np.ceil(np.sqrt(t)))+1)):
         if t%x == 0:
             return (x, int(t/x))
+
+
+def centers(x):
+    return (x[:-1]+x[1:])*0.5
+
+
+def get_units(dimension):
+    if dimension == 3: return r' / \:{\rm GeV}'
+    if dimension == 4: return r''
+    if dimension == 5: return r' / \:{rm GeV}^{-1}'
+    if dimension == 6: return r' / \:{rm GeV}^{-2}'
+    if dimension == 7: return r' / \:{rm GeV}^{-3}'
+    if dimension == 8: return r' / \:{rm GeV}^{-4}'
+
+
+def calc_nbins(x):
+    n =  (np.max(x) - np.min(x)) / (2 * len(x)**(-1./3) * (np.percentile(x, 75) - np.percentile(x, 25)))
+    return np.floor(n)
+
+
+def calc_bins(x):
+    nbins = calc_nbins(x)
+    return np.linspace(np.min(x), np.max(x)+2, num=nbins+1)
+
+
+def most_likely(arr):
+    """Return the densest region given a 1D array of data."""
+    binning = calc_bins(arr)
+    harr = np.histogram(arr, binning)[0]
+    return centers(binning)[np.argmax(harr)]
+
+
+def interval(arr, percentile=68.):
+    """Returns the *percentile* shortest interval around the mode."""
+    center = most_likely(arr)
+    sarr = sorted(arr)
+    delta = np.abs(sarr - center)
+    curr_low = np.argmin(delta)
+    curr_up = curr_low
+    npoints = len(sarr)
+    while curr_up - curr_low < percentile/100.*npoints:
+        if curr_low == 0:
+            curr_up += 1
+        elif curr_up == npoints-1:
+            curr_low -= 1
+        elif sarr[curr_up]-sarr[curr_low-1] < sarr[curr_up+1]-sarr[curr_low]:
+            curr_low -= 1
+        elif sarr[curr_up]-sarr[curr_low-1] > sarr[curr_up+1]-sarr[curr_low]:
+            curr_up += 1
+        elif (curr_up - curr_low) % 2:
+            # they are equal so step half of the time up and down
+            curr_low -= 1
+        else:
+            curr_up += 1
+    return sarr[curr_low], center, sarr[curr_up]
+
+
+def flat_angles_to_u(x):
+    """Convert from angles to mixing elements."""
+    return abs(angles_to_u(x)).astype(np.float32).flatten().tolist()
+
+
+def myround(x, base=2, up=False, down=False):
+    if up == down and up is True: assert 0
+    if up: return int(base * np.round(float(x)/base-0.5))
+    elif down: return int(base * np.round(float(x)/base+0.5))
+    else: int(base * np.round(float(x)/base))
+
 

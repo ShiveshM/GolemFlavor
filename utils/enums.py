@@ -20,23 +20,9 @@ class DataType(Enum):
     REALISATION = 3
 
 
-class EnergyDependance(Enum):
-    MONO     = 1
-    SPECTRAL = 2
-
-
 class Likelihood(Enum):
-    FLAT     = 1
-    GAUSSIAN = 2
-    GOLEMFIT = 3
-    GF_FREQ  = 4
-
-
-class MixingScenario(Enum):
-    T12  = 1
-    T13  = 2
-    T23  = 3
-    NONE = 4
+    GOLEMFIT = 1
+    GF_FREQ  = 2
 
 
 class ParamTag(Enum):
@@ -60,14 +46,6 @@ class MCMCSeedType(Enum):
     GAUSSIAN = 2
 
 
-class SensitivityCateg(Enum):
-    FULL            = 1
-    FIXED_ANGLE     = 2
-    CORR_ANGLE      = 3
-    FIXED_ONE_ANGLE = 4
-    CORR_ONE_ANGLE  = 5
-
-
 class StatCateg(Enum):
     BAYESIAN    = 1
     FREQUENTIST = 2
@@ -79,6 +57,7 @@ class SteeringCateg(Enum):
 
 
 class Texture(Enum):
-    OEU = 0
-    OET = 1
-    OUT = 2
+    OEU  = 1
+    OET  = 2
+    OUT  = 3
+    NONE = 4

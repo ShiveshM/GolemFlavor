@@ -13,7 +13,7 @@ from functools import partial
 
 import numpy as np
 
-from utils.enums import EnergyDependance, MixingScenario
+from utils.enums import Texture
 from utils.misc import enum_parse, parse_bool
 
 import mpmath as mp
@@ -40,7 +40,17 @@ ASIN   = mp.asin
 EXP    = mp.exp
 
 MASS_EIGENVALUES = [7.40E-23, 2.515E-21]
-"""SM mass eigenvalues"""
+"""SM mass eigenvalues."""
+
+SCALE_BOUNDARIES = {
+    3 : (-32, -20),
+    4 : (-40, -24),
+    5 : (-48, -27),
+    6 : (-56, -30),
+    7 : (-64, -33),
+    8 : (-72, -36)
+}
+"""Boundaries to scan the NP scale for each dimension."""
 
 
 def determinant(x):
@@ -244,38 +254,13 @@ def normalise_fr(fr):
     return np.array(fr) / float(np.sum(fr))
 
 
-def estimate_scale(args):
-    """Estimate the scale at which new physics will enter."""
-    try: m_eign = args.m3x_2
-    except: m_eign = MASS_EIGENVALUES[1]
-    if hasattr(args, 'scale'):
-        if args.scale != 0:
-            scale = args.scale
-            scale_region = (scale/args.scale_region, scale*args.scale_region)
-            return scale, scale_region
-    if args.energy_dependance is EnergyDependance.MONO:
-        scale = np.power(
-            10, np.round(np.log10(m_eign/args.energy)) - \
-            np.log10(args.energy**(args.dimension-3))
-        )
-        scale_region = (scale/args.scale_region, scale*args.scale_region)
-    elif args.energy_dependance is EnergyDependance.SPECTRAL:
-        lower_s = (m_eign/args.binning[-1]) / (args.binning[-1]**(args.dimension-3))
-        upper_s = (m_eign/args.binning[0]) / (args.binning[0]**(args.dimension-3))
-        scale = np.power(10, np.average(np.log10([lower_s, upper_s])))
-        diff = upper_s / lower_s
-        scale_region = (lower_s/np.power(10, args.dimension), upper_s*diff*np.power(10, args.dimension))
-        scale_region = [np.power(10, np.round(np.log10(x))) for x in scale_region]
-    return scale, scale_region
-
-
 def fr_argparse(parser):
     parser.add_argument(
-        '--measured-ratio', type=float, nargs=3, default=[1, 1, 1],
-        help='Set the central value for the measured flavour ratio at IceCube'
+        '--injected-ratio', type=float, nargs=3, required=False,
+        help='Injected ratio if not using data'
     )
     parser.add_argument(
-        '--source-ratio', type=float, nargs=3, default=[2, 1, 0],
+        '--source-ratio', type=float, nargs=3, default=[1, 2, 0],
         help='Set the source flavour ratio for the case when you want to fix it'
     )
     parser.add_argument(
@@ -287,50 +272,12 @@ def fr_argparse(parser):
         help='Set the new physics dimension to consider'
     )
     parser.add_argument(
-        '--energy-dependance', default='spectral', type=partial(enum_parse, c=EnergyDependance),
-        choices=EnergyDependance,
-        help='Type of energy dependance to use in the BSM fit'
-    )
-    parser.add_argument(
-        '--spectral-index', default=-2, type=float,
-        help='Spectral index for spectral energy dependance'
-    )
-    parser.add_argument(
-        '--fold-index', default='True', type=parse_bool,
-        help='Fold in the spectral index when using GolemFit'
+        '--texture', type=partial(enum_parse, c=Texture),
+        default='none', choices=Texture, help='Set the BSM mixing texture'
     )
     parser.add_argument(
         '--binning', default=[6e4, 1e7, 20], type=float, nargs=3,
         help='Binning for spectral energy dependance'
-    )
-    parser.add_argument(
-        '--fix-source-ratio', type=parse_bool, default='False',
-        help='Fix the source flavour ratio'
-    )
-    parser.add_argument(
-        '--fix-mixing', type=partial(enum_parse, c=MixingScenario),
-        default='None', choices=MixingScenario,
-        help='Fix all mixing parameters to choice of maximal mixing'
-    )
-    parser.add_argument(
-        '--fix-mixing-almost', type=parse_bool, default='False',
-        help='Fix all mixing parameters except s23'
-    )
-    parser.add_argument(
-        '--fix-scale', type=parse_bool, default='False',
-        help='Fix the new physics scale'
-    )
-    parser.add_argument(
-        '--scale', type=float, default=0,
-        help='Set the new physics scale'
-    )
-    parser.add_argument(
-        '--scale-region', type=float, default=1e10,
-        help='Set the size of the box to scan for the scale'
-    )
-    parser.add_argument(
-        '--energy', type=float, default=1000,
-        help='Set the energy scale'
     )
 
 
@@ -363,8 +310,7 @@ NUFIT_U = angles_to_u((0.307, (1-0.02195)**2, 0.565, 3.97935))
 
 
 def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
-                   sm_u=NUFIT_U, no_bsm=False, fix_mixing=MixingScenario.NONE,
-                   fix_mixing_almost=False, fix_scale=False, scale=None,
+                   sm_u=NUFIT_U, no_bsm=False, texture=Texture.NONE,
                    check_uni=True, epsilon=1e-7):
     """Construct the BSM mixing matrix from the BSM parameters.
 
@@ -388,17 +334,8 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
     no_bsm : bool
         Turn off BSM behaviour
 
-    fix_mixing : MixingScenario
-        Fix the BSM mixing angles
-
-    fix_mixing_almost : bool
-        Fix the BSM mixing angles except one
-
-    fix_scale : bool
-        Fix the BSM scale
-
-    scale : float
-        Used with fix_scale - scale at which to fix
+    texture : Texture
+        BSM mixing texture
 
     check_uni : bool
         Check the resulting BSM mixing matrix is unitary
@@ -422,33 +359,20 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
             'got\n{0}'.format(sm_u)
         )
 
-    if fix_mixing is not MixingScenario.NONE and fix_mixing_almost:
-        raise NotImplementedError(
-            '--fix-mixing and --fix-mixing-almost cannot be used together'
-        )
-
     if not isinstance(theta, (list, tuple)):
         theta = [theta]
 
-    if fix_mixing is MixingScenario.T12:
-        s12_2, c13_4, s23_2, dcp, sc2 = 0.5, 1.0, 0.0, 0., theta
-    elif fix_mixing is MixingScenario.T13:
-        s12_2, c13_4, s23_2, dcp, sc2 = 0.0, 0.25, 0.0, 0., theta
-    elif fix_mixing is MixingScenario.T23:
-        s12_2, c13_4, s23_2, dcp, sc2 = 0.0, 1.0, 0.5, 0., theta
-    elif fix_mixing_almost:
-        s12_2, c13_4, dcp = 0.5, 1.0-1E-6, 0.
-        s23_2, sc2 = theta
-    elif fix_scale:
-        s12_2, c13_4, s23_2, dcp = theta
-        sc2 = scale
+    z = 0.+1e-9
+    if texture is Texture.OEU:
+        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = 0.5, 1.0, z, z, theta
+    elif texture is Texture.OET:
+        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = z, 0.25,  z, z, theta
+    elif texture is Texture.OUT:
+        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = z, 1.0, 0.5, z, theta
     else:
-        s12_2, c13_4, s23_2, dcp, sc2 = theta
+        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = theta
 
-    if len(theta) != 0:
-        sc2 = np.power(10., sc2)
-    else:
-        sc2 = scale
+    sc2 = np.power(10., sc2)
     sc1 = sc2 / 100.
 
     mass_matrix = np.array(
@@ -458,11 +382,11 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
     if no_bsm:
         eg_vector = cardano_eqn(sm_ham)
     else:
-        new_physics_u = angles_to_u((s12_2, c13_4, s23_2, dcp))
-        scale_matrix = np.array(
+        NP_U = angles_to_u((np_s12_2, np_c13_4, np_s23_2, np_dcp))
+        SC_U = np.array(
             [[0, 0, 0], [0, sc1, 0], [0, 0, sc2]]
         )
-        bsm_term = (energy**(dim-3)) * np.dot(new_physics_u, np.dot(scale_matrix, new_physics_u.conj().T))
+        bsm_term = (energy**(dim-3)) * np.dot(NP_U, np.dot(SC_U, NP_U.conj().T))
         bsm_ham = sm_ham + bsm_term
         eg_vector = cardano_eqn(bsm_ham)
 

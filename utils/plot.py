@@ -19,12 +19,13 @@ from scipy.interpolate import splev, splprep
 from scipy.ndimage.filters import gaussian_filter
 
 import matplotlib as mpl
+import matplotlib.patches as patches
+import matplotlib.gridspec as gridspec
 mpl.use('Agg')
+
 from matplotlib import rc
 from matplotlib import pyplot as plt
 from matplotlib.offsetbox import AnchoredText
-import matplotlib.patches as patches
-import matplotlib.gridspec as gridspec
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
@@ -32,22 +33,19 @@ from getdist import plots, mcsamples
 
 import ternary
 from ternary.heatmapping import polygon_generator
-# print ternary.__file__
-# assert 0
 
 import shapely.geometry as geometry
 
 from utils import misc as misc_utils
 from utils.enums import DataType, EnergyDependance, str_enum
-from utils.enums import Likelihood, MixingScenario, ParamTag, StatCateg
-from utils.enums import Texture
+from utils.enums import Likelihood, ParamTag, StatCateg, Texture
 from utils.fr import angles_to_u, angles_to_fr
 
 
-bayes_K = 1.   # Substantial degree of belief.
-# bayes_K = 3/2. # Strong degree of belief.
-# bayes_K = 2.   # Very strong degree of belief
-# bayes_K = 5/2. # Decisive degree of belief
+BAYES_K = 1.   # Substantial degree of belief.
+# BAYES_K = 3/2. # Strong degree of belief.
+# BAYES_K = 2.   # Very strong degree of belief
+# BAYES_K = 5/2. # Decisive degree of belief
 
 
 if os.path.isfile('./plot_llh/paper.mplstyle'):
@@ -58,64 +56,16 @@ if 'submitter' in socket.gethostname():
     rc('text', usetex=False)
 
 
-def centers(x):
-    return (x[:-1]+x[1:])*0.5
-
-
-def get_units(dimension):
-    if dimension == 3: return r' / \:{\rm GeV}'
-    if dimension == 4: return r''
-    if dimension == 5: return r' / \:{rm GeV}^{-1}'
-    if dimension == 6: return r' / \:{rm GeV}^{-2}'
-    if dimension == 7: return r' / \:{rm GeV}^{-3}'
-    if dimension == 8: return r' / \:{rm GeV}^{-4}'
-
-
-def calc_nbins(x):
-    n =  (np.max(x) - np.min(x)) / (2 * len(x)**(-1./3) * (np.percentile(x, 75) - np.percentile(x, 25)))
-    return np.floor(n)
-
-
-def calc_bins(x):
-    nbins = calc_nbins(x)
-    return np.linspace(np.min(x), np.max(x)+2, num=nbins+1)
-
-
-def most_likely(arr):
-    """Return the densest region given a 1D array of data."""
-    binning = calc_bins(arr)
-    harr = np.histogram(arr, binning)[0]
-    return centers(binning)[np.argmax(harr)]
-
-
-def interval(arr, percentile=68.):
-    """Returns the *percentile* shortest interval around the mode."""
-    center = most_likely(arr)
-    sarr = sorted(arr)
-    delta = np.abs(sarr - center)
-    curr_low = np.argmin(delta)
-    curr_up = curr_low
-    npoints = len(sarr)
-    while curr_up - curr_low < percentile/100.*npoints:
-        if curr_low == 0:
-            curr_up += 1
-        elif curr_up == npoints-1:
-            curr_low -= 1
-        elif sarr[curr_up]-sarr[curr_low-1] < sarr[curr_up+1]-sarr[curr_low]:
-            curr_low -= 1
-        elif sarr[curr_up]-sarr[curr_low-1] > sarr[curr_up+1]-sarr[curr_low]:
-            curr_up += 1
-        elif (curr_up - curr_low) % 2:
-            # they are equal so step half of the time up and down
-            curr_low -= 1
-        else:
-            curr_up += 1
-    return sarr[curr_low], center, sarr[curr_up]
-
-
-def flat_angles_to_u(x):
-    """Convert from angles to mixing elements."""
-    return abs(angles_to_u(x)).astype(np.float32).flatten().tolist()
+def gen_figtext(args):
+    """Generate the figure text."""
+    t = ''
+    t += 'Source flavour ratio = [{0}]'.format(solve_ratio(args.source_ratio))
+    if args.data in [DataType.ASIMOV, DataType.REALISATION]:
+        t += '\nIC injected flavour ratio = [{0}]'.format(
+            solve_ratio(args.injected_ratio)
+        )
+    t += '\nDimension = {0}'.format(args.dimension)
+    return t
 
 
 def plot_Tchain(Tchain, axes_labels, ranges):
@@ -137,39 +87,6 @@ def plot_Tchain(Tchain, axes_labels, ranges):
         [Tsample], filled=True,
     )
     return g
-
-
-def gen_figtext(args):
-    """Generate the figure text."""
-    t = ''
-    mr1, mr2, mr3 = misc_utils.solve_ratio(args.measured_ratio)
-    if args.fix_source_ratio:
-        sr1, sr2, sr3 = misc_utils.solve_ratio(args.source_ratio)
-        t += 'Source flavour ratio = [{0}, {1}, {2}]'.format(sr1, sr2, sr3)
-        if args.data in [DataType.ASIMOV, DataType.REALISATION]:
-            t += '\nIC observed flavour ratio = [{0}, {1}, {2}]'.format(
-                mr1, mr2, mr3
-            )
-        t += '\nDimension = {0}'.format(args.dimension)
-    else:
-        if args.data in [DataType.ASIMOV, DataType.REALISATION]:
-            t += 'IC observed flavour ratio = [{0}, {1}, ' \
-                    '{2}]\nDimension = {3}'.format(
-                        mr1, mr2, mr3, args.dimension, int(args.energy)
-                    )
-    if args.fix_scale:
-        t += 'Scale = {0}'.format(args.scale)
-    if args.likelihood is Likelihood.GAUSSIAN:
-        t += '\nSigma = {0:.3f}'.format(args.sigma_ratio)
-    if args.energy_dependance is EnergyDependance.SPECTRAL:
-        if not args.fold_index:
-            t += '\nSpectral Index = {0}'.format(int(args.spectral_index))
-        t += '\nBinning = [{0}, {1}] TeV - {2} bins'.format(
-            int(args.binning[0]/1e3), int(args.binning[-1]/1e3), len(args.binning)-1
-        )
-    elif args.energy_dependance is EnergyDependance.MONO:
-        t += '\nEnergy = {0} TeV'.format(int(args.energy/1e3))
-    return t
 
 
 def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None):
@@ -287,13 +204,6 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None):
             g.export(outfile+'_elements.'+of)
 
 
-def myround(x, base=2, up=False, down=False):
-    if up == down and up is True: assert 0
-    if up: return int(base * np.round(float(x)/base-0.5))
-    elif down: return int(base * np.round(float(x)/base+0.5))
-    else: int(base * np.round(float(x)/base))
-
-
 def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     """Make MultiNest factor or LLH value plot."""
     print 'Making Statistic plot'
@@ -337,7 +247,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
 
     ax.plot(scales_rm, reduced_ev)
 
-    ax.axhline(y=np.log(10**(bayes_K)), color='red', alpha=1., linewidth=1.3)
+    ax.axhline(y=np.log(10**(BAYES_K)), color='red', alpha=1., linewidth=1.3)
 
     for ymaj in ax.yaxis.get_majorticklocs():
         ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.3, linewidth=1)
@@ -394,7 +304,7 @@ def plot_sens_full(data, outfile, outformat, args):
             null = statistic[min_idx]
             if args.stat_method is StatCateg.BAYESIAN:
                 reduced_ev = -(statistic - null)
-                al = scales[reduced_ev > np.log(10**(bayes_K))] # Strong degree of belief
+                al = scales[reduced_ev > np.log(10**(BAYES_K))] # Strong degree of belief
                 # al = scales[reduced_ev > 0.4] # Testing
             elif args.stat_method is StatCateg.FREQUENTIST:
                 reduced_ev = -2*(statistic - null)
@@ -437,8 +347,8 @@ def plot_sens_full(data, outfile, outformat, args):
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
 
 
-def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
-    print 'Making FIXED_ANGLE_PRETTY sensitivity plot'
+def plot_table_sens(data, outfile, outformat, args):
+    print 'Making TABLE sensitivity plot'
     argsc = deepcopy(args)
     dims = len(data)
     LV_atmo_90pc_limits = {
@@ -598,14 +508,14 @@ def plot_sens_fixed_angle_pretty(data, outfile, outformat, args):
                 null = statistic[min_idx]
                 if args.stat_method is StatCateg.BAYESIAN:
                     reduced_ev = -(statistic_rm - null)
-                    al = scales_rm[reduced_ev > np.log(10**(bayes_K))]
+                    al = scales_rm[reduced_ev > np.log(10**(BAYES_K))]
                 elif args.stat_method is StatCateg.FREQUENTIST:
                     reduced_ev = -2*(statistic_rm - null)
                     al = scales_rm[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
                 if len(al) == 0:
                     print 'No points for DIM {0} FRS {1}!'.format(dim, src)
                     continue
-                if reduced_ev[-1] < np.log(10**(bayes_K)) - 0.1:
+                if reduced_ev[-1] < np.log(10**(BAYES_K)) - 0.1:
                     print 'Peaked contour does not exclude large scales! For ' \
                         'DIM {0} FRS{1}!'.format(dim, src)
                     continue
@@ -739,14 +649,14 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                 null = statistic[min_idx]
                 if args.stat_method is StatCateg.BAYESIAN:
                     reduced_ev = -(statistic - null)
-                    al = scales[reduced_ev > np.log(10**(bayes_K))] # Strong degree of belief
+                    al = scales[reduced_ev > np.log(10**(BAYES_K))] # Strong degree of belief
                 elif args.stat_method is StatCateg.FREQUENTIST:
                     reduced_ev = -2*(statistic - null)
                     al = scales[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
                 if len(al) == 0:
                     print 'No points for DIM {0} FRS {1}!'.format(dim, src)
                     continue
-                if reduced_ev[-1] < np.log(10**(bayes_K)) - 0.1:
+                if reduced_ev[-1] < np.log(10**(BAYES_K)) - 0.1:
                     print 'Peaked contour does not exclude large scales! For ' \
                         'DIM {0} FRS{1}!'.format(dim, src)
                     continue
@@ -903,7 +813,7 @@ def plot_sens_corr_angle(data, outfile, outformat, args):
                 print sep_arrays
 
                 if args.stat_method is StatCateg.BAYESIAN:
-                    reduced_pdat_mask = (sep_arrays[2] > np.log(10**(bayes_K))) # Strong degree of belief
+                    reduced_pdat_mask = (sep_arrays[2] > np.log(10**(BAYES_K))) # Strong degree of belief
                 elif args.stat_method is StatCateg.FREQUENTIST:
                     reduced_pdat_mask = (sep_arrays[2] > 4.61) # 90% CL for 2 DOFS via Wilks
                 reduced_pdat = sep_arrays.T[reduced_pdat_mask].T
@@ -1175,7 +1085,7 @@ def plot_source_ternary(data, outfile, outformat, args):
     for idim, dim in enumerate(args.dimensions):
         print '|||| DIM = {0}, {1}'.format(idim, dim)
         for isce in xrange(r_data.shape[1]):
-            print '|||| SCEN = {0}'.format(str_enum(Texture(isce)))
+            print '|||| SCEN = {0}'.format(str_enum(MixingScenario(isce+1)))
             fig = plt.figure(figsize=(8, 8))
             ax  = fig.add_subplot(111)
             tax = get_tax(ax, scale=nsrcs)
@@ -1204,14 +1114,14 @@ def plot_source_ternary(data, outfile, outformat, args):
                 if args.stat_method is StatCateg.BAYESIAN:
                     reduced_ev = -(statistic_rm - null)
                     print 'reduced_ev', reduced_ev
-                    al = scales_rm[reduced_ev > np.log(10**(bayes_K))]
+                    al = scales_rm[reduced_ev > np.log(10**(BAYES_K))]
                 else:
                     assert 0
                 if len(al) == 0:
                     print 'No points for DIM {0} FRS {1}!'.format(dim, src)
                     interp_dict[src_sc] = -60
                     continue
-                if reduced_ev[-1] < np.log(10**(bayes_K)) - 0.1:
+                if reduced_ev[-1] < np.log(10**(BAYES_K)) - 0.1:
                     print 'Peaked contour does not exclude large scales! For ' \
                         'DIM {0} FRS{1}!'.format(dim, src)
                     interp_dict[src_sc] = -60
@@ -1244,8 +1154,9 @@ def texture_label(x):
         raise AssertionError
 
 
-def plot_source_ternary_1D(data, outfile, outformat, args):
+def plot_x(data, outfile, outformat, args):
     """Ternary plot in the source flavour space for each operator texture."""
+    print 'Making X sensitivity plot'
     sources = args.source_ratios
     x_1D = []
     i_src_1D = []
@@ -1279,7 +1190,7 @@ def plot_source_ternary_1D(data, outfile, outformat, args):
         ax.set_ylabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda_{d=6}^{-1}\:/\:{\rm GeV}^{-2})\: ]$', fontsize=18)
         ax.set_xlim(0, 1)
         for isce in xrange(r_data.shape[1]):
-            print '|||| SCEN = {0}'.format(str_enum(Texture(isce)))
+            print '|||| SCEN = {0}'.format(str_enum(MixingScenario(isce+1)))
             H = np.full(len(x_1D), np.nan)
             for ix, x in enumerate(x_1D):
                 print '|||| X = {0}'.format(x)
@@ -1303,13 +1214,13 @@ def plot_source_ternary_1D(data, outfile, outformat, args):
                 if args.stat_method is StatCateg.BAYESIAN:
                     reduced_ev = -(statistic_rm - null)
                     print 'reduced_ev', reduced_ev
-                    al = scales_rm[reduced_ev > np.log(10**(bayes_K))]
+                    al = scales_rm[reduced_ev > np.log(10**(BAYES_K))]
                 else:
                     assert 0
                 if len(al) == 0:
                     print 'No points for DIM {0} X {1}!'.format(dim, x)
                     continue
-                if reduced_ev[-1] < np.log(10**(bayes_K)) - 0.1:
+                if reduced_ev[-1] < np.log(10**(BAYES_K)) - 0.1:
                     print 'Peaked contour does not exclude large scales! For ' \
                         'DIM {0} X {1}!'.format(dim, x)
                     continue
@@ -1320,7 +1231,7 @@ def plot_source_ternary_1D(data, outfile, outformat, args):
             H = ma.masked_invalid(H)
             H_0 = np.concatenate([[H[0]], H])
             ax.step(be, H_0, linewidth=2,
-                    label=texture_label(Texture(isce)), linestyle='-',
+                    label=texture_label(MixingScenario(isce+1)), linestyle='-',
                     drawstyle='steps-pre')
             print 'H', H
             print

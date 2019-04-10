@@ -16,9 +16,8 @@ from copy import deepcopy
 
 import numpy as np
 
-from utils.plot import get_units
 from utils.fr import fr_to_angles
-from utils.enums import DataType, Likelihood, MixingScenario, ParamTag, PriorsCateg
+from utils.enums import DataType, Likelihood, ParamTag, PriorsCateg
 
 
 class Param(object):
@@ -219,66 +218,3 @@ class ParamSet(Sequence):
         elif isinstance(p, ParamSet):
             param_sequence.extend(p.params)
         return ParamSet(param_sequence)
-
-
-def get_paramsets(args, nuisance_paramset):
-    """Make the paramsets for generating the Asmimov MC sample and also running
-    the MCMC.
-    """
-    asimov_paramset = []
-    llh_paramset = []
-
-    llh_paramset.extend(
-        [x for x in nuisance_paramset.from_tag(ParamTag.SM_ANGLES)]
-    )
-    if args.likelihood in [Likelihood.GOLEMFIT, Likelihood.GF_FREQ]:
-        gf_nuisance = [x for x in nuisance_paramset.from_tag(ParamTag.NUISANCE)]
-        asimov_paramset.extend(gf_nuisance)
-        llh_paramset.extend(gf_nuisance)
-    for parm in llh_paramset:
-        parm.value = args.__getattribute__(parm.name)
-    tag = ParamTag.BESTFIT
-    try:
-        flavour_angles = fr_to_angles(args.measured_ratio)
-    except:
-        flavour_angles = fr_to_angles(args.injected_ratio)
-    asimov_paramset.extend([
-        Param(name='astroFlavorAngle1', value=flavour_angles[0], ranges=[0., 1.], std=0.2, tag=tag),
-        Param(name='astroFlavorAngle2', value=flavour_angles[1], ranges=[-1., 1.], std=0.2, tag=tag),
-    ])
-    asimov_paramset = ParamSet(asimov_paramset)
-
-    if hasattr(args, 'fix_source_ratio'):
-        if args.fix_mixing is MixingScenario.NONE and not args.fix_mixing_almost:
-            tag = ParamTag.MMANGLES
-            llh_paramset.extend([
-                Param(name='np_s_12^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{12}^2', tag=tag),
-                Param(name='np_c_13^4', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{c}_{13}^4', tag=tag),
-                Param(name='np_s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^2', tag=tag),
-                Param(name='np_dcp', value=np.pi, ranges=[0., 2*np.pi], std=0.2, tex=r'\tilde{\delta_{CP}}', tag=tag)
-            ])
-        if args.fix_mixing_almost:
-            tag = ParamTag.MMANGLES
-            llh_paramset.extend([
-                Param(name='np_s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^4', tag=tag)
-            ])
-        if not args.fix_scale:
-            tag = ParamTag.SCALE
-            if hasattr(args, 'dimension'):
-                llh_paramset.append(
-                    Param(name='logLam', value=np.log10(args.scale), ranges=np.log10(args.scale_region), std=3,
-                          tex=r'{\rm log}_{10}\left (\Lambda^{-1}'+get_units(args.dimension)+r'\right )', tag=tag)
-                )
-            elif hasattr(args, 'dimensions'):
-                llh_paramset.append(
-                    Param(name='logLam', value=np.log10(args.scale), ranges=np.log10(args.scale_region), std=3,
-                          tex=r'{\rm log}_{10}\left (\Lambda^{-1} / GeV^{-d+4}\right )', tag=tag)
-                )
-        if not args.fix_source_ratio:
-            tag = ParamTag.SRCANGLES
-            llh_paramset.extend([
-                Param(name='s_phi4', value=0.5, ranges=[0., 1.],  std=0.2, tex=r'sin^4(\phi)', tag=tag),
-                Param(name='c_2psi', value=0.5, ranges=[-1., 1.], std=0.2, tex=r'cos(2\psi)', tag=tag)
-            ])
-    llh_paramset = ParamSet(llh_paramset)
-    return asimov_paramset, llh_paramset

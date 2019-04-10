@@ -24,7 +24,7 @@ def CubePrior(cube, ndim, n_params):
 
 
 def lnProb(cube, ndim, n_params, mn_paramset, llh_paramset, asimov_paramset,
-           args, fitter):
+           args):
     if ndim != len(mn_paramset):
         raise AssertionError(
             'Length of MultiNest scan paramset is not the same as the input '
@@ -41,7 +41,6 @@ def lnProb(cube, ndim, n_params, mn_paramset, llh_paramset, asimov_paramset,
         args=args,
         asimov_paramset=asimov_paramset,
         llh_paramset=llh_paramset,
-        fitter=fitter
     )
     return llh
 
@@ -61,13 +60,14 @@ def mn_argparse(parser):
     )
 
 
-def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, fitter,
+def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args,
                 identifier='mn'):
     """Run the MultiNest algorithm to calculate the evidence."""
     n_params = len(mn_paramset)
 
     for n in mn_paramset.names:
         llh_paramset[n].value = mn_paramset[n].value
+    print 'llh_paramset', llh_paramset
 
     lnProbEval = partial(
         lnProb,
@@ -75,14 +75,13 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, fitter,
         llh_paramset    = llh_paramset,
         asimov_paramset = asimov_paramset,
         args            = args,
-        fitter          = fitter
     )
 
     llh = '{0}'.format(args.likelihood).split('.')[1]
     data = '{0}'.format(args.data).split('.')[1]
-    sr1, sr2, sr3 = solve_ratio(args.source_ratio)
-    prefix = './mnrun/DIM{0}/{1}/{2}/s{3}{4}{5}/{6}'.format(
-        args.dimension, data, llh, sr1, sr2, sr3, identifier
+    src_string = solve_ratio(args.source_ratio)
+    prefix = './mnrun/DIM{0}/{1}/{2}/s{3}/{4}'.format(
+        args.dimension, data, llh, src_string, identifier
     )
     make_dir(prefix)
     print 'Running evidence calculation for {0}'.format(prefix)

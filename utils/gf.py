@@ -24,6 +24,9 @@ from utils.misc import enum_parse, parse_bool, thread_factors
 from utils.param import ParamSet
 
 
+FITTER = None
+
+
 def fit_flags(llh_paramset):
     default_flags = {
         # False means it's not fixed in minimization
@@ -74,9 +77,6 @@ def steering_params(args):
     elif args.likelihood is Likelihood.GF_FREQ:
         params.frequentist = True;
 
-    # For Tianlu
-    # params.years = [999]
-
     if hasattr(args, 'binning'):
         params.minFitEnergy = args.binning[0]  # GeV
         params.maxFitEnergy = args.binning[-1] # GeV
@@ -95,59 +95,61 @@ def steering_params(args):
     return params
 
 
-def setup_asimov(fitter, params):
+def setup_asimov(params):
     print 'Injecting the model', params
     asimov_params = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         asimov_params.__setattr__(parm.name, float(parm.value))
-    fitter.SetupAsimov(asimov_params)
+    FITTER.SetupAsimov(asimov_params)
 
 
-def setup_realisation(fitter, params, seed):
+def setup_realisation(params, seed):
     print 'Injecting the model', params
     asimov_params = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         asimov_params.__setattr__(parm.name, float(parm.value))
-    fitter.Swallow(fitter.SpitRealization(asimov_params, seed))
+    FITTER.Swallow(FITTER.SpitRealization(asimov_params, seed))
 
 
 def setup_fitter(args, asimov_paramset):
+    global FITTER
     datapaths = gf.DataPaths()
     sparams = steering_params(args)
     npp = gf.NewPhysicsParams()
-    fitter = gf.GolemFit(datapaths, sparams, npp)
+    FITTER = gf.GolemFit(datapaths, sparams, npp)
     if args.data is DataType.ASIMOV:
-        setup_asimov(fitter, asimov_paramset)
+        setup_asimov(FITTER, asimov_paramset)
     elif args.data is DataType.REALISATION:
         seed = args.seed if args.seed is not None else 1
-        setup_realisation(fitter, asimov_paramset, seed)
+        setup_realisation(FITTER, asimov_paramset, seed)
     elif args.data is DataType.REAL:
         print 'Using MagicTau DATA'
-    return fitter
 
 
-def get_llh(fitter, params):
+def get_llh(params):
     # print 'params', params
     fitparams = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         fitparams.__setattr__(parm.name, float(parm.value))
-    llh = -fitter.EvalLLH(fitparams)
+    llh = -FITTER.EvalLLH(fitparams)
     return llh
 
 
-def get_llh_freq(fitter, params):
+def get_llh_freq(params):
     print 'setting to {0}'.format(params)
     fitparams = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         fitparams.__setattr__(parm.name, float(parm.value))
-    fitter.SetFitParametersSeed(fitparams)
-    llh = -fitter.MinLLH().likelihood
+    FITTER.SetFitParametersSeed(fitparams)
+    llh = -FITTER.MinLLH().likelihood
     return llh
 
 
-def data_distributions(fitter):
-    hdat = fitter.GetDataDistribution()
-    binedges = np.asarray([fitter.GetZenithBinsData(), fitter.GetEnergyBinsData()])
+def data_distributions():
+    hdat = FITTER.GetDataDistribution()
+    binedges = np.asarray(
+        [FITTER.GetZenithBinsData(), FITTER.GetEnergyBinsData()]
+    )
     return hdat, binedges
 
 
@@ -164,4 +166,3 @@ def gf_argparse(parser):
         choices=SteeringCateg,
         help='use asimov/fake dataset with specific steering'
     )
-

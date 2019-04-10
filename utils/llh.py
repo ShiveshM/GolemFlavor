@@ -17,7 +17,7 @@ from scipy.stats import multivariate_normal, truncnorm
 
 from utils import fr as fr_utils
 from utils import gf as gf_utils
-from utils.enums import EnergyDependance, Likelihood, ParamTag, PriorsCateg
+from utils.enums import Likelihood, ParamTag, PriorsCateg
 from utils.misc import enum_parse, gen_identifier, parse_bool
 
 
@@ -34,22 +34,11 @@ def multi_gaussian(fr, fr_bf, sigma, offset=-320):
     return np.log(multivariate_normal.pdf(fr, mean=fr_bf, cov=cov_fr)) + offset
 
 
-def likelihood_argparse(parser):
+def llh_argparse(parser):
     parser.add_argument(
-        '--likelihood', default='gaussian', type=partial(enum_parse, c=Likelihood),
-        choices=Likelihood, help='likelihood contour'
-    )
-    parser.add_argument(
-        '--sigma-ratio', type=float, default=0.01,
-        help='Set the 1 sigma for the measured flavour ratio for a gaussian LLH'
-    )
-    parser.add_argument(
-        '--save-measured-fr', type=parse_bool, default='False',
-        help='Output the measured flavour ratios'
-    )
-    parser.add_argument(
-        '--output-measured-fr', type=str, default='./frs',
-        help='Output of the measured flavour ratios'
+        '--stat-method', default='bayesian',
+        type=partial(misc_utils.enum_parse, c=StatCateg), choices=StatCateg,
+        help='Statistical method to employ'
     )
 
 
@@ -82,7 +71,7 @@ def lnprior(theta, paramset):
     return prior
 
 
-def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
+def triangle_llh(theta, args, asimov_paramset, llh_paramset):
     """Log likelihood function for a given theta."""
     if len(theta) != len(llh_paramset):
         raise AssertionError(
@@ -95,31 +84,14 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
     for param in llh_paramset.from_tag(ParamTag.NUISANCE):
         hypo_paramset[param.name].value = param.value
 
-    if args.energy_dependance is EnergyDependance.SPECTRAL:
-        bin_centers = np.sqrt(args.binning[:-1]*args.binning[1:])
-        bin_width = np.abs(np.diff(args.binning))
-        if args.likelihood in [Likelihood.GOLEMFIT, Likelihood.GF_FREQ] \
-           and args.fold_index:
-            args.spectral_index = -hypo_paramset['astroDeltaGamma'].value
+    bin_centers = np.sqrt(args.binning[:-1]*args.binning[1:])
+    bin_width = np.abs(np.diff(args.binning))
+    spectral_index = -hypo_paramset['astroDeltaGamma'].value
 
-    if args.fix_source_ratio:
-        if args.energy_dependance is EnergyDependance.MONO:
-            source_flux = args.source_ratio
-        elif args.energy_dependance is EnergyDependance.SPECTRAL:
-            source_flux = np.array(
-                [fr * np.power(bin_centers, args.spectral_index)
-                 for fr in args.source_ratio]
-            ).T
-    else:
-        if args.energy_dependance is EnergyDependance.MONO:
-            source_flux = fr_utils.angles_to_fr(
-                llh_paramset.from_tag(ParamTag.SRCANGLES, values=True)
-            )
-        elif args.energy_dependance is EnergyDependance.SPECTRAL:
-            source_flux = np.array(
-                [fr * np.power(bin_centers, args.spectral_index)
-                 for fr in fr_utils.angles_to_fr(theta[-2:])]
-            ).T
+    source_flux = np.array(
+        [fr * np.power(bin_centers, spectral_index)
+         for fr in args.source_ratio]
+    ).T
 
     bsm_angles = llh_paramset.from_tag(
         [ParamTag.SCALE, ParamTag.MMANGLES], values=True
@@ -139,21 +111,7 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
 
     if args.no_bsm:
         fr = fr_utils.u_to_fr(source_flux, np.array(sm_u, dtype=np.complex256))
-    elif args.energy_dependance is EnergyDependance.MONO:
-        u = fr_utils.params_to_BSMu(
-            theta             = bsm_angles,
-            dim               = args.dimension,
-            energy            = args.energy,
-            mass_eigenvalues  = mass_eigenvalues,
-            sm_u              = sm_u,
-            no_bsm            = args.no_bsm,
-            fix_mixing        = args.fix_mixing,
-            fix_mixing_almost = args.fix_mixing_almost,
-            fix_scale         = args.fix_scale,
-            scale             = args.scale
-        )
-        fr = fr_utils.u_to_fr(source_flux, u)
-    elif args.energy_dependance is EnergyDependance.SPECTRAL:
+    else:
         mf_perbin = []
         for i_sf, sf_perbin in enumerate(source_flux):
             u = fr_utils.params_to_BSMu(
@@ -163,10 +121,7 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
                 mass_eigenvalues  = mass_eigenvalues,
                 sm_u              = sm_u,
                 no_bsm            = args.no_bsm,
-                fix_mixing        = args.fix_mixing,
-                fix_mixing_almost = args.fix_mixing_almost,
-                fix_scale         = args.fix_scale,
-                scale             = args.scale
+                texture           = args.texture,
             )
             fr = fr_utils.u_to_fr(sf_perbin, u)
             mf_perbin.append(fr)
@@ -181,35 +136,18 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset, fitter):
     for idx, param in enumerate(hypo_paramset.from_tag(ParamTag.BESTFIT)):
         param.value = flavour_angles[idx]
 
-    if args.likelihood is Likelihood.FLAT:
-        llh = 1.
-    elif args.likelihood is Likelihood.GAUSSIAN:
-        fr_bf = args.measured_ratio
-        llh = multi_gaussian(fr, fr_bf, args.sigma_ratio)
-    elif args.likelihood is Likelihood.GOLEMFIT:
-        llh = gf_utils.get_llh(fitter, hypo_paramset)
+    if args.likelihood is Likelihood.GOLEMFIT:
+        llh = gf_utils.get_llh(hypo_paramset)
     elif args.likelihood is Likelihood.GF_FREQ:
-        llh = gf_utils.get_llh_freq(fitter, hypo_paramset)
-
-    if args.save_measured_fr and args.burnin is False:
-        n = gen_identifier(args) + '.txt'
-        with open(args.output_measured_fr + n, 'a') as f:
-            f.write(r'{0:.3f} {1:.3f} {2:.3f}'.format(
-                float(fr[0]), float(fr[1]), float(fr[2])
-            ))
-            for p in llh_paramset:
-                f.write(r' {0:.3f}'.format(p.value))
-            f.write('     LLH = {0:.3f}'.format(llh))
-            f.write('\n')
-
+        llh = gf_utils.get_llh_freq(hypo_paramset)
     return llh
 
 
-def ln_prob(theta, args, asimov_paramset, llh_paramset, fitter):
+def ln_prob(theta, args, asimov_paramset, llh_paramset):
     lp = lnprior(theta, paramset=llh_paramset)
     if not np.isfinite(lp):
         return -np.inf
     return lp + triangle_llh(
         theta, args=args, asimov_paramset=asimov_paramset,
-        llh_paramset=llh_paramset, fitter=fitter
+        llh_paramset=llh_paramset
     )

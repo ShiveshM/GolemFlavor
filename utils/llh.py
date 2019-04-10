@@ -17,7 +17,7 @@ from scipy.stats import multivariate_normal, truncnorm
 
 from utils import fr as fr_utils
 from utils import gf as gf_utils
-from utils.enums import Likelihood, ParamTag, PriorsCateg
+from utils.enums import Likelihood, ParamTag, PriorsCateg, StatCateg
 from utils.misc import enum_parse, gen_identifier, parse_bool
 
 
@@ -37,7 +37,7 @@ def multi_gaussian(fr, fr_bf, sigma, offset=-320):
 def llh_argparse(parser):
     parser.add_argument(
         '--stat-method', default='bayesian',
-        type=partial(misc_utils.enum_parse, c=StatCateg), choices=StatCateg,
+        type=partial(enum_parse, c=StatCateg), choices=StatCateg,
         help='Statistical method to employ'
     )
 

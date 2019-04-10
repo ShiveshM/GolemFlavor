@@ -67,7 +67,6 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args,
 
     for n in mn_paramset.names:
         llh_paramset[n].value = mn_paramset[n].value
-    print 'llh_paramset', llh_paramset
 
     lnProbEval = partial(
         lnProb,

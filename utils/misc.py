@@ -20,7 +20,7 @@ from operator import attrgetter
 import numpy as np
 
 from utils.enums import str_enum
-from utils.enums import Likelihood, Texture
+from utils.enums import DataType, Likelihood, Texture
 
 
 class SortingHelpFormatter(argparse.HelpFormatter):
@@ -44,7 +44,7 @@ def gen_identifier(args):
     f += '_sfr_' + solve_ratio(args.source_ratio)
     if args.data in [DataType.ASIMOV, DataType.REALISATION]:
         f += '_mfr_' + solve_ratio(args.injected_ratio)
-    if args.Texture is not Texture.NONE:
+    if args.texture is not Texture.NONE:
         f += '_{0}'.format(str_enum(args.texture))
     return f
 

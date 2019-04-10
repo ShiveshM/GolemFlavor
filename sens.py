@@ -23,8 +23,9 @@ from utils import gf as gf_utils
 from utils import llh as llh_utils
 from utils import misc as misc_utils
 from utils import mn as mn_utils
-from utils.enums import Likelihood, ParamTag
-from utils.enums import PriorsCateg, SensitivityCateg, StatCateg, Texture
+from utils.enums import str_enum
+from utils.enums import DataType, Likelihood, ParamTag
+from utils.enums import PriorsCateg, StatCateg, Texture
 from utils.param import Param, ParamSet
 
 
@@ -77,30 +78,23 @@ def get_paramsets(args, nuisance_paramset):
     for parm in llh_paramset:
         parm.value = args.__getattribute__(parm.name)
 
-    tag = ParamTag.MMANGLES
-    llh_paramset.extend([
-        Param(name='np_s_12^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{12}^2', tag=tag),
-        Param(name='np_c_13^4', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{c}_{13}^4', tag=tag),
-        Param(name='np_s_23^2', value=0.5, ranges=[0., 1.], std=0.2, tex=r'\tilde{s}_{23}^2', tag=tag),
-        Param(name='np_dcp',  value=np.pi, ranges=[0., 2*np.pi], std=0.2, tex=r'\tilde{\delta_{CP}}', tag=tag)
-    ])
-
     boundaries = fr_utils.SCALE_BOUNDARIES[args.dimension]
     tag = ParamTag.SCALE
     llh_paramset.append(
         Param(
             name='logLam', value=np.mean(boundaries), ranges=boundaries, std=3,
-            tex=r'{\rm log}_{10}\left (\Lambda^{-1}'+get_units(args.dimension)+r'\right )',
+            tex=r'{\rm log}_{10}\left (\Lambda^{-1}' + \
+                misc_utils.get_units(args.dimension)+r'\right )',
             tag=tag
         )
     )
     llh_paramset = ParamSet(llh_paramset)
 
     tag = ParamTag.BESTFIT
-    if args.data in [DataType.ASIMOV, DataType.REALISATION]:
-        flavour_angles = fr_to_angles(args.injected_ratio)
+    if args.data is not DataType.REAL:
+        flavour_angles = fr_utils.fr_to_angles(args.injected_ratio)
     else:
-        flavour_angles = fr_to_angles([1, 1, 1])
+        flavour_angles = fr_utils.fr_to_angles([1, 1, 1])
 
     asimov_paramset.extend(gf_nuisance)
     asimov_paramset.extend([
@@ -136,8 +130,9 @@ def process_args(args):
     else:
         args.eval_segment = int(args.eval_segment)
 
-    if args.stat_method is StatCateg.FREQUENTIST and \
-       args.likelihood is Likelihood.GOLEMFIT:
+    if args.stat_method is StatCateg.BAYESIAN:
+        args.likelihood = Likelihood.GOLEMFIT
+    elif args.stat_method is StatCateg.FREQUENTIST:
         args.likelihood = Likelihood.GF_FREQ
 
     if args.texture is Texture.NONE:
@@ -191,9 +186,7 @@ def main():
 
     # Scale and BSM mixings will be fixed.
     scale_prm    = llh_paramset.from_tag(ParamTag.SCALE)[0]
-    base_mn_pset = llh_paramset.from_tag(
-        [ParamTag.SCALE, ParamTag.MMANGLES], invert=True
-    )
+    base_mn_pset = llh_paramset.from_tag(ParamTag.SCALE, invert=True)
 
     # Array of scales to scan over.
     boundaries = fr_utils.SCALE_BOUNDARIES[args.dimension]
@@ -228,8 +221,8 @@ def main():
         scale_prm.value = scale
 
         if args.stat_method is StatCateg.BAYESIAN:
-            identifier = 'b{0}_{1}_sce{2}_sca{3}'.format(
-                args.eval_segment, args.segments, int(args.texture), scale
+            identifier = 'b{0}_{1}_{2}_sca{3}'.format(
+                args.eval_segment, args.segments, str_enum(args.texture), scale
             )
             try:
                 stat = mn_utils.mn_evidence(

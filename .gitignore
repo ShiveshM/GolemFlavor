@@ -4,6 +4,7 @@ nohup*
 *.nfs*
 plots/
 *.pdf
+dagman_*
 dagman_FR*
 submitter/logs/
 mnrun_*

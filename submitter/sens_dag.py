@@ -3,14 +3,20 @@
 import os
 import numpy as np
 
-sources = [
-    (1, 2, 0),
-    (1, 0, 0),
-    (0, 1, 0),
-]
+# sources = [
+#     (1, 2, 0),
+#     (1, 0, 0),
+#     (0, 1, 0),
+# ]
+
+x_bins = 20
+x_array = np.linspace(0, 1, x_bins)
+sources = []
+for x in x_array:
+    sources.append([x, 1-x, 0])
 
 dims = [
-    3, 4, 5, 6, 7, 8
+    6
 ]
 
 textures = [
@@ -18,7 +24,6 @@ textures = [
 ]
 
 datadir = '/data/user/smandalia/flavour_ratio/data/sensitivity'
-scratchdir = '/scratch/smandalia/flavour_ratio'
 
 prefix = ''
 # prefix = '_noprior'
@@ -38,16 +43,16 @@ GLOBAL_PARAMS.update(dict(
 # MultiNest
 GLOBAL_PARAMS.update(dict(
     # mn_live_points = 1000,
-    mn_live_points = 600,
-    # mn_live_points = 300,
+    # mn_live_points = 600,
+    mn_live_points = 200,
     # mn_tolerance   = 0.1,
     mn_tolerance   = 0.3,
-    mn_output      = scratchdir + '/mnrun'
+    mn_output      = './mnrun'
 ))
 
 # FR
 GLOBAL_PARAMS.update(dict(
-    threads = 4,
+    threads = 1,
     binning = '6e4 1e7 20',
     no_bsm  = 'False'
 ))
@@ -86,4 +91,5 @@ with open(dagfile, 'w') as f:
                     f.write('VARS\tjob{0}\tdatadir="{1}"\n'.format(job_number, of_d))
                     job_number += 1
 
+    print 'total jobs = {0}'.format(job_number - 1)
     print 'dag file = {0}'.format(dagfile)

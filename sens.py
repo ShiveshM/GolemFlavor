@@ -233,9 +233,9 @@ def main():
                     identifier      = identifier
                 )
             except:
-                print 'Failed run, continuing'
-                # raise
-                continue
+                print 'Failed run'
+                raise
+                # continue
             print '## Evidence = {0}'.format(stat)
         elif args.stat_method is StatCateg.FREQUENTIST:
             raise NotImplementedError('Still needs testing')

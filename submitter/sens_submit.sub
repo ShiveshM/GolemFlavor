@@ -3,21 +3,16 @@ Arguments = "--ast $(ast) --data $(data) --dimension $(dimension) --no-bsm $(no_
 
 # All logs will go to a single file 
 log    = /scratch/smandalia/flavour_ratio/submitter/logs/job_$(Cluster).log
-output = /scratch/smandalia/flavour_ratio/submitter/logs/job_$(Cluster).out
-error  = /scratch/smandalia/flavour_ratio/submitter/logs/job_$(Cluster).err
+output = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/logs/job_$(Cluster).out
+error  = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/logs/job_$(Cluster).err
 
 getenv = True
 # environment = "X509_USER_PROXY=x509up_u14830" 
 
-# Stage user cert to the node (Gridftp-Users is already on CVMFS)
-# transfer_input_files = /tmp/x509up_u14830
-
-# but do not try to copy outputs back (see: https://htcondor-wiki.cs.wisc.edu/index.cgi/tktview?tn=3081) 
-# +TransferOutput="" 
-# Transfer_output_files = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/metaouts/
-
 request_memory = 3GB
-request_cpus = 4
+request_cpus = 1
+
+initialdir = /home/smandalia/condor
 
 Universe        = vanilla 
 Notification    = never 

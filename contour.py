@@ -20,10 +20,10 @@ from utils import fr as fr_utils
 from utils import gf as gf_utils
 from utils import llh as llh_utils
 from utils import misc as misc_utils
-from utils import mn as mn_utils
+from utils import mcmc as mcmc_utils
 from utils import plot as plot_utils
 from utils.enums import str_enum
-from utils.enums import DataType, Likelihood, ParamTag, PriorsCateg
+from utils.enums import DataType, Likelihood, MCMCSeedType, ParamTag, PriorsCateg
 from utils.param import Param, ParamSet, get_paramsets
 
 from pymultinest import Analyzer, run
@@ -35,11 +35,19 @@ def define_nuisance():
     tag = ParamTag.NUISANCE
     lg_prior = PriorsCateg.LIMITEDGAUSS
     nuisance.extend([
-        Param(name='convNorm',        value=1.,  seed=[0.5, 2. ], ranges=[0.1, 10.], std=0.4, prior=lg_prior, tag=tag),
-        Param(name='promptNorm',      value=0.,  seed=[0. , 6. ], ranges=[0. , 20.], std=2.4, prior=lg_prior, tag=tag),
-        Param(name='muonNorm',        value=1.,  seed=[0.1, 2. ], ranges=[0. , 10.], std=0.1, tag=tag),
-        Param(name='astroNorm',       value=6.9, seed=[0.,  5. ], ranges=[0. , 20.], std=1.5, tag=tag),
-        Param(name='astroDeltaGamma', value=2.5, seed=[2.4, 3. ], ranges=[-5., 5. ], std=0.1, tag=tag)
+        # Param(name='convNorm',                  value=1.,   seed=[0.5,  2. ],  ranges=[0.1,   10.],   std=0.4, prior=lg_prior, tag=tag),
+        # Param(name='promptNorm',                value=0.,   seed=[0.,   6. ],  ranges=[0.,    20.],   std=2.4, prior=lg_prior, tag=tag),
+        Param(name='convNorm',                  value=1.,   seed=[0.5,  2. ],  ranges=[0.1,   10.],   std=0.4, tag=tag),
+        Param(name='promptNorm',                value=0.,   seed=[0.,   6. ],  ranges=[0.,    20.],   std=2.4, tag=tag),
+        Param(name='muonNorm',                  value=1.,   seed=[0.1,  2. ],  ranges=[0.,    10.],   std=0.1, tag=tag),
+        Param(name='astroNorm',                 value=6.9,  seed=[0.,   5. ],  ranges=[0.,    20.],   std=1.5, tag=tag),
+        Param(name='astroDeltaGamma',           value=2.5,  seed=[2.4,  3. ],  ranges=[-5.,   5. ],   std=0.1, tag=tag),
+        Param(name='CRDeltaGamma',              value=0.,   seed=[-0.1, 0.1 ], ranges=[-1.,   1. ],   std=0.1, tag=tag),
+        Param(name='NeutrinoAntineutrinoRatio', value=1.,   seed=[0.8,  1.2 ], ranges=[0.,    2. ],   std=0.1, tag=tag),
+        Param(name='anisotropyScale',           value=1.,   seed=[0.8,  1.2 ], ranges=[0.,    2. ],   std=0.1, tag=tag),
+        Param(name='domEfficiency',             value=0.99, seed=[0.8,  1.2 ], ranges=[0.8,   1.2 ],  std=0.1, tag=tag),
+        Param(name='holeiceForward',            value=0.,   seed=[-0.8, 0.8 ], ranges=[-4.42, 1.58 ], std=0.1, tag=tag),
+        Param(name='piKRatio',                  value=1.0,  seed=[0.8,  1.2 ], ranges=[0.,    2. ],   std=0.1, tag=tag)
     ])
     return ParamSet(nuisance)
 
@@ -54,7 +62,6 @@ def nuisance_argparse(parser):
 
 def process_args(args):
     """Process the input args."""
-    args.plot_angles = args.plot_chains
     if args.likelihood is not Likelihood.GOLEMFIT \
        and args.likelihood is not Likelihood.GF_FREQ:
         raise AssertionError(
@@ -76,18 +83,6 @@ def parse_args(args=None):
         help='Set the central value for the injected flavour ratio at IceCube'
     )
     parser.add_argument(
-        '--run-scan', type=misc_utils.parse_bool, default='True',
-        help='Do the scan from scratch'
-    )
-    parser.add_argument(
-        '--plot-chains', type=misc_utils.parse_bool, default='False',
-        help='Plot the (joint) posteriors'
-    )
-    parser.add_argument(
-        '--plot-triangle', type=misc_utils.parse_bool, default='False',
-        help='Project the posterior contour on the flavour triangle'
-    )
-    parser.add_argument(
         '--seed', type=misc_utils.seed_parse, default='25',
         help='Set the random seed value'
     )
@@ -103,10 +98,9 @@ def parse_args(args=None):
         gf_utils.gf_argparse(parser)
     except: pass
     llh_utils.likelihood_argparse(parser)
-    mn_utils.mn_argparse(parser)
+    mcmc_utils.mcmc_argparse(parser)
     nuisance_argparse(parser)
     misc_utils.remove_option(parser, 'sigma_ratio')
-    misc_utils.remove_option(parser, 'mn_output')
     if args is None: return parser.parse_args()
     else: return parser.parse_args(args.split())
 
@@ -163,25 +157,6 @@ def ln_prob(theta, args, hypo_paramset, fitter):
     )
 
 
-def lnProb(cube, ndim, n_params, hypo_paramset, args, fitter):
-    if ndim != len(hypo_paramset):
-        raise AssertionError(
-            'Length of MultiNest scan paramset is not the same as the input '
-            'params\ncube={0}\nmn_paramset]{1}'.format(cube, hypo_paramset)
-        )
-    pranges = hypo_paramset.ranges
-    for i in xrange(ndim):
-        hypo_paramset[i].value = (pranges[i][1]-pranges[i][0])*cube[i] + pranges[i][0]
-    theta = hypo_paramset.values
-    llh = ln_prob(
-        theta          = theta,
-        args           = args,
-        hypo_paramset  = hypo_paramset,
-        fitter         = fitter
-    )
-    return llh
-
-
 def main():
     args = parse_args()
     process_args(args)
@@ -196,99 +171,53 @@ def main():
     print '== {0:<25} = {1}'.format('outfile', outfile)
 
     n_params = len(hypo_paramset)
-    prefix = outfile + '_mn_'
-    misc_utils.make_dir(prefix)
+    outfile = outfile + '_emcee_'
 
     print 'asimov_paramset', asimov_paramset
     print 'hypo_paramset', hypo_paramset
 
-    if args.run_scan:
+    if args.run_mcmc:
         fitter = gf_utils.setup_fitter(args, asimov_paramset)
 
-        lnProbEval = partial(
-            lnProb,
+        ln_prob_eval = partial(
+            ln_prob,
             hypo_paramset  = hypo_paramset,
             args           = args,
             fitter         = fitter
         )
 
-        cwd = os.getcwd()
-        os.chdir(prefix[:-len(os.path.basename(prefix))])
+        if args.mcmc_seed_type == MCMCSeedType.UNIFORM:
+            p0 = mcmc_utils.flat_seed(
+                hypo_paramset, nwalkers=args.nwalkers
+            )
+        elif args.mcmc_seed_type == MCMCSeedType.GAUSSIAN:
+            p0 = mcmc_utils.gaussian_seed(
+                hypo_paramset, nwalkers=args.nwalkers
+            )
 
-        print 'Running evidence calculation for {0}'.format(prefix)
-        run(
-            LogLikelihood              = lnProbEval,
-            Prior                      = mn_utils.CubePrior,
-            n_dims                     = n_params,
-            n_live_points              = args.mn_live_points,
-            evidence_tolerance         = args.mn_tolerance,
-            outputfiles_basename       = prefix[-len(os.path.basename(prefix)):],
-            importance_nested_sampling = True,
-            resume                     = False,
-            verbose                    = True
+        samples = mcmc_utils.mcmc(
+            p0       = p0,
+            ln_prob  = ln_prob_eval,
+            ndim     = n_params,
+            nwalkers = args.nwalkers,
+            burnin   = args.burnin,
+            nsteps   = args.nsteps,
+            args     = args,
+            threads  = 1
+            # TODO(shivesh): broken because you cannot pickle a GolemFitPy object
+            # threads      = misc_utils.thread_factors(args.threads)[0]
         )
+        mcmc_utils.save_chains(samples, outfile)
 
-        os.chdir(cwd)
-
-    # Analyze
-    analyser = Analyzer(
-        outputfiles_basename=prefix, n_params=n_params
+    of = outfile[:5]+outfile[5:].replace('data', 'plots')+'_posterior'
+    plot_utils.chainer_plot(
+        infile       = outfile+'.npy',
+        outfile      = of,
+        outformat    = ['png'],
+        args         = args,
+        llh_paramset = hypo_paramset,
+        fig_text     = gen_figtext(args, hypo_paramset)
     )
-    print analyser
-
-    pranges = hypo_paramset.ranges
-
-    bf = analyser.get_best_fit()['parameters']
-    for i in xrange(len(bf)):
-        bf[i] = (pranges[i][1]-pranges[i][0])*bf[i] + pranges[i][0]
-    print 'bestfit = ', bf
-    print 'bestfit log_likelihood', analyser.get_best_fit()['log_likelihood']
-
-    print
-    print '{0:50} = {1}'.format('global evidence', analyser.get_stats()['global evidence'])
-    print
-
-    fig_text = gen_figtext(args, asimov_paramset)
-    fig_text += '\nBestfit LLH = {0}'.format(analyser.get_best_fit()['log_likelihood'])
-    fig_text += '\nBestfits = '
-    for x in bf: fig_text += '{0:.2f} '.format(x)
-
-    if args.plot_chains or args.plot_triangle:
-        chains = analyser.get_data()[:,2:]
-        for x in chains:
-            for i in xrange(len(x)):
-                x[i] = (pranges[i][1]-pranges[i][0])*x[i] + pranges[i][0]
-
-    if args.plot_chains:
-        of = outfile[:5]+outfile[5:].replace('data', 'plots')+'_posterior'
-        plot_utils.chainer_plot(
-            infile       = chains,
-            outfile      = of,
-            outformat    = ['png'],
-            args         = args,
-            llh_paramset = hypo_paramset,
-            fig_text     = fig_text
-        )
-        print 'Saved plot', of
-
-    if args.plot_triangle:
-        llh = -0.5 * analyser.get_data()[:,1]
-
-        flavour_angles = chains[:,-2:]
-        flavour_ratios = np.array(
-            map(fr_utils.angles_to_fr, flavour_angles)
-        )
-
-        of = outfile[:5]+outfile[5:].replace('data', 'plots')+'_triangle'
-        plot_utils.triangle_project(
-            frs          = flavour_ratios,
-            llh          = llh,
-            outfile      = of,
-            outformat    = ['png'],
-            args         = args,
-            llh_paramset = hypo_paramset,
-            fig_text     = fig_text
-        )
 
     print "DONE!"
 

@@ -33,7 +33,8 @@ class SortingHelpFormatter(argparse.HelpFormatter):
 def solve_ratio(fr):
     denominator = reduce(gcd, fr)
     f = [int(x/denominator) for x in fr]
-    if f[0] > 1E3 or f[1] > 1E3 or f[2] > 1E3:
+    allow = (1, 2, 0)
+    if f[0] not in allow or f[1] not in allow or f[2] not in allow:
         return '{0:.2f}_{1:.2f}_{2:.2f}'.format(fr[0], fr[1], fr[2])
     else:
         return '{0}_{1}_{2}'.format(f[0], f[1], f[2])
@@ -162,10 +163,10 @@ def centers(x):
 def get_units(dimension):
     if dimension == 3: return r' / \:{\rm GeV}'
     if dimension == 4: return r''
-    if dimension == 5: return r' / \:{rm GeV}^{-1}'
-    if dimension == 6: return r' / \:{rm GeV}^{-2}'
-    if dimension == 7: return r' / \:{rm GeV}^{-3}'
-    if dimension == 8: return r' / \:{rm GeV}^{-4}'
+    if dimension == 5: return r' / \:{\rm GeV}^{-1}'
+    if dimension == 6: return r' / \:{\rm GeV}^{-2}'
+    if dimension == 7: return r' / \:{\rm GeV}^{-3}'
+    if dimension == 8: return r' / \:{\rm GeV}^{-4}'
 
 
 def calc_nbins(x):

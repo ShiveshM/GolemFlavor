@@ -20,10 +20,10 @@ import numpy.ma as ma
 
 from utils import fr as fr_utils
 from utils import llh as llh_utils
-from utils import misc as misc_utils
 from utils import plot as plot_utils
-from utils.enums import EnergyDependance, Likelihood, MixingScenario, ParamTag
-from utils.enums import PriorsCateg, SensitivityCateg, StatCateg
+from utils.enums import DataType, Texture
+from utils.misc import enum_parse, parse_bool, parse_enum, print_args
+from utils.misc import gen_identifier, SortingHelpFormatter
 from utils.param import Param, ParamSet
 
 
@@ -32,14 +32,22 @@ def process_args(args):
     if args.data is not DataType.REAL:
         args.injected_ratio = fr_utils.normalise_fr(args.injected_ratio)
 
-    if len(args.source_ratios) % 3 != 0:
-        raise ValueError(
-            'Invalid source ratios input {0}'.format(args.source_ratios)
-        )
+    if args.source_ratios is not None:
+        if args.x_segments is not None:
+            raise ValueError('Cannot do both --source-ratios and --x-segments')
+        if len(args.source_ratios) % 3 != 0:
+            raise ValueError(
+                'Invalid source ratios input {0}'.format(args.source_ratios)
+            )
 
-    srs = [args.source_ratios[3*x:3*x+3]
-           for x in range(int(len(args.source_ratios)/3))]
-    args.source_ratios = map(fr_utils.normalise_fr, srs)
+        srs = [args.source_ratios[3*x:3*x+3]
+               for x in range(int(len(args.source_ratios)/3))]
+        args.source_ratios = map(fr_utils.normalise_fr, srs)
+    elif args.x_segments is not None:
+        x_array = np.linspace(0, 1, args.x_segments)
+        args.source_ratios = [[x, 1-x, 0] for x in x_array]
+    else:
+        raise ValueError('Must supply either --source-ratios or --x-segments')
 
     args.dimensions = np.sort(args.dimensions)
 
@@ -48,7 +56,7 @@ def parse_args(args=None):
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
         description="HESE BSM flavour ratio analysis plotting script",
-        formatter_class=misc_utils.SortingHelpFormatter,
+        formatter_class=SortingHelpFormatter,
     )
     parser.add_argument(
         '--datadir', type=str,
@@ -60,7 +68,7 @@ def parse_args(args=None):
         help='Number of new physics scales to evaluate'
     )
     parser.add_argument(
-        '--split-jobs', type=misc_utils.parse_bool, default='True',
+        '--split-jobs', type=parse_bool, default='True',
         help='Did the jobs get split'
     )
     parser.add_argument(
@@ -68,8 +76,12 @@ def parse_args(args=None):
         help='Set the new physics dimensions to consider'
     )
     parser.add_argument(
-        '--source-ratios', type=int, nargs='*', default=[1, 2, 0],
-        help='Set the source flavour ratios'
+        '--source-ratios', type=int, nargs='*', default=None,
+        required=False, help='Set the source flavour ratios'
+    )
+    parser.add_argument(
+        '--x-segments', type=int, default=None,
+        required=False, help='Number of segments in x'
     )
     parser.add_argument(
         '--texture', type=partial(enum_parse, c=Texture),
@@ -80,18 +92,18 @@ def parse_args(args=None):
         choices=DataType, help='select datatype'
     )
     parser.add_argument(
-        '--plot-x', type=misc_utils.parse_bool, default='True',
+        '--plot-x', type=parse_bool, default='False',
         help='Make sensitivity plot x vs limit'
     )
     parser.add_argument(
-        '--plot-table', type=misc_utils.parse_bool, default='True',
+        '--plot-table', type=parse_bool, default='False',
         help='Make sensitivity table plot'
     )
     parser.add_argument(
-        '--plot-statistic', type=misc_utils.parse_bool, default='False',
+        '--plot-statistic', type=parse_bool, default='False',
         help='Plot MultiNest evidence or LLH value'
     )
-    llh_utils.likelihood_argparse(parser)
+    llh_utils.llh_argparse(parser)
     if args is None: return parser.parse_args()
     else: return parser.parse_args(args.split())
 
@@ -99,7 +111,7 @@ def parse_args(args=None):
 def main():
     args = parse_args()
     process_args(args)
-    misc_utils.print_args(args)
+    print_args(args)
 
     dims = len(args.dimensions)
     srcs = len(args.source_ratios)
@@ -116,10 +128,11 @@ def main():
     statistic_arr = np.full((dims, srcs, texs, args.segments, 2), np.nan)
 
     print 'Loading data'
+    argsc = deepcopy(args)
     for idim, dim in enumerate(args.dimensions):
-        argsc = deepcopy(args)
         argsc.dimension = dim
 
+        datadir = args.datadir + '/DIM{0}'.format(dim)
         # Array of scales to scan over.
         boundaries = fr_utils.SCALE_BOUNDARIES[argsc.dimension]
         eval_scales = np.linspace(
@@ -130,12 +143,11 @@ def main():
         for isrc, src in enumerate(args.source_ratios):
             argsc.source_ratio = src
             for itex, texture in enumerate(textures):
-                argc.texture = texture
+                argsc.texture = texture
 
-                base_infile = args.datadir + '/{0}/{1}/{2}/fr_stat'.format(
-                    *map(misc_utils.parse_enum, [args.stat_method, args.data]),
-                    prefix
-                ) + misc_utils.gen_identifier(argsc)
+                base_infile = datadir + '/{0}/{1}/'.format(
+                    *map(parse_enum, [args.stat_method, args.data])
+                ) + r'{0}/fr_stat'.format(prefix) + gen_identifier(argsc)
 
                 print '== {0:<25} = {1}'.format('base_infile', base_infile)
 
@@ -147,12 +159,13 @@ def main():
                         try:
                             print 'Loading from {0}'.format(infile+'.npy')
                             statistic_arr[idim][isrc][itex][idx_sc] = \
-                                np.load(infile+'.npy')[:,0]
+                                np.load(infile+'.npy')[0]
                         except:
                             print 'Unable to load file {0}'.format(
                                 infile+'.npy'
                             )
-                            continue
+                            raise
+                            # continue
                 else:
                     print 'Loading from {0}'.format(base_infile+'.npy')
                     try:
@@ -165,7 +178,6 @@ def main():
                         continue
 
     data = ma.masked_invalid(statistic_arr)
-    argsc = deepcopy(args)
 
     print 'data', data
     if args.plot_statistic:
@@ -184,12 +196,11 @@ def main():
             for isrc, src in enumerate(args.source_ratios):
                 argsc.source_ratio = src
                 for itex, texture in enumerate(textures):
-                    argc.texture = texture
+                    argsc.texture = texture
 
-                    base_infile = args.datadir + '/{0}/{1}/{2}/fr_stat'.format(
-                        *map(misc_utils.parse_enum, [args.stat_method, args.data]),
-                        prefix
-                    ) + misc_utils.gen_identifier(argsc)
+                    base_infile = args.datadir + '/DIM{0}/{1}/{2}/'.format(
+                        dim, *map(parse_enum, [args.stat_method, args.data])
+                    ) + r'{0}/fr_stat'.format(prefix) + gen_identifier(argsc)
                     basename = os.path.dirname(base_infile)
                     outfile = basename[:5]+basename[5:].replace('data', 'plots')
                     outfile += '/' + os.path.basename(base_infile)
@@ -205,10 +216,11 @@ def main():
                     )
 
     basename = args.datadir[:5]+args.datadir[5:].replace('data', 'plots')
-    baseoutfile = basename + '/{0}/{1}/{2}/'.format(
-        *map(misc_utils.parse_enum, [args.stat_method, args.data]), prefix
-    )
+    baseoutfile = basename + '/{0}/{1}/'.format(
+        *map(parse_enum, [args.stat_method, args.data])
+    ) + r'{0}/'.format(prefix)
 
+    argsc = deepcopy(args)
     if args.plot_x:
         for idim, dim in enumerate(args.dimensions):
             argsc.dimension = dim

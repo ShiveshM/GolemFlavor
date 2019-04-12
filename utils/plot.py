@@ -36,10 +36,10 @@ from ternary.heatmapping import polygon_generator
 
 import shapely.geometry as geometry
 
-from utils import misc as misc_utils
-from utils.enums import DataType, EnergyDependance, str_enum
+from utils.enums import DataType, str_enum
 from utils.enums import Likelihood, ParamTag, StatCateg, Texture
-from utils.fr import angles_to_u, angles_to_fr
+from utils.misc import get_units, make_dir, solve_ratio
+from utils.fr import angles_to_u, angles_to_fr, SCALE_BOUNDARIES
 
 
 BAYES_K = 1.   # Substantial degree of belief.
@@ -115,7 +115,7 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None):
     print 'raw.shape', raw.shape
     print 'raw', raw
 
-    misc_utils.make_dir(outfile)
+    make_dir(outfile), make_dir
     if fig_text is None:
         fig_text = gen_figtext(args)
 
@@ -277,7 +277,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     )
     at.patch.set_boxstyle("round,pad=0.1,rounding_size=0.5")
     ax.add_artist(at)
-    misc_utils.make_dir(outfile)
+    make_dir(outfile)
     for of in outformat:
         print 'Saving as {0}'.format(outfile+'.'+of)
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
@@ -322,12 +322,12 @@ def plot_sens_full(data, outfile, outformat, args):
                 al = scales[reduced_ev > 2.71] # 90% CL for 1 DOF via Wilks
             if len(al) == 0:
                 print 'No points for DIM {0} FRS {1} NULL {2}!'.format(
-                    dim, misc_utils.solve_ratio(src), null
+                    dim, solve_ratio(src), null
                 )
                 print 'Reduced EV {0}'.format(reduced_ev)
                 continue
             lim = al[0]
-            label = '[{0}, {1}, {2}]'.format(*misc_utils.solve_ratio(src))
+            label = '[{0}, {1}, {2}]'.format(*solve_ratio(src))
             if lim < yranges[0]: yranges[0] = lim
             if lim > yranges[1]: yranges[1] = lim+4
             line = plt.Line2D(
@@ -352,7 +352,7 @@ def plot_sens_full(data, outfile, outformat, args):
     for xmaj in ax.xaxis.get_majorticklocs():
         ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.4, linewidth=1)
 
-    misc_utils.make_dir(outfile)
+    make_dir(outfile)
     for of in outformat:
         print 'Saving plot as {0}'.format(outfile+'.'+of)
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
@@ -496,7 +496,7 @@ def plot_table_sens(data, outfile, outformat, args):
 
                 if isrc not in legend_log:
                     legend_log.append(isrc)
-                    label = '{0} at source'.format(misc_utils.solve_ratio(src))
+                    label = '{0} at source'.format(solve_ratio(src))
                     legend_elements.append(
                         Patch(facecolor=rgb_co[isrc]+[0.3],
                               edgecolor=rgb_co[isrc]+[1], label=label)
@@ -544,7 +544,7 @@ def plot_table_sens(data, outfile, outformat, args):
         fig.text(0.278, ybound, r'\bf IceCube Simulation', color='red', fontsize=13,
                  ha='center', va='center', zorder=11)
 
-    misc_utils.make_dir(outfile)
+    make_dir(outfile)
     for of in outformat:
         print 'Saving plot as {0}'.format(outfile+'.'+of)
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
@@ -616,7 +616,7 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
                 arr_len = 1.5
                 lim = al[0]
                 print 'limit = {0}'.format(lim)
-                label = '{0} : {1} : {2}'.format(*misc_utils.solve_ratio(src))
+                label = '{0} : {1} : {2}'.format(*solve_ratio(src))
                 # if lim < yranges[0]: yranges[0] = lim-arr_len
                 # if lim > yranges[1]: yranges[1] = lim+arr_len+2
                 # if lim > yranges[1]: yranges[1] = lim
@@ -680,7 +680,7 @@ def plot_sens_fixed_angle(data, outfile, outformat, args):
             ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.2, linewidth=1)
 
         out = outfile + '_DIM{0}'.format(dim)
-        misc_utils.make_dir(out)
+        make_dir(out)
         for of in outformat:
             print 'Saving plot as {0}'.format(out+'.'+of)
             fig.savefig(out+'.'+of, bbox_inches='tight', dpi=150)
@@ -824,7 +824,7 @@ def plot_sens_corr_angle(data, outfile, outformat, args):
                 at.patch.set_boxstyle("round,pad=0.1,rounding_size=0.5")
                 ax.add_artist(at)
                 out = outfile + '_DIM{0}_SRC{1}_AN{2}'.format(dim, isrc, ian)
-                misc_utils.make_dir(out)
+                make_dir(out)
                 for of in outformat:
                     print 'Saving plot as {0}'.format(out+'.'+of)
                     fig.savefig(out+'.'+of, bbox_inches='tight', dpi=150)
@@ -934,7 +934,7 @@ def triangle_project(frs, llh, outfile, outformat, args, llh_paramset, fig_text)
     cb.set_label(r'$LLH$', fontsize=fontsize+5, labelpad=20,
                  horizontalalignment='center')
 
-    misc_utils.make_dir(outfile)
+    make_dir(outfile)
     for of in outformat:
         print 'Saving plot as {0}'.format(outfile+'.'+of)
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
@@ -1088,7 +1088,7 @@ def plot_source_ternary(data, outfile, outformat, args):
             print 'vertices', heatmap(interp_dict, nsrcs)
             print
             tax.heatmap(interp_dict, scale=nsrcs, vmin=-60, vmax=-30)
-            misc_utils.make_dir(outfile)
+            make_dir(outfile)
             for of in outformat:
                 print 'Saving plot as {0}'.format(outfile+'_SCEN{0}.'.format(isce)+of)
                 fig.savefig(outfile+'_SCEN{0}.'.format(isce)+of, bbox_inches='tight', dpi=150)
@@ -1102,7 +1102,7 @@ def plot_x(data, outfile, outformat, args):
     print 'Making X sensitivity plot'
     dims = args.dimensions
     srcs = args.source_ratios
-    x_arr = [i[0] for i in srcs]
+    x_arr = np.array([i[0] for i in srcs])
     if args.texture is Texture.NONE:
         textures = [Texture.OEU, Texture.OET, Texture.OUT]
     else:
@@ -1122,15 +1122,18 @@ def plot_x(data, outfile, outformat, args):
 
     for idim, dim in enumerate(dims):
         print '|||| DIM = {0}, {1}'.format(idim, dim)
+        boundaries = SCALE_BOUNDARIES[dim]
+
         fig = plt.figure(figsize=(4, 4))
         ax  = fig.add_subplot(111)
         ax.tick_params(axis='x', labelsize=12)
         ax.tick_params(axis='y', labelsize=12)
         ax.set_xlabel(r'$x$', fontsize=18)
-        ax.set_ylabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda_{d='+str(dim)+r'}^{-1}\:/\:'+get_units(args.dimension)+r')\: ]$', fontsize=18)
+        ax.set_ylabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda_{d='+str(dim)+r'}^{-1}\:'+get_units(args.dimension)+r')\: ]$', fontsize=12)
         ax.set_xlim(0, 1)
-        for itex, tex in enumerate(texture):
-            print '|||| TEX = {0}'.format(texture)
+        ax.set_ylim(boundaries)
+        for itex, tex in enumerate(textures):
+            print '|||| TEX = {0}'.format(tex)
             lims = np.full(len(srcs), np.nan)
             for isrc, src in enumerate(srcs):
                 x = src[0]
@@ -1167,14 +1170,18 @@ def plot_x(data, outfile, outformat, args):
 
                 lims[isrc] = lim
             lims = ma.masked_invalid(lims)
-            print 'lims', lims
-            ax.scatter(x_arr, lims)
+            size = np.sum(~lims.mask)
+            if size == 0: continue
+            tck, u = splprep([x_arr[~lims.mask], lims[~lims.mask]], s=0, k=1)
+            x, y = splev(np.linspace(0, 1, 100), tck)
+            ax.scatter(x_arr, lims, marker='o', s=10, alpha=1, zorder=5)
+            ax.fill_between(x, y, 0, label=texture_label(tex))
         for ymaj in ax.yaxis.get_majorticklocs():
             ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.3, linewidth=1)
-        for xmaj in be:
+        for xmaj in ax.xaxis.get_majorticklocs():
             ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.3, linewidth=1)
         ax.legend()
-        misc_utils.make_dir(outfile)
+        make_dir(outfile)
         for of in outformat:
             print 'Saving plot as {0}'.format(outfile+'_DIM{0}.'.format(dim)+of)
             fig.savefig(outfile+'_DIM{0}.'.format(dim)+of, bbox_inches='tight', dpi=150)

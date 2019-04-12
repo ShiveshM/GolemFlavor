@@ -68,6 +68,17 @@ def gen_figtext(args):
     return t
 
 
+def texture_label(x):
+    if x == Texture.OEU:
+        return r'$\mathcal{O}_{e\mu}$'
+    elif x == Texture.OET:
+        return r'$\mathcal{O}_{e\tau}$'
+    elif x == Texture.OUT:
+        return r'$\mathcal{O}_{\mu\tau}$'
+    else:
+        raise AssertionError
+
+
 def plot_Tchain(Tchain, axes_labels, ranges):
     """Plot the Tchain using getdist."""
     Tsample = mcsamples.MCSamples(
@@ -350,7 +361,20 @@ def plot_sens_full(data, outfile, outformat, args):
 def plot_table_sens(data, outfile, outformat, args):
     print 'Making TABLE sensitivity plot'
     argsc = deepcopy(args)
-    dims = len(data)
+
+    dims = args.dimensions
+    srcs = args.source_ratios
+    if args.texture is Texture.NONE:
+        textures = [Texture.OEU, Texture.OET, Texture.OUT]
+    else:
+        textures = [args.texture]
+
+    if len(srcs) > 3:
+        raise NotImplementedError
+
+    xlims = (-60, -20)
+    ylims = (0.5, 1.5)
+
     LV_atmo_90pc_limits = {
         3: (2E-24, 1E-1),
         4: (2.7E-28, 3.16E-25),
@@ -359,6 +383,7 @@ def plot_table_sens(data, outfile, outformat, args):
         7: (3.6E-41, 1.77E-32),
         8: (1.4E-45, 1.00E-34)
     }
+
     PS = 8.203e-20 # GeV^{-1}
     planck_scale = {
         5: PS,
@@ -367,33 +392,8 @@ def plot_table_sens(data, outfile, outformat, args):
         8: PS**4
     }
 
-    best_limits = {
-        3: ('CMB polarization', 1E-43, 'brown'),
-        4: ('GRB vacuum birefringence', 1E-38, 'lightgreen'),
-        5: ('GRB vacuum birefringence', 1E-34, 'lightgreen'),
-        6: ('UHE cosmic ray', 1E-42, 'violet'),
-        7: ('GRB vacuum birefringence', 1E-28, 'lightgreen'),
-        8: ('gravitational Cherenkov radiation', 1E-46, 'lightblue')
-    }
-
-    show_data = True
-
-    en = np.log10([1E4, 1E7])
-    bote = {
-        3: (-21-(en[0]*1), -21-(en[1]+en[1]*1)),
-        4: (-21-(en[0]*2), -21-(en[1]+en[1]*2)),
-        5: (-21-(en[0]*3), -21-(en[1]+en[1]*3)),
-        6: (-21-(en[0]*4), -21-(en[1]+en[1]*4)),
-        7: (-21-(en[0]*5), -21-(en[1]+en[1]*5)),
-        8: (-21-(en[0]*6), -21-(en[1]+en[1]*6))
-    }
-
-    angles = 3
-
     colour = {0:'red', 1:'blue', 2:'green'}
     rgb_co = {0:[1,0,0], 1:[0,0,1], 2:[0.0, 0.5019607843137255, 0.0]}
-    yticks = [r'$\mathcal{O}_{e\mu}$', r'$\mathcal{O}_{e\tau}$', r'$\mathcal{O}_{\mu\tau}$']
-    xlims = (-60, -20)
 
     fig = plt.figure(figsize=(8, 6))
     gs = gridspec.GridSpec(dims, 1)
@@ -403,80 +403,46 @@ def plot_table_sens(data, outfile, outformat, args):
     legend_log = []
     legend_elements = []
 
-    for idim in xrange(len(data)):
-        dim = args.dimensions[idim]
+    for idim, dim in enumerate(dimensions):
         print '== dim', dim
         argsc.dimension = dim
-        if angles == 3:
-            gs0 = gridspec.GridSpecFromSubplotSpec(
-                len(yticks), 1, subplot_spec=gs[idim], hspace=0
-            )
-        elif angles == 2:
-            gs0 = gridspec.GridSpecFromSubplotSpec(
-                len(yticks)-1, 1, subplot_spec=gs[idim], hspace=0
-            )
+        gs0 = gridspec.GridSpecFromSubplotSpec(
+            len(textures), 1, subplot_spec=gs[idim], hspace=0
+        )
 
-        for ian in xrange(len(yticks)):
-            if angles == 2 and ian == 0: continue
-            print '=== an', ian
-            if angles == 3:
-                ax = fig.add_subplot(gs0[ian])
-            elif angles == 2:
-                ax = fig.add_subplot(gs0[ian-1])
-            if first_ax is None: first_ax = ax
+        for itex, tex in enumerate(textures):
+            argcs.texture = tex
+            ylabel = texture_label(texture)
+            # if angles == 2 and ian == 0: continue
+            ax = fig.add_subplot(gs0[itex])
+
+            if first_ax is None:
+                first_ax = ax
+
             ax.set_xlim(xlims)
-            ylim = (0.5, 1.5)
-            ax.set_ylim(ylim)
+            ax.set_ylim(ylims)
             ax.set_yticks([1.])
-            ax.set_yticklabels([yticks[ian]], fontsize=13)
+            ax.set_yticklabels([ylabel], fontsize=13)
             ax.yaxis.tick_right()
             for xmaj in ax.xaxis.get_majorticklocs():
                 ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.2, linewidth=1)
             ax.get_xaxis().set_visible(False)
-            linestyle = (5, (10, 10))
-            if angles == 3:
-                if ian == 1:
-                    ax.spines['bottom'].set_alpha(0.6)
-                elif ian == 2:
-                    ax.text(
-                        -0.04, ylim[0], '$d = {0}$'.format(dim), fontsize=16,
-                        rotation='90', verticalalignment='center',
-                        transform=ax.transAxes
-                    )
-                    dim_label_flag = False
-                    ax.spines['top'].set_alpha(0.6)
-                    ax.spines['bottom'].set_alpha(0.6)
-                elif ian == 2:
-                    ax.spines['top'].set_alpha(0.6)
-            if angles == 2:
-                if ian == 0:
-                    ax.spines['bottom'].set_alpha(0.6)
-                elif ian == 1:
-                    ax.text(
-                        -0.04, ylim[0]+0.3, r'$d = {0}$'.format(dim), fontsize=16,
-                        rotation='90', verticalalignment='top',
-                        transform=ax.transAxes
-                    )
-                    dim_label_flag = False
-                    ax.spines['top'].set_alpha(0.6)
+            # TODO(shivesh): check this
+            if itex == len(tex) - 2:
+                ax.spines['bottom'].set_alpha(0.6)
+            elif itex == len(tex) - 1:
+                ax.text(
+                    -0.04, ylim[0], '$d = {0}$'.format(dim), fontsize=16,
+                    rotation='90', verticalalignment='center',
+                    transform=ax.transAxes
+                )
+                dim_label_flag = False
+                ax.spines['top'].set_alpha(0.6)
+                ax.spines['bottom'].set_alpha(0.6)
 
-            for isrc in xrange(len(data[idim])):
-                src = args.source_ratios[isrc]
+            for isrc, src in enumerate(srcs):
                 print '== src', src
                 argsc.source_ratio = src
-
-                if show_data:
-                    alpha = 0.03
-                    col = 'black'
-                else:
-                    alpha = 0.07
-                    col = 'blue'
-                # ax.add_patch(patches.Rectangle(
-                #     (bote[dim][1], ylim[0]), bote[dim][0]-bote[dim][1], np.diff(ylim),
-                #     fill=True, facecolor=col, alpha=alpha, linewidth=0
-                # ))
-                bc_limit = best_limits[dim]
-                # ax.axvline(x=np.log10(bc_limit[1]), color=bc_limit[2], alpha=0.7, linewidth=1.5)
 
                 if dim in planck_scale:
                     ps = np.log10(planck_scale[dim])
@@ -495,7 +461,7 @@ def plot_table_sens(data, outfile, outformat, args):
                     else:
                         ax.axvline(x=ps, color='purple', alpha=1., linewidth=1.5)
 
-                scales, statistic = ma.compress_rows(data[idim][isrc][ian]).T
+                scales, statistic = ma.compress_rows(data[idim][isrc][itex]).T
                 try:
                     tck, u = splprep([scales, statistic], s=0)
                 except:
@@ -522,45 +488,32 @@ def plot_table_sens(data, outfile, outformat, args):
                 lim = al[0]
                 print 'limit = {0}'.format(lim)
 
-                if show_data:
-                    ax.axvline(x=lim, color=colour[isrc], alpha=1., linewidth=1.5)
-                    ax.add_patch(patches.Rectangle(
-                        (lim, ylim[0]), 100, np.diff(ylim), fill=True, facecolor=colour[isrc],
-                        alpha=0.3, linewidth=0
-                    ))
+                ax.axvline(x=lim, color=colour[isrc], alpha=1., linewidth=1.5)
+                ax.add_patch(patches.Rectangle(
+                    (lim, ylim[0]), 100, np.diff(ylim), fill=True, facecolor=colour[isrc],
+                    alpha=0.3, linewidth=0
+                ))
 
-                    if isrc not in legend_log:
-                        legend_log.append(isrc)
-                        label = '{0} : {1} : {2} at source'.format(*misc_utils.solve_ratio(src))
-                        legend_elements.append(
-                            Patch(facecolor=rgb_co[isrc]+[0.3],
-                                  edgecolor=rgb_co[isrc]+[1], label=label)
-                        )
+                if isrc not in legend_log:
+                    legend_log.append(isrc)
+                    label = '{0} at source'.format(misc_utils.solve_ratio(src))
+                    legend_elements.append(
+                        Patch(facecolor=rgb_co[isrc]+[0.3],
+                              edgecolor=rgb_co[isrc]+[1], label=label)
+                    )
 
-            if ian == 2:
+            if itex == 2:
                 LV_lim = np.log10(LV_atmo_90pc_limits[dim])
                 ax.add_patch(patches.Rectangle(
                     (LV_lim[1], ylim[0]), LV_lim[0]-LV_lim[1], np.diff(ylim),
                     fill=False, hatch='\\\\'
                 ))
 
-    # fig.text(
-    #     0.06, 0.5, r'Dimension $d$ of SME coefficient', fontsize=16, rotation='90',
-    #     verticalalignment='center'
-    # )
-    # fig.text(
-    #     0.96, 0.5, r'New Physics Maximal Mixing Scenario', fontsize=16,
-    #     rotation='270', verticalalignment='center'
-    # )
-
     ax.get_xaxis().set_visible(True)
     ax.set_xlabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda^{-1}\:/\:{\rm GeV}^{-d+4})\: ]$',
                  fontsize=19)
     ax.tick_params(axis='x', labelsize=16)
 
-    # legend_elements.append(
-    #     Patch(facecolor=col, alpha=alpha+0.1, edgecolor='k', label='maximum reach')
-    # )
     purple = [0.5019607843137255, 0.0, 0.5019607843137255]
     legend_elements.append(
         Patch(facecolor=purple+[0.7], edgecolor=purple+[1], label='Planck Scale Expectation')
@@ -1143,58 +1096,46 @@ def plot_source_ternary(data, outfile, outformat, args):
             assert 0
 
 
-def texture_label(x):
-    if x == Texture.OEU:
-        return r'$\mathcal{O}_{e\mu}$'
-    elif x == Texture.OET:
-        return r'$\mathcal{O}_{e\tau}$'
-    elif x == Texture.OUT:
-        return r'$\mathcal{O}_{\mu\tau}$'
-    else:
-        raise AssertionError
-
-
 def plot_x(data, outfile, outformat, args):
-    """Ternary plot in the source flavour space for each operator texture."""
+    """Limit plot as a function of the source flavour ratio for each operator
+    texture."""
     print 'Making X sensitivity plot'
-    sources = args.source_ratios
-    x_1D = []
-    i_src_1D = []
-    for i, s in enumerate(sources):
-        if s[2] != 0: continue
-        x_1D.append(s[0])
-        i_src_1D.append(i)
-    i_src_1D = list(reversed(i_src_1D))
-    x_1D = list(reversed(x_1D))
-    print 'x_1D', x_1D
-    def get_edges_from_cen(bincen):
-        hwidth = 0.5*(bincen[1] - bincen[0])
-        return np.append([bincen[0]-hwidth], bincen[:]+hwidth)
-    be = get_edges_from_cen(x_1D)
+    dims = args.dimensions
+    srcs = args.source_ratios
+    x_arr = [i[0] for i in srcs]
+    if args.texture is Texture.NONE:
+        textures = [Texture.OEU, Texture.OET, Texture.OUT]
+    else:
+        textures = [args.texture]
 
-    r_data = np.full((data.shape[0], data.shape[2], len(i_src_1D), data.shape[3], data.shape[4]), np.nan)
+    # Rearrange data structure
+    r_data = np.full((
+        data.shape[0], data.shape[2], data.shape[1], data.shape[3], data.shape[4]
+    ), np.nan)
+
     for idim in xrange(data.shape[0]):
-        for i1D, isrc in enumerate(i_src_1D):
-            for isce in xrange(data.shape[2]):
-                r_data[idim][isce][i1D] = data[idim][isrc][isce]
+        for isrc in xrange(data.shape[1]):
+            for itex in xrange(data.shape[2]):
+                r_data[idim][itex][isrc] = data[idim][isrc][itex]
     r_data = ma.masked_invalid(r_data)
     print r_data.shape, 'r_data.shape'
 
-    for idim, dim in enumerate(args.dimensions):
+    for idim, dim in enumerate(dims):
         print '|||| DIM = {0}, {1}'.format(idim, dim)
         fig = plt.figure(figsize=(4, 4))
         ax  = fig.add_subplot(111)
         ax.tick_params(axis='x', labelsize=12)
         ax.tick_params(axis='y', labelsize=12)
         ax.set_xlabel(r'$x$', fontsize=18)
-        ax.set_ylabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda_{d=6}^{-1}\:/\:{\rm GeV}^{-2})\: ]$', fontsize=18)
+        ax.set_ylabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda_{d='+str(dim)+r'}^{-1}\:/\:'+get_units(args.dimension)+r')\: ]$', fontsize=18)
         ax.set_xlim(0, 1)
-        for isce in xrange(r_data.shape[1]):
-            print '|||| SCEN = {0}'.format(str_enum(MixingScenario(isce+1)))
-            H = np.full(len(x_1D), np.nan)
-            for ix, x in enumerate(x_1D):
+        for itex, tex in enumerate(texture):
+            print '|||| TEX = {0}'.format(texture)
+            lims = np.full(len(srcs), np.nan)
+            for isrc, src in enumerate(srcs):
+                x = src[0]
                 print '|||| X = {0}'.format(x)
-                scales, statistic = ma.compress_rows(r_data[idim][isce][ix]).T
+                scales, statistic = ma.compress_rows(r_data[idim][itex][isrc]).T
                 print 'scales', scales
                 print 'statistic', statistic
 
@@ -1202,12 +1143,9 @@ def plot_x(data, outfile, outformat, args):
                     tck, u = splprep([scales, statistic], s=0)
                 except:
                     continue
-                # sc, st = splev(np.linspace(0, 1, 10000), tck)
-                sc, st = splev(np.linspace(0, 1, 20), tck)
+                sc, st = splev(np.linspace(0, 1, 10000), tck)
                 scales_rm = sc[sc >= scales[1]]
                 statistic_rm = st[sc >= scales[1]]
-                # scales_rm = sc
-                # statistic_rm = st
 
                 min_idx = np.argmin(scales)
                 null = statistic[min_idx]
@@ -1227,14 +1165,10 @@ def plot_x(data, outfile, outformat, args):
                 lim = al[0]
                 print 'limit = {0}'.format(lim)
 
-                H[ix] = lim
-            H = ma.masked_invalid(H)
-            H_0 = np.concatenate([[H[0]], H])
-            ax.step(be, H_0, linewidth=2,
-                    label=texture_label(MixingScenario(isce+1)), linestyle='-',
-                    drawstyle='steps-pre')
-            print 'H', H
-            print
+                lims[isrc] = lim
+            lims = ma.masked_invalid(lims)
+            print 'lims', lims
+            ax.scatter(x_arr, lims)
         for ymaj in ax.yaxis.get_majorticklocs():
             ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.3, linewidth=1)
         for xmaj in be:

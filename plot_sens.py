@@ -69,7 +69,7 @@ def parse_args(args=None):
     )
     parser.add_argument(
         '--source-ratios', type=int, nargs='*', default=[1, 2, 0],
-        help='Set the source flavour ratios for the case when you want to fix it'
+        help='Set the source flavour ratios'
     )
     parser.add_argument(
         '--texture', type=partial(enum_parse, c=Texture),
@@ -165,13 +165,13 @@ def main():
                         continue
 
     data = ma.masked_invalid(statistic_arr)
+    argsc = deepcopy(args)
 
     print 'data', data
     if args.plot_statistic:
         print 'Plotting statistic'
 
         for idim, dim in enumerate(args.dimensions):
-            argsc = deepcopy(args)
             argsc.dimension = dim
 
             # Array of scales to scan over.
@@ -211,7 +211,6 @@ def main():
 
     if args.plot_x:
         for idim, dim in enumerate(args.dimensions):
-            argsc = deepcopy(args)
             argsc.dimension = dim
             plot_utils.plot_x(
                 data      = data,

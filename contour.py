@@ -24,7 +24,7 @@ from utils import mcmc as mcmc_utils
 from utils import plot as plot_utils
 from utils.enums import str_enum
 from utils.enums import DataType, Likelihood, MCMCSeedType, ParamTag, PriorsCateg
-from utils.param import Param, ParamSet, get_paramsets
+from utils.param import Param, ParamSet
 
 from pymultinest import Analyzer, run
 
@@ -35,21 +35,66 @@ def define_nuisance():
     tag = ParamTag.NUISANCE
     lg_prior = PriorsCateg.LIMITEDGAUSS
     nuisance.extend([
-        # Param(name='convNorm',                  value=1.,   seed=[0.5,  2. ],  ranges=[0.1,   10.],   std=0.4, prior=lg_prior, tag=tag),
-        # Param(name='promptNorm',                value=0.,   seed=[0.,   6. ],  ranges=[0.,    20.],   std=2.4, prior=lg_prior, tag=tag),
-        Param(name='convNorm',                  value=1.,   seed=[0.5,  2. ],  ranges=[0.1,   10.],   std=0.4, tag=tag),
-        Param(name='promptNorm',                value=0.,   seed=[0.,   6. ],  ranges=[0.,    20.],   std=2.4, tag=tag),
+        Param(name='convNorm',                  value=1.,   seed=[0.5,  2. ],  ranges=[0.1,   10.],   std=0.4, prior=lg_prior, tag=tag),
+        Param(name='promptNorm',                value=0.,   seed=[0.,   6. ],  ranges=[0.,    20.],   std=2.4, prior=lg_prior, tag=tag),
+        # Param(name='convNorm',                  value=1.,   seed=[0.5,  2. ],  ranges=[0.1,   10.],   std=0.4, tag=tag),
+        # Param(name='promptNorm',                value=0.,   seed=[0.,   6. ],  ranges=[0.,    20.],   std=2.4, tag=tag),
         Param(name='muonNorm',                  value=1.,   seed=[0.1,  2. ],  ranges=[0.,    10.],   std=0.1, tag=tag),
         Param(name='astroNorm',                 value=6.9,  seed=[0.,   5. ],  ranges=[0.,    20.],   std=1.5, tag=tag),
         Param(name='astroDeltaGamma',           value=2.5,  seed=[2.4,  3. ],  ranges=[-5.,   5. ],   std=0.1, tag=tag),
-        Param(name='CRDeltaGamma',              value=0.,   seed=[-0.1, 0.1 ], ranges=[-1.,   1. ],   std=0.1, tag=tag),
-        Param(name='NeutrinoAntineutrinoRatio', value=1.,   seed=[0.8,  1.2 ], ranges=[0.,    2. ],   std=0.1, tag=tag),
-        Param(name='anisotropyScale',           value=1.,   seed=[0.8,  1.2 ], ranges=[0.,    2. ],   std=0.1, tag=tag),
-        Param(name='domEfficiency',             value=0.99, seed=[0.8,  1.2 ], ranges=[0.8,   1.2 ],  std=0.1, tag=tag),
-        Param(name='holeiceForward',            value=0.,   seed=[-0.8, 0.8 ], ranges=[-4.42, 1.58 ], std=0.1, tag=tag),
-        Param(name='piKRatio',                  value=1.0,  seed=[0.8,  1.2 ], ranges=[0.,    2. ],   std=0.1, tag=tag)
+        # Param(name='CRDeltaGamma',              value=0.,   seed=[-0.1, 0.1 ], ranges=[-1.,   1. ],   std=0.1, tag=tag),
+        # Param(name='NeutrinoAntineutrinoRatio', value=1.,   seed=[0.8,  1.2 ], ranges=[0.,    2. ],   std=0.1, tag=tag),
+        # Param(name='anisotropyScale',           value=1.,   seed=[0.8,  1.2 ], ranges=[0.,    2. ],   std=0.1, tag=tag),
+        # Param(name='domEfficiency',             value=0.99, seed=[0.8,  1.2 ], ranges=[0.8,   1.2 ],  std=0.1, tag=tag),
+        # Param(name='holeiceForward',            value=0.,   seed=[-0.8, 0.8 ], ranges=[-4.42, 1.58 ], std=0.1, tag=tag),
+        # Param(name='piKRatio',                  value=1.0,  seed=[0.8,  1.2 ], ranges=[0.,    2. ],   std=0.1, tag=tag)
     ])
     return ParamSet(nuisance)
+
+
+def get_paramsets(args, nuisance_paramset):
+    """Make the paramsets for generating the Asmimov MC sample and also running
+    the MCMC.
+    """
+    asimov_paramset = []
+    llh_paramset = []
+
+    gf_nuisance = [x for x in nuisance_paramset.from_tag(ParamTag.NUISANCE)]
+
+    llh_paramset.extend(
+        [x for x in nuisance_paramset.from_tag(ParamTag.SM_ANGLES)]
+    )
+    llh_paramset.extend(gf_nuisance)
+
+    for parm in llh_paramset:
+        parm.value = args.__getattribute__(parm.name)
+
+    boundaries = fr_utils.SCALE_BOUNDARIES[args.dimension]
+    tag = ParamTag.SCALE
+    llh_paramset.append(
+        Param(
+            name='logLam', value=np.mean(boundaries), ranges=boundaries, std=3,
+            tex=r'{\rm log}_{10}\left (\Lambda^{-1}' + \
+                misc_utils.get_units(args.dimension)+r'\right )',
+            tag=tag
+        )
+    )
+    llh_paramset = ParamSet(llh_paramset)
+
+    tag = ParamTag.BESTFIT
+    if args.data is not DataType.REAL:
+        flavour_angles = fr_utils.fr_to_angles(args.injected_ratio)
+    else:
+        flavour_angles = fr_utils.fr_to_angles([1, 1, 1])
+
+    asimov_paramset.extend(gf_nuisance)
+    asimov_paramset.extend([
+        Param(name='astroFlavorAngle1', value=flavour_angles[0], ranges=[ 0., 1.], std=0.2, tag=tag),
+        Param(name='astroFlavorAngle2', value=flavour_angles[1], ranges=[-1., 1.], std=0.2, tag=tag),
+    ])
+    asimov_paramset = ParamSet(asimov_paramset)
+
+    return asimov_paramset, llh_paramset
 
 
 def nuisance_argparse(parser):
@@ -62,14 +107,16 @@ def nuisance_argparse(parser):
 
 def process_args(args):
     """Process the input args."""
-    if args.likelihood is not Likelihood.GOLEMFIT \
-       and args.likelihood is not Likelihood.GF_FREQ:
-        raise AssertionError(
-            'Likelihood method {0} not supported for this '
-            'script!\nChoose either GOLEMFIT or GF_FREQ'.format(
-                str_enum(args.likelihood)
-            )
-        )
+    if args.data is not DataType.REAL:
+        args.injected_ratio = fr_utils.normalise_fr(args.injected_ratio)
+
+    if args.stat_method is StatCateg.BAYESIAN:
+        args.likelihood = Likelihood.GOLEMFIT
+    elif args.stat_method is StatCateg.FREQUENTIST:
+        args.likelihood = Likelihood.GF_FREQ
+
+    args.mcmc_threads = thread_factors(args.threads)[0]
+    args.threads = thread_factors(args.threads)[1]
 
 
 def parse_args(args=None):
@@ -83,7 +130,7 @@ def parse_args(args=None):
         help='Set the central value for the injected flavour ratio at IceCube'
     )
     parser.add_argument(
-        '--seed', type=misc_utils.seed_parse, default='25',
+        '--seed', type=misc_utils.seed_parse, default='26',
         help='Set the random seed value'
     )
     parser.add_argument(
@@ -94,13 +141,10 @@ def parse_args(args=None):
         '--outfile', type=str, default='./untitled',
         help='Path to output results'
     )
-    try:
-        gf_utils.gf_argparse(parser)
-    except: pass
-    llh_utils.likelihood_argparse(parser)
+    gf_utils.gf_argparse(parser)
+    llh_utils.llh_argparse(parser)
     mcmc_utils.mcmc_argparse(parser)
     nuisance_argparse(parser)
-    misc_utils.remove_option(parser, 'sigma_ratio')
     if args is None: return parser.parse_args()
     else: return parser.parse_args(args.split())
 
@@ -127,7 +171,7 @@ def gen_figtext(args, asimov_paramset):
     return f
 
 
-def triangle_llh(theta, args, hypo_paramset, fitter):
+def triangle_llh(theta, args, hypo_paramset):
     """Log likelihood function for a given theta."""
     if len(theta) != len(hypo_paramset):
         raise AssertionError(
@@ -138,14 +182,14 @@ def triangle_llh(theta, args, hypo_paramset, fitter):
         param.value = theta[idx]
 
     if args.likelihood is Likelihood.GOLEMFIT:
-        llh = gf_utils.get_llh(fitter, hypo_paramset)
+        llh = gf_utils.get_llh(hypo_paramset)
     elif args.likelihood is Likelihood.GF_FREQ:
-        llh = gf_utils.get_llh_freq(fitter, hypo_paramset)
+        llh = gf_utils.get_llh_freq(hypo_paramset)
 
     return llh
 
 
-def ln_prob(theta, args, hypo_paramset, fitter):
+def ln_prob(theta, args, hypo_paramset):
     lp = llh_utils.lnprior(theta, paramset=hypo_paramset)
     if not np.isfinite(lp):
         return -np.inf
@@ -153,7 +197,6 @@ def ln_prob(theta, args, hypo_paramset, fitter):
         theta,
         args           = args,
         hypo_paramset  = hypo_paramset,
-        fitter         = fitter
     )
 
 
@@ -177,13 +220,12 @@ def main():
     print 'hypo_paramset', hypo_paramset
 
     if args.run_mcmc:
-        fitter = gf_utils.setup_fitter(args, asimov_paramset)
+        gf_utils.setup_fitter(args, asimov_paramset)
 
         ln_prob_eval = partial(
             ln_prob,
             hypo_paramset  = hypo_paramset,
             args           = args,
-            fitter         = fitter
         )
 
         if args.mcmc_seed_type == MCMCSeedType.UNIFORM:
@@ -203,9 +245,7 @@ def main():
             burnin   = args.burnin,
             nsteps   = args.nsteps,
             args     = args,
-            threads  = 1
-            # TODO(shivesh): broken because you cannot pickle a GolemFitPy object
-            # threads      = misc_utils.thread_factors(args.threads)[0]
+            threads  = args.mcmc_threads
         )
         mcmc_utils.save_chains(samples, outfile)
 

@@ -17,7 +17,7 @@ initialdir = /home/smandalia/condor
 Universe        = vanilla 
 Notification    = never 
 
-+AccountingGroup="quicktest.$ENV(USER)"
+# +AccountingGroup="quicktest.$ENV(USER)"
 # +AccountingGroup="sanctioned.$ENV(USER)"
 # run on both SL5 and 6
 # +WantRHEL6 = True

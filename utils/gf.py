@@ -70,7 +70,6 @@ def steering_params(args):
         params.fastmode = True
     params.simToLoad= steering_categ.name.lower()
     params.evalThreads = args.threads
-    # params.evalThreads = thread_factors(args.threads)[1]
 
     if args.likelihood is Likelihood.GOLEMFIT:
         params.frequentist = False;

@@ -10,7 +10,7 @@ getenv = True
 # environment = "X509_USER_PROXY=x509up_u14830" 
 
 request_memory = 3GB
-request_cpus = 1
+request_cpus = 2
 
 initialdir = /home/smandalia/condor
 

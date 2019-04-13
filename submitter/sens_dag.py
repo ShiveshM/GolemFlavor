@@ -10,7 +10,7 @@ import numpy as np
 # ]
 
 MASK_X = (0.3, 0.8)
-x_segments = 20
+x_segments = 50
 x_array = np.linspace(0, 1, x_segments)
 sources = []
 for x in x_array:
@@ -44,9 +44,9 @@ GLOBAL_PARAMS.update(dict(
 
 # MultiNest
 GLOBAL_PARAMS.update(dict(
-    # mn_live_points = 1000,
+    mn_live_points = 1000,
     # mn_live_points = 600,
-    mn_live_points = 200,
+    # mn_live_points = 200,
     # mn_tolerance   = 0.1,
     mn_tolerance   = 0.3,
     mn_output      = './mnrun'
@@ -54,7 +54,7 @@ GLOBAL_PARAMS.update(dict(
 
 # FR
 GLOBAL_PARAMS.update(dict(
-    threads = 1,
+    threads = 2,
     binning = '6e4 1e7 20',
     no_bsm  = 'False'
 ))

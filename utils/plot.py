@@ -1141,6 +1141,10 @@ def plot_x(data, outfile, outformat, args):
                 scales, statistic = ma.compress_rows(r_data[idim][itex][isrc]).T
                 print 'scales', scales
                 print 'statistic', statistic
+                max_st = np.max(statistic)
+                if args.stat_method is StatCateg.BAYESIAN:
+                    if (statistic[0] - max_st) > np.log(10**(BAYES_K)):
+                        raise AssertionError('Discovered LV!')
 
                 try:
                     tck, u = splprep([scales, statistic], s=0)

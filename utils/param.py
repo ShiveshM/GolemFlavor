@@ -125,14 +125,7 @@ class ParamSet(Sequence):
             return self._by_name[i]
 
     def __getattr__(self, attr):
-        try:
-            return super(ParamSet, self).__getattribute__(attr)
-        except AttributeError:
-            t, v, tb = sys.exc_info()
-            try:
-                return self[attr]
-            except KeyError:
-                raise t, v, tb
+        return super(ParamSet, self).__getattribute__(attr)
 
     def __iter__(self):
         return iter(self._params)

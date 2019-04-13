@@ -12,6 +12,7 @@ from __future__ import absolute_import, division
 
 import os
 import argparse
+from copy import deepcopy
 from functools import partial
 
 import numpy as np
@@ -23,7 +24,8 @@ from utils import misc as misc_utils
 from utils import mcmc as mcmc_utils
 from utils import plot as plot_utils
 from utils.enums import str_enum
-from utils.enums import DataType, Likelihood, MCMCSeedType, ParamTag, PriorsCateg
+from utils.enums import DataType, Likelihood, MCMCSeedType, ParamTag
+from utils.enums import PriorsCateg
 from utils.param import Param, ParamSet
 
 from pymultinest import Analyzer, run
@@ -60,33 +62,19 @@ def get_paramsets(args, nuisance_paramset):
     llh_paramset = []
 
     gf_nuisance = [x for x in nuisance_paramset.from_tag(ParamTag.NUISANCE)]
-
-    llh_paramset.extend(
-        [x for x in nuisance_paramset.from_tag(ParamTag.SM_ANGLES)]
-    )
     llh_paramset.extend(gf_nuisance)
 
     for parm in llh_paramset:
         parm.value = args.__getattribute__(parm.name)
 
-    boundaries = fr_utils.SCALE_BOUNDARIES[args.dimension]
-    tag = ParamTag.SCALE
-    llh_paramset.append(
-        Param(
-            name='logLam', value=np.mean(boundaries), ranges=boundaries, std=3,
-            tex=r'{\rm log}_{10}\left (\Lambda^{-1}' + \
-                misc_utils.get_units(args.dimension)+r'\right )',
-            tag=tag
-        )
-    )
     llh_paramset = ParamSet(llh_paramset)
 
-    tag = ParamTag.BESTFIT
     if args.data is not DataType.REAL:
         flavour_angles = fr_utils.fr_to_angles(args.injected_ratio)
     else:
         flavour_angles = fr_utils.fr_to_angles([1, 1, 1])
 
+    tag = ParamTag.BESTFIT
     asimov_paramset.extend(gf_nuisance)
     asimov_paramset.extend([
         Param(name='astroFlavorAngle1', value=flavour_angles[0], ranges=[ 0., 1.], std=0.2, tag=tag),
@@ -110,13 +98,10 @@ def process_args(args):
     if args.data is not DataType.REAL:
         args.injected_ratio = fr_utils.normalise_fr(args.injected_ratio)
 
-    if args.stat_method is StatCateg.BAYESIAN:
-        args.likelihood = Likelihood.GOLEMFIT
-    elif args.stat_method is StatCateg.FREQUENTIST:
-        args.likelihood = Likelihood.GF_FREQ
+    args.likelihood = Likelihood.GOLEMFIT
 
-    args.mcmc_threads = thread_factors(args.threads)[0]
-    args.threads = thread_factors(args.threads)[1]
+    args.mcmc_threads = misc_utils.thread_factors(args.threads)[0]
+    args.threads = misc_utils.thread_factors(args.threads)[1]
 
 
 def parse_args(args=None):
@@ -138,11 +123,10 @@ def parse_args(args=None):
         help='Set the number of threads to use (int or "max")'
     )
     parser.add_argument(
-        '--outfile', type=str, default='./untitled',
+        '--datadir', type=str, default='./untitled',
         help='Path to output results'
     )
     gf_utils.gf_argparse(parser)
-    llh_utils.llh_argparse(parser)
     mcmc_utils.mcmc_argparse(parser)
     nuisance_argparse(parser)
     if args is None: return parser.parse_args()
@@ -150,7 +134,7 @@ def parse_args(args=None):
 
 
 def gen_identifier(args):
-    f = '_{0}_{1}'.format(*map(str_enum, (args.likelihood, args.data)))
+    f = '_{0}'.format(str_enum(args.data))
     if args.data is not DataType.REAL:
         ir1, ir2, ir3 = misc_utils.solve_ratio(args.injected_ratio)
         f += '_INJ_{0:03d}_{1:03d}_{2:03d}'.format(ir1, ir2, ir3)
@@ -190,13 +174,14 @@ def triangle_llh(theta, args, hypo_paramset):
 
 
 def ln_prob(theta, args, hypo_paramset):
-    lp = llh_utils.lnprior(theta, paramset=hypo_paramset)
+    dc_hypo_paramset = deepcopy(hypo_paramset)
+    lp = llh_utils.lnprior(theta, paramset=dc_hypo_paramset)
     if not np.isfinite(lp):
         return -np.inf
     return lp + triangle_llh(
         theta,
         args           = args,
-        hypo_paramset  = hypo_paramset,
+        hypo_paramset  = dc_hypo_paramset,
     )
 
 
@@ -210,11 +195,8 @@ def main():
 
     asimov_paramset, hypo_paramset = get_paramsets(args, define_nuisance())
     hypo_paramset.extend(asimov_paramset.from_tag(ParamTag.BESTFIT))
-    outfile = args.outfile + gen_identifier(args)
+    outfile = args.datadir + '/contour' + gen_identifier(args)
     print '== {0:<25} = {1}'.format('outfile', outfile)
-
-    n_params = len(hypo_paramset)
-    outfile = outfile + '_emcee_'
 
     print 'asimov_paramset', asimov_paramset
     print 'hypo_paramset', hypo_paramset
@@ -240,7 +222,7 @@ def main():
         samples = mcmc_utils.mcmc(
             p0       = p0,
             ln_prob  = ln_prob_eval,
-            ndim     = n_params,
+            ndim     = len(hypo_paramset),
             nwalkers = args.nwalkers,
             burnin   = args.burnin,
             nsteps   = args.nsteps,

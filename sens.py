@@ -14,6 +14,8 @@ import os
 import argparse
 from functools import partial
 
+import glob
+
 import numpy as np
 import numpy.ma as ma
 from scipy.optimize import minimize
@@ -216,34 +218,44 @@ def main():
         print '|||| SCALE = {0:.0E}'.format(np.power(10, scale))
 
         # Lower scale boundary for first (NULL) point and set the scale param.
+        reset_range = None
         if scale < scale_prm.ranges[0]:
+            reset_range = scale_prm.ranges
             scale_prm.ranges = (scale, scale_prm.ranges[1])
         scale_prm.value = scale
 
-        if args.stat_method is StatCateg.BAYESIAN:
-            identifier = 'b{0}_{1}_{2}_sca{3}'.format(
-                args.eval_segment, args.segments, str_enum(args.texture), scale
+        identifier = 'b{0}_{1}_{2}_sca{3}'.format(
+            args.eval_segment, args.segments, str_enum(args.texture), scale
+        )
+        llh = '{0}'.format(args.likelihood).split('.')[1]
+        data = '{0}'.format(args.data).split('.')[1]
+        src_string = solve_ratio(args.source_ratio)
+        prefix = args.mn_output + '/DIM{0}/{1}/{2}/s{3}/{4}'.format(
+            args.dimension, data, llh, src_string, identifier
+        )
+        try:
+            stat = mn_utils.mn_evidence(
+                mn_paramset     = base_mn_pset,
+                llh_paramset    = llh_paramset,
+                asimov_paramset = asimov_paramset,
+                args            = args,
+                prefix          = prefix
             )
-            try:
-                stat = mn_utils.mn_evidence(
-                    mn_paramset     = base_mn_pset,
-                    llh_paramset    = llh_paramset,
-                    asimov_paramset = asimov_paramset,
-                    args            = args,
-                    identifier      = identifier
-                )
-            except:
-                print 'Failed run'
-                raise
-                # continue
-            print '## Evidence = {0}'.format(stat)
-        elif args.stat_method is StatCateg.FREQUENTIST:
-            raise NotImplementedError('Still needs testing')
+        except:
+            print 'Failed run'
+            raise
+        print '## Evidence = {0}'.format(stat)
 
         if args.eval_segment is not None:
             stat_arr[0] = np.array([scale, stat])
         else:
             stat_arr[idx_sc] = np.array([scale, stat])
+
+        # Cleanup.
+        for f in glob.glob(prefix + '*'):
+            os.remove(f)
+        if reset_range is not None:
+            scale_prm.ranges = reset_range
 
     misc_utils.make_dir(outfile)
     print 'Saving to {0}'.format(outfile+'.npy')

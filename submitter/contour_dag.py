@@ -13,50 +13,46 @@ injected_ratios = [
     (0, 0, 1)
 ]
 
+datadir = '/data/user/smandalia/flavour_ratio/data/contour'
+
+prefix = ''
+# prefix = '_noprior'
+
+golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
+condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/contour_submit.sub'
+
 GLOBAL_PARAMS = {}
 
 GLOBAL_PARAMS.update(dict(
-    threads            = 1,
-    save_measured_fr   = 'False',
-    output_measured_fr = './frs/',
-    seed               = None
+    threads     = 12,
+    seed        = 26
 ))
 
-# MultiNest
+# Emcee
 GLOBAL_PARAMS.update(dict(
-    mn_live_points = 5000,
-    mn_tolerance   = 0.3,
-))
-
-# Likelihood
-GLOBAL_PARAMS.update(dict(
-    likelihood  = 'golemfit',
+    run_mcmc = 'True',
+    burnin   = 200,
+    nsteps   = 1000,
+    nwalkers = 60,
+    mcmc_seed_type = 'uniform'
 ))
 
 # GolemFit
 GLOBAL_PARAMS.update(dict(
     ast  = 'p2_0',
-    # data = 'realisation'
-    # data = 'asimov'
     data = 'real'
 ))
 
 # Plot
 GLOBAL_PARAMS.update(dict(
-    plot_chains   = 'False',
-    plot_triangle = 'False'
+    plot_angles   = 'False',
+    plot_elements = 'False',
 ))
 
-outfile = 'dagman_FR_CONTOUR_{0}'.format(GLOBAL_PARAMS['data'])
-outfile += '.submit'
-output  = '/data/user/smandalia/flavour_ratio/data/contour/{0}/{1}/'.format(
-    GLOBAL_PARAMS['likelihood'], GLOBAL_PARAMS['data']
-)
-# output += 'nosyst/'
-# output += 'noprompt/'
-# output += 'strictpriors/'
+dagfile = 'dagman_CONTOUR_{0}'.format(GLOBAL_PARAMS['data'])
+dagfile += prefix + '.submit'
 
-with open(outfile, 'w') as f:
+with open(dagfile, 'w') as f:
     job_number = 1
     for inj in injected_ratios:
         print 'inj', inj
@@ -66,8 +62,9 @@ with open(outfile, 'w') as f:
         f.write('VARS\tjob{0}\tir2="{1}"\n'.format(job_number, inj[2]))
         for key in GLOBAL_PARAMS.iterkeys():
             f.write('VARS\tjob{0}\t{1}="{2}"\n'.format(job_number, key, GLOBAL_PARAMS[key]))
-        f.write('VARS\tjob{0}\toutfile="{1}"\n'.format(job_number, output))
+        f.write('VARS\tjob{0}\tdatadir="{1}"\n'.format(job_number, datadir))
         job_number += 1
         if GLOBAL_PARAMS['data'] == 'real': break
 
-print 'dag file = {0}'.format(outfile)
+print 'total jobs = {0}'.format(job_number - 1)
+print 'dag file = {0}'.format(dagfile)

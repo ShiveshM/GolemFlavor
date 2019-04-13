@@ -9,10 +9,12 @@ import numpy as np
 #     (0, 1, 0),
 # ]
 
-x_bins = 20
-x_array = np.linspace(0, 1, x_bins)
+MASK_X = (0.3, 0.8)
+x_segments = 20
+x_array = np.linspace(0, 1, x_segments)
 sources = []
 for x in x_array:
+    if x > MASK_X[0] and x < MASK_X[1]: continue
     sources.append([x, 1-x, 0])
 
 dims = [

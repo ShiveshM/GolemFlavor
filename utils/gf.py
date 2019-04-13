@@ -126,7 +126,6 @@ def setup_fitter(args, asimov_paramset):
 
 
 def get_llh(params):
-    # print 'params', params
     fitparams = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         fitparams.__setattr__(parm.name, float(parm.value))

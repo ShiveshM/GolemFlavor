@@ -60,8 +60,7 @@ def mn_argparse(parser):
     )
 
 
-def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args,
-                identifier='mn'):
+def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, prefix='mn'):
     """Run the MultiNest algorithm to calculate the evidence."""
     n_params = len(mn_paramset)
 
@@ -76,12 +75,6 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args,
         args            = args,
     )
 
-    llh = '{0}'.format(args.likelihood).split('.')[1]
-    data = '{0}'.format(args.data).split('.')[1]
-    src_string = solve_ratio(args.source_ratio)
-    prefix = args.mn_output + '/DIM{0}/{1}/{2}/s{3}/{4}'.format(
-        args.dimension, data, llh, src_string, identifier
-    )
     make_dir(prefix)
     print 'Running evidence calculation for {0}'.format(prefix)
     run(

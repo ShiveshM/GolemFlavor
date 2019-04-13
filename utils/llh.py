@@ -9,6 +9,7 @@ Likelihood functions for the BSM flavour ratio analysis
 
 from __future__ import absolute_import, division
 
+from copy import deepcopy
 from functools import partial
 
 import numpy as np
@@ -144,10 +145,12 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset):
 
 
 def ln_prob(theta, args, asimov_paramset, llh_paramset):
-    lp = lnprior(theta, paramset=llh_paramset)
+    dc_asimov_paramset = deepcopy(asimov_paramset)
+    dc_llh_paramset = deepcopy(llh_paramset)
+    lp = lnprior(theta, paramset=dc_llh_paramset)
     if not np.isfinite(lp):
         return -np.inf
     return lp + triangle_llh(
-        theta, args=args, asimov_paramset=asimov_paramset,
-        llh_paramset=llh_paramset
+        theta, args=args, asimov_paramset=dc_asimov_paramset,
+        llh_paramset=dc_llh_paramset
     )

@@ -27,6 +27,9 @@ from utils.misc import gen_identifier, SortingHelpFormatter
 from utils.param import Param, ParamSet
 
 
+MASK_X = (0.3, 0.8)
+
+
 def process_args(args):
     """Process the input args."""
     if args.data is not DataType.REAL:
@@ -45,7 +48,11 @@ def process_args(args):
         args.source_ratios = map(fr_utils.normalise_fr, srs)
     elif args.x_segments is not None:
         x_array = np.linspace(0, 1, args.x_segments)
-        args.source_ratios = [[x, 1-x, 0] for x in x_array]
+        sources = []
+        for x in x_array:
+            if x > MASK_X[0] and x < MASK_X[1]: continue
+            sources.append([x, 1-x, 0])
+        args.source_ratios = sources
     else:
         raise ValueError('Must supply either --source-ratios or --x-segments')
 

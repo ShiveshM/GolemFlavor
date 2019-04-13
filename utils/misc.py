@@ -120,6 +120,7 @@ def make_dir(outfile):
         else:
             raise
 
+
 def remove_option(parser, arg):
     for action in parser._actions:
         if (vars(action)['option_strings']

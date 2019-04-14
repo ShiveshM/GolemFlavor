@@ -19,12 +19,10 @@ from utils import fr as fr_utils
 from utils import misc as misc_utils
 from utils import plot as plot_utils
 from utils.enums import str_enum
-from utils.enums import Likelihood, ParamTag, PriorsCateg
+from utils.enums import ParamTag, PriorsCateg
 from utils.param import Param, ParamSet
 
 from matplotlib import pyplot as plt
-
-from pymultinest import Analyzer
 
 
 def define_nuisance():
@@ -44,9 +42,8 @@ def define_nuisance():
 
 def get_paramsets(args, nuisance_paramset):
     paramset = []
-    if args.likelihood in [Likelihood.GOLEMFIT, Likelihood.GF_FREQ]:
-        gf_nuisance = [x for x in nuisance_paramset.from_tag(ParamTag.NUISANCE)]
-        paramset.extend(gf_nuisance)
+    gf_nuisance = [x for x in nuisance_paramset.from_tag(ParamTag.NUISANCE)]
+    paramset.extend(gf_nuisance)
     tag = ParamTag.BESTFIT
     paramset.extend([
         Param(name='astroFlavorAngle1', value=0, ranges=[0., 1.], std=0.2, tag=tag),
@@ -58,14 +55,7 @@ def get_paramsets(args, nuisance_paramset):
 
 def process_args(args):
     """Process the input args."""
-    if args.likelihood is not Likelihood.GOLEMFIT \
-       and args.likelihood is not Likelihood.GF_FREQ:
-        raise AssertionError(
-            'Likelihood method {0} not supported for this '
-            'script!\nChoose either GOLEMFIT or GF_FREQ'.format(
-                str_enum(args.likelihood)
-            )
-        )
+    pass
 
 def parse_args(args=None):
     """Parse command line arguments"""
@@ -74,12 +64,7 @@ def parse_args(args=None):
         formatter_class=misc_utils.SortingHelpFormatter,
     )
     parser.add_argument(
-        '--likelihood', default='golemfit',
-        type=partial(misc_utils.enum_parse, c=Likelihood),
-        choices=Likelihood, help='likelihood contour'
-    )
-    parser.add_argument(
-        '--contour-dir', type=str,
+        '--datadir', type=str,
         help='Path to directory containing MultiNest runs'
     )
     parser.add_argument(
@@ -100,7 +85,6 @@ def main():
     print n_params
 
     chains = np.load('/data/user/smandalia/flavour_ratio/data/contour_emcee/golemfit/real/_GOLEMFIT_REAL_emcee_.npy')
-    # chains = np.load('/data/user/smandalia/flavour_ratio/data/contour_emcee/golemfit/real/more_sys_flat/_GOLEMFIT_REAL_emcee_.npy')
 
     print chains
     flavour_angles = chains[:,-2:]

@@ -9,7 +9,7 @@ error  = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/
 getenv = True
 # environment = "X509_USER_PROXY=x509up_u14830" 
 
-request_memory = 3GB
+request_memory = 8GB
 request_cpus = 12
 
 initialdir = /home/smandalia/condor

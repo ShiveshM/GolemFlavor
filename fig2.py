@@ -84,7 +84,8 @@ def main():
     n_params = len(paramset)
     print n_params
 
-    chains = np.load('/data/user/smandalia/flavour_ratio/data/contour_emcee/golemfit/real/_GOLEMFIT_REAL_emcee_.npy')
+    chains = np.load('/data/user/smandalia/flavour_ratio/data/contour/contour_REAL.npy')
+    # chains = np.load('/data/user/smandalia/flavour_ratio/data/contour_emcee/golemfit/real/more_sys_flat/_GOLEMFIT_REAL_emcee_.npy')
 
     print chains
     flavour_angles = chains[:,-2:]
@@ -94,9 +95,11 @@ def main():
 
     nbins = 25
 
+    ax_labels = [r'$f_{e}$', r'$f_{\mu}$', r'$f_{\tau}$']
+
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111)
-    tax = plot_utils.get_tax(ax, scale=nbins)
+    tax = plot_utils.get_tax(ax, scale=nbins, ax_labels=ax_labels)
 
     plot_utils.flavour_contour(
         frs = flavour_ratios,

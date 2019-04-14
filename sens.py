@@ -229,7 +229,7 @@ def main():
         )
         llh = '{0}'.format(args.likelihood).split('.')[1]
         data = '{0}'.format(args.data).split('.')[1]
-        src_string = solve_ratio(args.source_ratio)
+        src_string = misc_utils.solve_ratio(args.source_ratio)
         prefix = args.mn_output + '/DIM{0}/{1}/{2}/s{3}/{4}'.format(
             args.dimension, data, llh, src_string, identifier
         )
@@ -252,10 +252,14 @@ def main():
             stat_arr[idx_sc] = np.array([scale, stat])
 
         # Cleanup.
-        for f in glob.glob(prefix + '*'):
-            os.remove(f)
         if reset_range is not None:
             scale_prm.ranges = reset_range
+        try:
+            for f in glob.glob(prefix + '*'):
+                os.remove(f)
+        except:
+            print 'got error trying to cleanup, continuing'
+            pass
 
     misc_utils.make_dir(outfile)
     print 'Saving to {0}'.format(outfile+'.npy')

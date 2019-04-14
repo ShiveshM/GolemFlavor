@@ -38,7 +38,7 @@ import shapely.geometry as geometry
 
 from utils.enums import DataType, str_enum
 from utils.enums import Likelihood, ParamTag, StatCateg, Texture
-from utils.misc import get_units, make_dir, solve_ratio
+from utils.misc import get_units, make_dir, solve_ratio, interval
 from utils.fr import angles_to_u, angles_to_fr, SCALE_BOUNDARIES
 
 
@@ -863,9 +863,9 @@ def get_tax(ax, scale, ax_labels):
     tax.clear_matplotlib_ticks()
 
     # Set ticks
-    # ticks = np.linspace(0, 1, 6)
-    # tax.ticks(ticks=ticks, locations=ticks*scale, axis='blr', linewidth=1,
-    #           offset=0.03, fontsize=fontsize, tick_formats='%.1f')
+    ticks = np.linspace(0, 1, 6)
+    tax.ticks(ticks=ticks, locations=ticks*scale, axis='blr', linewidth=1,
+              offset=0.03, fontsize=fontsize, tick_formats='%.1f')
     tax.ticks()
 
     tax._redraw_labels()
@@ -1021,8 +1021,8 @@ def flavour_contour(frs, ax, nbins, coverage, **kwargs):
         ev_polygon.T[0], ev_polygon.T[1], label=r'{0}\%'.format(int(coverage)),
         **kwargs
     )
-    ax.scatter(points.T[0], points.T[1], marker='o', s=2, alpha=1, color=color,
-               zorder=3)
+    ax.scatter(points.T[0], points.T[1], marker='o', s=2, alpha=1, zorder=3,
+              **kwargs)
 
 def plot_source_ternary(data, outfile, outformat, args):
     """Ternary plot in the source flavour space for each operator texture."""

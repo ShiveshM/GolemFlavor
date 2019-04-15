@@ -168,7 +168,7 @@ def parse_args():
         help='Set the central value for the source flavour ratio at IceCube'
     )
     parser.add_argument(
-        '--angles', type=float, nargs=3, default=[0.307, (1-0.02195)**2, 0.565, 3.97935],
+        '--angles', type=float, nargs=3, default=[0.307, (1-0.02195)**2, 0.565],
         help='Set the 1 sigma for the measured flavour ratio'
     )
     parser.add_argument(

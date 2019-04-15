@@ -171,8 +171,8 @@ def main():
                             print 'Unable to load file {0}'.format(
                                 infile+'.npy'
                             )
-                            raise
-                            # continue
+                            # raise
+                            continue
                 else:
                     print 'Loading from {0}'.format(base_infile+'.npy')
                     try:
@@ -225,7 +225,7 @@ def main():
     basename = args.datadir[:5]+args.datadir[5:].replace('data', 'plots')
     baseoutfile = basename + '/{0}/{1}/'.format(
         *map(parse_enum, [args.stat_method, args.data])
-    ) + r'{0}/'.format(prefix)
+    ) + r'{0}'.format(prefix)
 
     if args.plot_x:
         plot_utils.plot_x(

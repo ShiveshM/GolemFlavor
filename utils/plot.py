@@ -109,7 +109,7 @@ def cmap_discretize(cmap, N):
     return mpl.colors.LinearSegmentedColormap(cmap.name + "_%d"%N, cdict, 1024)
 
 
-def get_limit(scales, statistic, mask_initial=False):
+def get_limit(scales, statistic, args, mask_initial=False):
     max_st = np.max(statistic)
     if args.stat_method is StatCateg.BAYESIAN:
         if (statistic[0] - max_st) > np.log(10**(BAYES_K)):
@@ -118,7 +118,7 @@ def get_limit(scales, statistic, mask_initial=False):
     try:
         tck, u = splprep([scales, statistic], s=0)
     except:
-        continue
+        return None
     sc, st = splev(np.linspace(0, 1, 10000), tck)
 
     if mask_initial:
@@ -137,12 +137,16 @@ def get_limit(scales, statistic, mask_initial=False):
     else:
         assert 0
     if len(al) == 0:
-        print 'No points for DIM {0} X {1}!'.format(dim, x)
-        continue
+        print 'No points for DIM {0} [{1}, {2}, {3}]!'.format(
+            args.dimension, *args.source_ratio
+        )
+        return None
     if reduced_ev[-1] < np.log(10**(BAYES_K)) - 0.1:
         print 'Peaked contour does not exclude large scales! For ' \
-            'DIM {0} X {1}!'.format(dim, x)
-        continue
+            'DIM {0} [{1}, {2}, {3}]!'.format(
+                args.dimension, *args.source_ratio
+            )
+        return None
     lim = al[0]
     print 'limit = {0}'.format(lim)
     return lim
@@ -526,7 +530,7 @@ def plot_table_sens(data, outfile, outformat, args):
                 ax.spines['bottom'].set_alpha(0.6)
             elif itex == len(tex) - 1:
                 ax.text(
-                    -0.04, ylim[0], '$d = {0}$'.format(dim), fontsize=16,
+                    -0.04, ylims[0], '$d = {0}$'.format(dim), fontsize=16,
                     rotation='90', verticalalignment='center',
                     transform=ax.transAxes
                 )
@@ -556,12 +560,13 @@ def plot_table_sens(data, outfile, outformat, args):
                         ax.axvline(x=ps, color='purple', alpha=1., linewidth=1.5)
 
                 scales, statistic = ma.compress_rows(data[idim][isrc][itex]).T
-                lim = get_limit(scales, statistic, mask_initial=True)
+                lim = get_limit(scales, statistic, argsc, mask_initial=True)
+                if lim is None: continue
 
                 ax.axvline(x=lim, color=colour[isrc], alpha=1., linewidth=1.5)
                 ax.add_patch(patches.Rectangle(
-                    (lim, ylim[0]), 100, np.diff(ylim), fill=True, facecolor=colour[isrc],
-                    alpha=0.3, linewidth=0
+                    (lim, ylims[0]), 100, np.diff(ylims), fill=True,
+                    facecolor=colour[isrc], alpha=0.3, linewidth=0
                 ))
 
                 if isrc not in legend_log:
@@ -645,11 +650,14 @@ def plot_x(data, outfile, outformat, args):
     print r_data.shape, 'r_data.shape'
 
     fig = plt.figure(figsize=(8, 6))
-    gs = gridspec.GridSpec(dims, 1)
+    gs = gridspec.GridSpec(len(dims), 1)
     gs.update(hspace=0.15)
 
     xlims = (-60, -20)
     ylims = (0, 1)
+
+    colour = {0:'red', 1:'blue', 2:'green'}
+    rgb_co = {0:[1,0,0], 1:[0,0,1], 2:[0.0, 0.5019607843137255, 0.0]}
 
     first_ax = None
     legend_log = []
@@ -660,12 +668,42 @@ def plot_x(data, outfile, outformat, args):
         argsc.dimension = dim
         ax = fig.add_subplot(gs[idim])
 
+        if first_ax is None:
+            first_ax = ax
+
         ax.set_xlim(xlims)
         ax.set_ylim(ylims)
-        ax.tick_params(axis='y', labelsize=12)
+        yticks = []
+        ylabels = []
+        if idim == 0:
+            yticks += [0]
+            ylabels += [r'$0$']
+        yticks += [1/3., 0.5, 2/3.]
+        ylabels += [r'$\frac{1}{3}$', r'$\frac{1}{2}$', r'$\frac{2}{3}$']
+        if idim == len(dims)-1:
+            yticks += [1]
+            ylabels += [r'$1$']
+        ax.set_yticks([], minor=True)
+        ax.set_yticks(yticks, minor=False)
+        ax.set_yticklabels(ylabels, fontsize=13)
         for xmaj in ax.xaxis.get_majorticklocs():
             ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.2, linewidth=1)
+        for ymaj in yticks:
+            if ymaj == 1/3.:
+                ax.axhline(y=ymaj, ls='-', color='gray', alpha=0.5, linewidth=1)
+            else:
+                ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.2, linewidth=1)
         ax.get_xaxis().set_visible(False)
+
+        ax.text(
+            1.01, 0.5, r'$d = {0}$'.format(dim), fontsize=16,
+            rotation='90', verticalalignment='center', transform=ax.transAxes
+        )
+
+        ax.text(
+            0.01, (1/3.)-0.05, r'$f_{\alpha}^S=(1:2:0)$', fontsize=13,
+            transform=ax.transAxes
+        )
 
         for itex, tex in enumerate(textures):
             print '|||| TEX = {0}'.format(tex)
@@ -674,8 +712,14 @@ def plot_x(data, outfile, outformat, args):
             for isrc, src in enumerate(srcs):
                 x = src[0]
                 print '|||| X = {0}'.format(x)
-                scales, statistic = ma.compress_rows(r_data[idim][itex][isrc]).T
-                lims[isrc] = get_limit(scales, statistic, mask_initial=True)
+                argsc.source_ratio = src
+                try:
+                    scales, statistic = ma.compress_rows(r_data[idim][itex][isrc]).T
+                except:
+                    continue
+                lim = get_limit(scales, statistic, argsc, mask_initial=True)
+                if lim is None: continue
+                lims[isrc] = lim
 
             lims = ma.masked_invalid(lims)
             size = np.sum(~lims.mask)
@@ -684,16 +728,22 @@ def plot_x(data, outfile, outformat, args):
             tck, u = splprep([x_arr[~lims.mask], lims[~lims.mask]], s=0, k=1)
             y, x = splev(np.linspace(0, 1, 100), tck)
             ax.scatter(lims, x_arr, marker='o', s=10, alpha=1, zorder=5,
-                       color=colour[itex])
+                       color='red')
             ax.fill_betweenx(y, x, 0, color=colour[itex], alpha=1.)
 
             if itex not in legend_log:
                 legend_log.append(itex)
-                label = texture_label(tex)
+                label = texture_label(tex)[:-1] + r'\:{\rm\:texture}$'
                 legend_elements.append(
-                    Patch(facecolor=rgb_co[isrc]+[0.3],
-                          edgecolor=rgb_co[isrc]+[1], label=label)
+                    Patch(facecolor=rgb_co[itex]+[0.3],
+                          edgecolor=rgb_co[itex]+[1], label=label)
                 )
+
+        LV_lim = np.log10(LV_ATMO_90PC_LIMITS[dim])
+        ax.add_patch(patches.Rectangle(
+            (LV_lim[1], ylims[0]), LV_lim[0]-LV_lim[1], np.diff(ylims),
+            fill=False, hatch='\\\\'
+        ))
 
         if dim in PLANCK_SCALE.iterkeys():
             ps = np.log10(PLANCK_SCALE[dim])
@@ -712,8 +762,9 @@ def plot_x(data, outfile, outformat, args):
             else:
                 ax.axvline(x=ps, color='purple', alpha=1., linewidth=1.5)
 
-    # ax.set_ylabel(r'${\rm Source\:Flavor\:Ratio}\:[\:x, \left (1-x\right ), 0\:]$',
-    #               fontsize=19)
+    fig.text(0.06, 0.5,
+             r'$x\: : \: {\rm Source\:Ratio}\:[\:f_{\alpha}^S=\left (\:x,\left (1-x\right ),0\:\right )\:]$',
+             va='center', rotation='vertical', fontsize=19)
 
     ax.get_xaxis().set_visible(True)
     ax.set_xlabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda^{-1}\:/\:{\rm GeV}^{-d+4})\: ]$',
@@ -728,7 +779,7 @@ def plot_x(data, outfile, outformat, args):
         Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube, Nature.Phy.14,961(2018)')
     )
     legend = first_ax.legend(
-        handles=legend_elements, prop=dict(size=11), loc='upper left',
+        handles=legend_elements, prop=dict(size=11), loc='center left',#loc='upper left',
         title='Excluded regions', framealpha=1., edgecolor='black',
         frameon=True
     )
@@ -736,7 +787,7 @@ def plot_x(data, outfile, outformat, args):
     plt.setp(legend.get_title(), fontsize='11')
     legend.get_frame().set_linestyle('-')
 
-    ybound = 0.595
+    ybound = 0.61
     if args.data is DataType.REAL:
         fig.text(0.278, ybound, r'\bf IceCube Preliminary', color='red', fontsize=13,
                  ha='center', va='center', zorder=11)
@@ -749,5 +800,5 @@ def plot_x(data, outfile, outformat, args):
 
     make_dir(outfile)
     for of in outformat:
-        print 'Saving plot as {0}'.format(outfile+'_DIM{0}.'.format(dim)+of)
-        fig.savefig(outfile+'_DIM{0}.'.format(dim)+of, bbox_inches='tight', dpi=150)
+        print 'Saving plot as {0}'.format(outfile + '.' + of)
+        fig.savefig(outfile + '.' + of, bbox_inches='tight', dpi=150)

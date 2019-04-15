@@ -67,10 +67,6 @@ def parse_args(args=None):
         '--datadir', type=str,
         help='Path to directory containing MultiNest runs'
     )
-    parser.add_argument(
-        '--outfile', type=str, default='./untitled',
-        help='Output path'
-    )
     if args is None: return parser.parse_args()
     else: return parser.parse_args(args.split())
 
@@ -82,13 +78,13 @@ def main():
 
     paramset = get_paramsets(args, define_nuisance())
     n_params = len(paramset)
-    print n_params
+    print 'n_params', n_params
 
-    chains = np.load('/data/user/smandalia/flavour_ratio/data/contour/contour_REAL.npy')
-    # chains = np.load('/data/user/smandalia/flavour_ratio/data/contour_emcee/golemfit/real/more_sys_flat/_GOLEMFIT_REAL_emcee_.npy')
+    prefix = ''
+    contour_infile = args.datadir + '/contour' + prefix + '_REAL.npy'
+    contour_chains = np.load(contour_infile)
 
-    print chains
-    flavour_angles = chains[:,-2:]
+    flavour_angles = contour_chains[:,-2:]
     flavour_ratios = np.array(
         map(fr_utils.angles_to_fr, flavour_angles)
     )
@@ -130,7 +126,10 @@ def main():
 
     ax.legend()
 
-    fig.savefig('test_emcee_moresys_flat.png', bbox_inches='tight', dpi=150)
+    outfile = args.datadir[:5]+args.datadir[5:].replace('data', 'plots')
+    outfile += '/fig2' + prefix + '.png'
+    print 'Saving plot as {0}'.format(outfile)
+    fig.savefig(outfile, bbox_inches='tight', dpi=150)
 
     print "DONE!"
 

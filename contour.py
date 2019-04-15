@@ -195,7 +195,9 @@ def main():
 
     asimov_paramset, hypo_paramset = get_paramsets(args, define_nuisance())
     hypo_paramset.extend(asimov_paramset.from_tag(ParamTag.BESTFIT))
-    outfile = args.datadir + '/contour' + gen_identifier(args)
+
+    prefix = ''
+    outfile = args.datadir + '/contour' + prefix + gen_identifier(args)
     print '== {0:<25} = {1}'.format('outfile', outfile)
 
     print 'asimov_paramset', asimov_paramset

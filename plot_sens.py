@@ -227,16 +227,13 @@ def main():
         *map(parse_enum, [args.stat_method, args.data])
     ) + r'{0}/'.format(prefix)
 
-    argsc = deepcopy(args)
     if args.plot_x:
-        for idim, dim in enumerate(args.dimensions):
-            argsc.dimension = dim
-            plot_utils.plot_x(
-                data      = data,
-                outfile   = baseoutfile + '/hese_x',
-                outformat = ['png', 'pdf'],
-                args      = argsc,
-            )
+        plot_utils.plot_x(
+            data      = data,
+            outfile   = baseoutfile + '/hese_x',
+            outformat = ['png', 'pdf'],
+            args      = args,
+        )
 
     if args.plot_table:
         plot_utils.plot_table_sens(

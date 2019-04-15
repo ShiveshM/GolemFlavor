@@ -256,6 +256,7 @@ def main():
             scale_prm.ranges = reset_range
         try:
             for f in glob.glob(prefix + '*'):
+                print 'cleaning file {0}'.format(f)
                 os.remove(f)
         except:
             print 'got error trying to cleanup, continuing'

@@ -16,7 +16,7 @@ import numpy as np
 from pymultinest import analyse, run
 
 from utils import llh as llh_utils
-from utils.misc import gen_identifier, make_dir, solve_ratio
+from utils.misc import gen_identifier, make_dir, parse_bool, solve_ratio
 
 
 def CubePrior(cube, ndim, n_params):
@@ -58,6 +58,10 @@ def mn_argparse(parser):
         '--mn-output', type=str, default='./mnrun/',
         help='Folder to store MultiNest evaluations'
     )
+    parser.add_argument(
+        '--run-mn', type=parse_bool, default='True',
+        help='Run MultiNest'
+    )
 
 
 def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, prefix='mn'):
@@ -75,19 +79,21 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, prefix='mn'):
         args            = args,
     )
 
-    make_dir(prefix)
-    print 'Running evidence calculation for {0}'.format(prefix)
-    run(
-        LogLikelihood              = lnProbEval,
-        Prior                      = CubePrior,
-        n_dims                     = n_params,
-        n_live_points              = args.mn_live_points,
-        evidence_tolerance         = args.mn_tolerance,
-        outputfiles_basename       = prefix,
-        importance_nested_sampling = True,
-        resume                     = False,
-        verbose                    = True
-    )
+    if args.run_mn:
+        make_dir(prefix)
+        print 'Running evidence calculation for {0}'.format(prefix)
+        run(
+            LogLikelihood              = lnProbEval,
+            Prior                      = CubePrior,
+            n_dims                     = n_params,
+            n_live_points              = args.mn_live_points,
+            evidence_tolerance         = args.mn_tolerance,
+            outputfiles_basename       = prefix,
+            importance_nested_sampling = True,
+            # resume                     = False,
+            resume                     = True,
+            verbose                    = True
+        )
 
     analyser = analyse.Analyzer(
         outputfiles_basename=prefix, n_params=n_params

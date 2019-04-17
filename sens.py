@@ -205,7 +205,8 @@ def main():
     ) + misc_utils.gen_identifier(args)
 
     # Setup Golemfit.
-    gf_utils.setup_fitter(args, asimov_paramset)
+    if args.run_mn:
+        gf_utils.setup_fitter(args, asimov_paramset)
 
     # Initialise data structure.
     stat_arr = np.full((eval_dim, 2), np.nan)
@@ -254,13 +255,15 @@ def main():
         # Cleanup.
         if reset_range is not None:
             scale_prm.ranges = reset_range
-        try:
-            for f in glob.glob(prefix + '*'):
-                print 'cleaning file {0}'.format(f)
-                os.remove(f)
-        except:
-            print 'got error trying to cleanup, continuing'
-            pass
+
+        if args.run_mn and not args.debug:
+            try:
+                for f in glob.glob(prefix + '*'):
+                    print 'cleaning file {0}'.format(f)
+                    os.remove(f)
+            except:
+                print 'got error trying to cleanup, continuing'
+                pass
 
     misc_utils.make_dir(outfile)
     print 'Saving to {0}'.format(outfile+'.npy')

@@ -27,7 +27,7 @@ from utils.misc import gen_identifier, SortingHelpFormatter
 from utils.param import Param, ParamSet
 
 
-MASK_X = (0.3, 0.8)
+MASK_X = (0.3, 0.89)
 
 
 def process_args(args):
@@ -227,13 +227,18 @@ def main():
         *map(parse_enum, [args.stat_method, args.data])
     ) + r'{0}'.format(prefix)
 
+    argsc = deepcopy(args)
     if args.plot_x:
-        plot_utils.plot_x(
-            data      = data,
-            outfile   = baseoutfile + '/hese_x',
-            outformat = ['png', 'pdf'],
-            args      = args,
-        )
+        for idim, dim in enumerate(args.dimensions):
+            print '|||| DIM = {0}'.format(dim)
+            argsc.dimension = dim
+            plot_utils.plot_x(
+                data      = data[idim],
+                outfile   = baseoutfile + '/hese_x_DIM{0}'.format(dim),
+                outformat = ['png', 'pdf'],
+                args      = argsc,
+                normalise = True
+            )
 
     if args.plot_table:
         plot_utils.plot_table_sens(

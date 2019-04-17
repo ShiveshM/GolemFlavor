@@ -28,6 +28,7 @@ from matplotlib import pyplot as plt
 from matplotlib.offsetbox import AnchoredText
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
+from matplotlib.patches import Arrow
 
 from getdist import plots, mcsamples
 
@@ -111,6 +112,7 @@ def cmap_discretize(cmap, N):
 
 def get_limit(scales, statistic, args, mask_initial=False):
     max_st = np.max(statistic)
+    print 'scales, stat', zip(scales, statistic)
     if args.stat_method is StatCateg.BAYESIAN:
         if (statistic[0] - max_st) > np.log(10**(BAYES_K)):
             raise AssertionError('Discovered LV!')
@@ -118,8 +120,10 @@ def get_limit(scales, statistic, args, mask_initial=False):
     try:
         tck, u = splprep([scales, statistic], s=0)
     except:
-        return None
-    sc, st = splev(np.linspace(0, 1, 10000), tck)
+        print 'Failed to spline'
+        # return None
+        raise
+    sc, st = splev(np.linspace(0, 1, 1000), tck)
 
     if mask_initial:
         scales_rm = sc[sc >= scales[1]]
@@ -132,7 +136,7 @@ def get_limit(scales, statistic, args, mask_initial=False):
     null = statistic[min_idx]
     if args.stat_method is StatCateg.BAYESIAN:
         reduced_ev = -(statistic_rm - null)
-        print 'reduced_ev', reduced_ev
+        print '[reduced_ev > np.log(10**(BAYES_K))]', np.sum([reduced_ev > np.log(10**(BAYES_K))])
         al = scales_rm[reduced_ev > np.log(10**(BAYES_K))]
     else:
         assert 0
@@ -142,11 +146,11 @@ def get_limit(scales, statistic, args, mask_initial=False):
         )
         return None
     if reduced_ev[-1] < np.log(10**(BAYES_K)) - 0.1:
-        print 'Peaked contour does not exclude large scales! For ' \
+        print 'Warning, peaked contour does not exclude large scales! For ' \
             'DIM {0} [{1}, {2}, {3}]!'.format(
                 args.dimension, *args.source_ratio
             )
-        return None
+        # return None
     lim = al[0]
     print 'limit = {0}'.format(lim)
     return lim
@@ -623,13 +627,11 @@ def plot_table_sens(data, outfile, outformat, args):
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
 
 
-def plot_x(data, outfile, outformat, args):
+def plot_x(data, outfile, outformat, args, normalise=False):
     """Limit plot as a function of the source flavour ratio for each operator
     texture."""
     print 'Making X sensitivity plot'
-    argsc = deepcopy(args)
-
-    dims = args.dimensions
+    dim = args.dimension
     srcs = args.source_ratios
     x_arr = np.array([i[0] for i in srcs])
     if args.texture is Texture.NONE:
@@ -639,137 +641,167 @@ def plot_x(data, outfile, outformat, args):
 
     # Rearrange data structure
     r_data = np.full((
-        data.shape[0], data.shape[2], data.shape[1], data.shape[3], data.shape[4]
+        data.shape[1], data.shape[0], data.shape[2], data.shape[3]
     ), np.nan)
 
-    for idim in xrange(data.shape[0]):
-        for isrc in xrange(data.shape[1]):
-            for itex in xrange(data.shape[2]):
-                r_data[idim][itex][isrc] = data[idim][isrc][itex]
+    for isrc in xrange(data.shape[0]):
+        for itex in xrange(data.shape[1]):
+            r_data[itex][isrc] = data[isrc][itex]
     r_data = ma.masked_invalid(r_data)
     print r_data.shape, 'r_data.shape'
 
-    fig = plt.figure(figsize=(8, 6))
-    gs = gridspec.GridSpec(len(dims), 1)
-    gs.update(hspace=0.15)
+    if normalise:
+        fig = plt.figure(figsize=(7, 6))
+    else:
+        fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111)
 
-    xlims = (-60, -20)
-    ylims = (0, 1)
+    if normalise:
+        ylims = (-10, 8)
+    else:
+        ylims = (-60, -20)
+    xlims = (0, 1)
 
-    colour = {0:'red', 1:'blue', 2:'green'}
-    rgb_co = {0:[1,0,0], 1:[0,0,1], 2:[0.0, 0.5019607843137255, 0.0]}
+    colour = {0:'red', 1:'green', 2:'blue'}
+    rgb_co = {0:[1,0,0], 1:[0.0, 0.5019607843137255, 0.0], 2:[0,0,1]}
 
-    first_ax = None
     legend_log = []
     legend_elements = []
+    labelsize = 13
+    largesize = 17
 
-    for idim, dim in enumerate(dims):
-        print '|||| DIM = {0}'.format(dim)
-        argsc.dimension = dim
-        ax = fig.add_subplot(gs[idim])
-
-        if first_ax is None:
-            first_ax = ax
-
-        ax.set_xlim(xlims)
-        ax.set_ylim(ylims)
-        yticks = []
-        ylabels = []
-        if idim == 0:
-            yticks += [0]
-            ylabels += [r'$0$']
-        yticks += [1/3., 0.5, 2/3.]
-        ylabels += [r'$\frac{1}{3}$', r'$\frac{1}{2}$', r'$\frac{2}{3}$']
-        if idim == len(dims)-1:
-            yticks += [1]
-            ylabels += [r'$1$']
-        ax.set_yticks([], minor=True)
-        ax.set_yticks(yticks, minor=False)
-        ax.set_yticklabels(ylabels, fontsize=13)
-        for xmaj in ax.xaxis.get_majorticklocs():
+    ax.set_xlim(xlims)
+    ax.set_ylim(ylims)
+    xticks = [0, 1/3., 0.5, 2/3., 1]
+    # xlabels = [r'$0$', r'$\frac{1}{3}$', r'$\frac{1}{2}$', r'$\frac{2}{3}$', r'$1$']
+    xlabels = [r'$0$', r'$1 / 3$', r'$1/2$', r'$2/3$', r'$1$']
+    ax.set_xticks([], minor=True)
+    ax.set_xticks(xticks, minor=False)
+    ax.set_xticklabels(xlabels, fontsize=largesize)
+    for ymaj in ax.yaxis.get_majorticklocs():
+        ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.2, linewidth=1)
+    for xmaj in xticks:
+        if xmaj == 1/3.:
+            ax.axvline(x=xmaj, ls='-', color='gray', alpha=0.5, linewidth=1)
+        else:
             ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.2, linewidth=1)
-        for ymaj in yticks:
-            if ymaj == 1/3.:
-                ax.axhline(y=ymaj, ls='-', color='gray', alpha=0.5, linewidth=1)
-            else:
-                ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.2, linewidth=1)
-        ax.get_xaxis().set_visible(False)
 
-        ax.text(
-            1.01, 0.5, r'$d = {0}$'.format(dim), fontsize=16,
-            rotation='90', verticalalignment='center', transform=ax.transAxes
+    ax.text(
+        (1/3.)+0.01, 0.01,  r'$f_{\alpha}^S=(1:2:0)$', fontsize=labelsize,
+        transform=ax.transAxes, rotation='vertical', va='bottom'
+    )
+    ax.text(
+        0.96, 0.01, r'$f_{\alpha}^S=(1:0:0)$', fontsize=labelsize,
+        transform=ax.transAxes, rotation='vertical', va='bottom', ha='left'
+    )
+    ax.text(
+        0.01, 0.01, r'$f_{\alpha}^S=(0:1:0)$', fontsize=labelsize,
+        transform=ax.transAxes, rotation='vertical', va='bottom'
+    )
+    ax.text(
+        0.07, 0.46, r'${\rm \bf Excluded}$', fontsize=largesize,
+        transform=ax.transAxes, color = 'g', rotation='vertical', zorder=10
+    )
+    ax.text(
+        0.95, 0.46, r'${\rm \bf Excluded}$', fontsize=largesize,
+        transform=ax.transAxes, color = 'b', rotation='vertical', zorder=10
+    )
+
+    for itex, tex in enumerate(textures):
+        print '|||| TEX = {0}'.format(tex)
+        lims = np.full(len(srcs), np.nan)
+
+        for isrc, src in enumerate(srcs):
+            x = src[0]
+            print '|||| X = {0}'.format(x)
+            args.source_ratio = src
+            d = r_data[itex][isrc]
+            if np.sum(d.mask) > 0:
+                continue
+            scales, statistic = ma.compress_rows(d).T
+            lim = get_limit(scales, statistic, args, mask_initial=True)
+            if lim is None: continue
+            if normalise:
+                lim -= np.log10(PLANCK_SCALE[dim])
+            lims[isrc] = lim
+
+        lims = ma.masked_invalid(lims)
+        size = np.sum(~lims.mask)
+        if size == 0: continue
+
+        print 'x_arr, lims', zip(x_arr, lims)
+        if normalise:
+            zeropoint = 100
+        else:
+            zeropoint = 0
+        lims[lims.mask] = zeropoint
+        tck, u = splprep([x_arr, lims], s=0, k=1)
+        x, y = splev(np.linspace(0, 1, 1000), tck)
+        y = gaussian_filter(y, sigma=4)
+        ax.fill_between(x, y, zeropoint, color=colour[itex], alpha=0.3)
+        # ax.scatter(x, y, color='black', s=1)
+        # ax.scatter(x_arr, lims, color=colour[itex], s=8)
+
+        if itex not in legend_log:
+            legend_log.append(itex)
+            label = texture_label(tex)[:-1] + r'\:{\rm\:texture}$'
+            legend_elements.append(
+                Patch(facecolor=rgb_co[itex]+[0.3],
+                      edgecolor=rgb_co[itex]+[1], label=label)
+            )
+
+    LV_lim = np.log10(LV_ATMO_90PC_LIMITS[dim])
+    if normalise:
+        LV_lim -= np.log10(PLANCK_SCALE[dim])
+    ax.add_patch(patches.Rectangle(
+        (xlims[0], LV_lim[1]), np.diff(xlims), LV_lim[0]-LV_lim[1],
+        fill=False, hatch='\\\\'
+    ))
+
+    if dim in PLANCK_SCALE:
+        ps = np.log10(PLANCK_SCALE[dim])
+        if normalise:
+            ps -= np.log10(PLANCK_SCALE[dim])
+            ax.add_patch(Arrow(
+                0.27, -0.009, 0, -5, width=0.12, capstyle='butt',
+                facecolor='purple', fill=True, alpha=0.8,
+                edgecolor='darkmagenta'
+            ))
+            ax.add_patch(Arrow(
+                0.82, -0.009, 0, -5, width=0.12, capstyle='butt',
+                facecolor='purple', fill=True, alpha=0.8,
+                edgecolor='darkmagenta'
+            ))
+
+            ax.text(
+                0.3, 0.4, r'${\rm \bf Quantum\:Gravity\:Frontier}$',
+                fontsize=largesize-2, transform=ax.transAxes, va='top',
+                ha='left', color='purple'
+            )
+        ax.axhline(y=ps, color='purple', alpha=1., linewidth=1.5)
+
+    if normalise:
+        fig.text(
+            0.02, 0.5,
+            r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\Lambda_{' +
+            r'\:d={0}'.format(args.dimension)+r'}\:/\:{\rm M}_{\:\rm Planck}^{\:'+
+            r'{0}'.format(args.dimension-4)+ r'}\right )\: ]$', ha='left',
+            va='center', rotation='vertical', fontsize=largesize
+        )
+    else:
+        fig.text(
+            0.02, 0.5,
+            r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\Lambda_{' +
+            r'\:d={0}'.format(args.dimension)+r'}^{-1}\:' + get_units(args.dimension) +
+            r'\right )\: ]$', ha='left',
+            va='center', rotation='vertical', fontsize=largesize
         )
 
-        ax.text(
-            0.01, (1/3.)-0.05, r'$f_{\alpha}^S=(1:2:0)$', fontsize=13,
-            transform=ax.transAxes
-        )
-
-        for itex, tex in enumerate(textures):
-            print '|||| TEX = {0}'.format(tex)
-            lims = np.full(len(srcs), np.nan)
-
-            for isrc, src in enumerate(srcs):
-                x = src[0]
-                print '|||| X = {0}'.format(x)
-                argsc.source_ratio = src
-                try:
-                    scales, statistic = ma.compress_rows(r_data[idim][itex][isrc]).T
-                except:
-                    continue
-                lim = get_limit(scales, statistic, argsc, mask_initial=True)
-                if lim is None: continue
-                lims[isrc] = lim
-
-            lims = ma.masked_invalid(lims)
-            size = np.sum(~lims.mask)
-            if size == 0: continue
-
-            tck, u = splprep([x_arr[~lims.mask], lims[~lims.mask]], s=0, k=1)
-            y, x = splev(np.linspace(0, 1, 100), tck)
-            ax.scatter(lims, x_arr, marker='o', s=10, alpha=1, zorder=5,
-                       color='red')
-            ax.fill_betweenx(y, x, 0, color=colour[itex], alpha=1.)
-
-            if itex not in legend_log:
-                legend_log.append(itex)
-                label = texture_label(tex)[:-1] + r'\:{\rm\:texture}$'
-                legend_elements.append(
-                    Patch(facecolor=rgb_co[itex]+[0.3],
-                          edgecolor=rgb_co[itex]+[1], label=label)
-                )
-
-        LV_lim = np.log10(LV_ATMO_90PC_LIMITS[dim])
-        ax.add_patch(patches.Rectangle(
-            (LV_lim[1], ylims[0]), LV_lim[0]-LV_lim[1], np.diff(ylims),
-            fill=False, hatch='\\\\'
-        ))
-
-        if dim in PLANCK_SCALE.iterkeys():
-            ps = np.log10(PLANCK_SCALE[dim])
-            if ps < xlims[0]:
-                ax.annotate(
-                    s='', xy=(xlims[0], 1), xytext=(xlims[0]+1, 1),
-                    arrowprops={'arrowstyle': '->, head_length=0.2',
-                                'lw': 1, 'color':'purple'}
-                )
-            elif ps > xlims[1]:
-                ax.annotate(
-                    s='', xy=(xlims[1]-1, 1), xytext=(xlims[1], 1),
-                    arrowprops={'arrowstyle': '<-, head_length=0.2',
-                                'lw': 1, 'color':'purple'}
-                )
-            else:
-                ax.axvline(x=ps, color='purple', alpha=1., linewidth=1.5)
-
-    fig.text(0.06, 0.5,
-             r'$x\: : \: {\rm Source\:Ratio}\:[\:f_{\alpha}^S=\left (\:x,\left (1-x\right ),0\:\right )\:]$',
-             va='center', rotation='vertical', fontsize=19)
-
-    ax.get_xaxis().set_visible(True)
-    ax.set_xlabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda^{-1}\:/\:{\rm GeV}^{-d+4})\: ]$',
-                  fontsize=19)
-    ax.tick_params(axis='x', labelsize=16)
+    ax.set_xlabel(
+        r'${\rm Source\:Flavour\:Ratio}\:[\:f_{\alpha}^S=\left (\:x:1-x:0\:\right )\:]$',
+        fontsize=largesize
+    )
+    ax.tick_params(axis='x', labelsize=largesize-1)
 
     purple = [0.5019607843137255, 0.0, 0.5019607843137255]
     legend_elements.append(
@@ -778,25 +810,24 @@ def plot_x(data, outfile, outformat, args):
     legend_elements.append(
         Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube, Nature.Phy.14,961(2018)')
     )
-    legend = first_ax.legend(
-        handles=legend_elements, prop=dict(size=11), loc='center left',#loc='upper left',
-        title='Excluded regions', framealpha=1., edgecolor='black',
-        frameon=True
+    legend = ax.legend(
+        handles=legend_elements, prop=dict(size=labelsize-2),
+        loc='upper center', title='Excluded regions', framealpha=1.,
+        edgecolor='black', frameon=True, bbox_to_anchor=(0.55, 1)
     )
-    first_ax.set_zorder(10)
-    plt.setp(legend.get_title(), fontsize='11')
+    plt.setp(legend.get_title(), fontsize=labelsize)
     legend.get_frame().set_linestyle('-')
 
-    ybound = 0.61
-    if args.data is DataType.REAL:
-        fig.text(0.278, ybound, r'\bf IceCube Preliminary', color='red', fontsize=13,
-                 ha='center', va='center', zorder=11)
-    elif args.data is DataType.REALISATION:
-        fig.text(0.278, ybound-0.05, r'\bf IceCube Simulation', color='red', fontsize=13,
-                 ha='center', va='center', zorder=11)
-    else:
-        fig.text(0.278, ybound, r'\bf IceCube Simulation', color='red', fontsize=13,
-                 ha='center', va='center', zorder=11)
+    # ybound = 0.61
+    # if args.data is DataType.REAL:
+    #     fig.text(0.278, ybound, r'\bf IceCube Preliminary', color='red', fontsize=13,
+    #              ha='center', va='center', zorder=11)
+    # elif args.data is DataType.REALISATION:
+    #     fig.text(0.278, ybound-0.05, r'\bf IceCube Simulation', color='red', fontsize=13,
+    #              ha='center', va='center', zorder=11)
+    # else:
+    #     fig.text(0.278, ybound, r'\bf IceCube Simulation', color='red', fontsize=13,
+    #              ha='center', va='center', zorder=11)
 
     make_dir(outfile)
     for of in outformat:

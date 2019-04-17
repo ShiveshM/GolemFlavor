@@ -136,8 +136,7 @@ def parse_args(args=None):
 def gen_identifier(args):
     f = '_{0}'.format(str_enum(args.data))
     if args.data is not DataType.REAL:
-        ir1, ir2, ir3 = misc_utils.solve_ratio(args.injected_ratio)
-        f += '_INJ_{0:03d}_{1:03d}_{2:03d}'.format(ir1, ir2, ir3)
+        f += '_INJ_{0}'.format(misc_utils.solve_ratio(args.injected_ratio))
     return f
 
 
@@ -146,8 +145,7 @@ def gen_figtext(args, asimov_paramset):
     if args.data is DataType.REAL:
         f += 'IceCube Preliminary'
     else:
-        ir1, ir2, ir3 = misc_utils.solve_ratio(args.injected_ratio)
-        f += 'Injected ratio = [{0}, {1}, {2}]'.format(ir1, ir2, ir3)
+        f += '_INJ_{0}'.format(misc_utils.solve_ratio(args.injected_ratio))
         for param in asimov_paramset:
             f += '\nInjected {0:20s} = {1:.3f}'.format(
                 param.name, param.nominal_value

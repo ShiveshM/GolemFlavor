@@ -203,7 +203,7 @@ def get_tax(ax, scale, ax_labels):
     return tax
 
 
-def flavour_contour(frs, ax, nbins, coverage, **kwargs):
+def flavour_contour(frs, ax, nbins, coverage, fill=False, **kwargs):
     """Plot the flavour contour for a specified coverage."""
     # Histogram in flavour space
     H, b = np.histogramdd(
@@ -265,10 +265,16 @@ def flavour_contour(frs, ax, nbins, coverage, **kwargs):
     ev_polygon = np.dstack((xi[~mask], yi[~mask]))[0]
 
     # Plot
-    ax.plot(
-        ev_polygon.T[0], ev_polygon.T[1], label=r'{0}\%'.format(int(coverage)),
-        **kwargs
-    )
+    if fill:
+        ax.fill(
+            ev_polygon.T[0], ev_polygon.T[1], label=r'{0}\%'.format(int(coverage)),
+            **kwargs
+        )
+    else:
+        ax.plot(
+            ev_polygon.T[0], ev_polygon.T[1], label=r'{0}\%'.format(int(coverage)),
+            **kwargs
+        )
     # ax.scatter(points.T[0], points.T[1], marker='o', s=2, alpha=1, zorder=3,
     #           **kwargs)
 

@@ -78,13 +78,15 @@ if 'submitter' in socket.gethostname():
 
 def gen_figtext(args):
     """Generate the figure text."""
-    t = ''
-    t += 'Source flavour ratio = [{0}]'.format(solve_ratio(args.source_ratio))
+    t = r'$'
+    t += r'{\rm Source\:flavour\:ratio}'+r'\:=\:({0})'.format(
+        solve_ratio(args.source_ratio).replace('_', ':')
+    )
     if args.data in [DataType.ASIMOV, DataType.REALISATION]:
-        t += '\nIC injected flavour ratio = [{0}]'.format(
-            solve_ratio(args.injected_ratio)
+        t += '\n' + r'\rm{Injected\:flavour\:ratio}'+r'\:=\:({0})'.format(
+            solve_ratio(args.injected_ratio).replace('_', ':')
         )
-    t += '\nDimension = {0}'.format(args.dimension)
+    t += '$\n' + r'${\rm Dimension}'+r' = {0}$'.format(args.dimension)
     return t
 
 
@@ -438,7 +440,8 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     fig = plt.figure(figsize=(7, 5))
     ax = fig.add_subplot(111)
 
-    ax.set_xlim(np.log10(args.scale_region))
+    xlims = SCALE_BOUNDARIES[args.dimension]
+    ax.set_xlim(xlims)
     ax.set_xlabel(r'${\mathrm {log}}_{10} \left (\Lambda^{-1}' + \
                   get_units(args.dimension) +r'\right )$', fontsize=16)
     if args.stat_method is StatCateg.BAYESIAN:

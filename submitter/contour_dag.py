@@ -3,9 +3,6 @@
 import os
 import numpy as np
 
-gfsource      = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
-condor_script = gfsource + '/scripts/flavour_ratio/submitter/contour_submit.sub'
-
 injected_ratios = [
     (1, 1, 1),
     (1, 0, 0),

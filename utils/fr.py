@@ -13,7 +13,7 @@ from functools import partial
 
 import numpy as np
 
-from utils.enums import Texture
+from utils.enums import ParamTag, Texture
 from utils.misc import enum_parse, parse_bool
 
 import mpmath as mp
@@ -309,14 +309,14 @@ NUFIT_U = angles_to_u((0.307, (1-0.02195)**2, 0.565, 3.97935))
 """NuFIT mixing matrix (s_12^2, c_13^4, s_23^2, dcp)"""
 
 
-def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
+def params_to_BSMu(bsm_angles, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
                    sm_u=NUFIT_U, no_bsm=False, texture=Texture.NONE,
                    check_uni=True, epsilon=1e-7):
     """Construct the BSM mixing matrix from the BSM parameters.
 
     Parameters
     ----------
-    theta : list, length > 3
+    bsm_angles : list, length > 3
         BSM parameters
 
     dim : int
@@ -359,18 +359,18 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
             'got\n{0}'.format(sm_u)
         )
 
-    if not isinstance(theta, (list, tuple)):
-        theta = [theta]
+    if not isinstance(bsm_angles, (list, tuple)):
+        bsm_angles = [bsm_angles]
 
     z = 0.+1e-9
     if texture is Texture.OEU:
-        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = 0.5, 1.0, z, z, theta
+        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = 0.5, 1.0, z, z, bsm_angles
     elif texture is Texture.OET:
-        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = z, 0.25,  z, z, theta
+        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = z, 0.25,  z, z, bsm_angles
     elif texture is Texture.OUT:
-        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = z, 1.0, 0.5, z, theta
+        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = z, 1.0, 0.5, z, bsm_angles
     else:
-        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = theta
+        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = bsm_angles
 
     sc2 = np.power(10., sc2)
     sc1 = sc2 / 100.
@@ -393,6 +393,64 @@ def params_to_BSMu(theta, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
     if check_uni:
         test_unitarity(eg_vector, rse=True, epsilon=epsilon)
     return eg_vector
+
+
+def flux_averaged_BSMu(theta, args, spectral_index, llh_paramset):
+    if len(theta) != len(llh_paramset):
+        raise AssertionError(
+            'Length of MCMC scan is not the same as the input '
+            'params\ntheta={0}\nparamset]{1}'.format(theta, llh_paramset)
+        )
+
+    for idx, param in enumerate(llh_paramset):
+        param.value = theta[idx]
+
+    bin_centers = np.sqrt(args.binning[:-1]*args.binning[1:])
+    bin_width = np.abs(np.diff(args.binning))
+
+    source_flux = np.array(
+        [fr * np.power(bin_centers, spectral_index)
+         for fr in args.source_ratio]
+    ).T
+
+    bsm_angles = llh_paramset.from_tag(
+        [ParamTag.SCALE, ParamTag.MMANGLES], values=True
+    )
+
+    m_eig_names = ['m21_2', 'm3x_2']
+    ma_names = ['s_12_2', 'c_13_4', 's_23_2', 'dcp']
+
+    if set(m_eig_names+ma_names).issubset(set(llh_paramset.names)):
+        mass_eigenvalues = [x.value for x in llh_paramset if x.name in m_eig_names]
+        sm_u = angles_to_u(
+            [x.value for x in llh_paramset if x.name in ma_names]
+        )
+    else:
+        mass_eigenvalues = MASS_EIGENVALUES
+        sm_u = NUFIT_U
+
+    if args.no_bsm:
+        fr = u_to_fr(source_flux, np.array(sm_u, dtype=np.complex256))
+    else:
+        mf_perbin = []
+        for i_sf, sf_perbin in enumerate(source_flux):
+            u = params_to_BSMu(
+                bsm_angles        = bsm_angles,
+                dim               = args.dimension,
+                energy            = bin_centers[i_sf],
+                mass_eigenvalues  = mass_eigenvalues,
+                sm_u              = sm_u,
+                no_bsm            = args.no_bsm,
+                texture           = args.texture,
+            )
+            fr = u_to_fr(sf_perbin, u)
+            mf_perbin.append(fr)
+        measured_flux = np.array(mf_perbin).T
+        intergrated_measured_flux = np.sum(measured_flux * bin_width, axis=1)
+        averaged_measured_flux = (1./(args.binning[-1] - args.binning[0])) * \
+            intergrated_measured_flux
+        fr = averaged_measured_flux / np.sum(averaged_measured_flux)
+    return fr
 
 
 def test_unitarity(x, prnt=False, rse=False, epsilon=None):

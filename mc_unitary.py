@@ -5,12 +5,11 @@
 # date   : March 17, 2018
 
 """
-HESE BSM flavour ratio MCMC analysis script
+Sample points only assuming unitarity
 """
 
 from __future__ import absolute_import, division
 
-import os
 import argparse
 from copy import deepcopy
 from functools import partial
@@ -59,7 +58,7 @@ def get_paramsets(args, nuisance_paramset):
     hypo_paramset = ParamSet(hypo_paramset)
 
     tag = ParamTag.BESTFIT
-    flavour_angles = fr_utils.fr_to_angles(args.injected_ratio)
+    flavour_angles = fr_utils.fr_to_angles(args.source_ratio)
 
     asimov_paramset.extend([
         Param(name='astroFlavorAngle1', value=flavour_angles[0], ranges=[ 0., 1.], std=0.2, tag=tag),
@@ -81,7 +80,7 @@ def nuisance_argparse(parser):
 
 def process_args(args):
     """Process the input args."""
-    args.injected_ratio = fr_utils.normalise_fr(args.injected_ratio)
+    args.source_ratio = fr_utils.normalise_fr(args.source_ratio)
 
 
 def parse_args(args=None):
@@ -91,8 +90,8 @@ def parse_args(args=None):
         formatter_class=misc_utils.SortingHelpFormatter,
     )
     parser.add_argument(
-        '--injected-ratio', type=float, nargs=3, default=[1, 2, 0],
-        help='Set the central value for the injected flavour ratio at source'
+        '--source-ratio', type=float, nargs=3, default=[1, 2, 0],
+        help='Set the source flavour ratio'
     )
     parser.add_argument(
         '--seed', type=misc_utils.seed_parse, default='26',
@@ -113,14 +112,14 @@ def parse_args(args=None):
 
 
 def gen_identifier(args):
-    f = '_INJ_{0}'.format(misc_utils.solve_ratio(args.injected_ratio))
+    f = '_INJ_{0}'.format(misc_utils.solve_ratio(args.source_ratio))
     return f
 
 
 def gen_figtext(args, asimov_paramset):
     f = ''
-    f += 'Injected ratio = {0}'.format(
-        misc_utils.solve_ratio(args.injected_ratio)
+    f += 'Source ratio = {0}'.format(
+        misc_utils.solve_ratio(args.source_ratio)
     )
     for param in asimov_paramset:
         f += '\nInjected {0:20s} = {1:.3f}'.format(
@@ -165,7 +164,7 @@ def main():
     asimov_paramset, hypo_paramset = get_paramsets(args, define_nuisance())
 
     prefix = ''
-    outfile = args.datadir + '/fr' + prefix + gen_identifier(args)
+    outfile = args.datadir + '/mc_unitary' + prefix + gen_identifier(args)
     print '== {0:<25} = {1}'.format('outfile', outfile)
 
     print 'asimov_paramset', asimov_paramset
@@ -200,7 +199,7 @@ def main():
 
         mmxs = map(fr_utils.angles_to_u, samples)
         frs = np.array(
-            [fr_utils.u_to_fr(args.injected_ratio, x) for x in mmxs]
+            [fr_utils.u_to_fr(args.source_ratio, x) for x in mmxs]
         )
         mcmc_utils.save_chains(frs, outfile)
 

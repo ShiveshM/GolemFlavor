@@ -65,7 +65,7 @@ def parse_args(args=None):
     )
     parser.add_argument(
         '--datadir', type=str,
-        help='Path to directory containing MultiNest runs'
+        help='Path to directory containing contour chains'
     )
     if args is None: return parser.parse_args()
     else: return parser.parse_args(args.split())

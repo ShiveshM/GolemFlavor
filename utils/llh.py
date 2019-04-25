@@ -79,58 +79,13 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset):
             'Length of MCMC scan is not the same as the input '
             'params\ntheta={0}\nparamset]{1}'.format(theta, llh_paramset)
         )
-    for idx, param in enumerate(llh_paramset):
-        param.value = theta[idx]
     hypo_paramset = asimov_paramset
     for param in llh_paramset.from_tag(ParamTag.NUISANCE):
         hypo_paramset[param.name].value = param.value
 
-    bin_centers = np.sqrt(args.binning[:-1]*args.binning[1:])
-    bin_width = np.abs(np.diff(args.binning))
     spectral_index = -hypo_paramset['astroDeltaGamma'].value
-
-    source_flux = np.array(
-        [fr * np.power(bin_centers, spectral_index)
-         for fr in args.source_ratio]
-    ).T
-
-    bsm_angles = llh_paramset.from_tag(
-        [ParamTag.SCALE, ParamTag.MMANGLES], values=True
-    )
-
-    m_eig_names = ['m21_2', 'm3x_2']
-    ma_names = ['s_12_2', 'c_13_4', 's_23_2', 'dcp']
-
-    if set(m_eig_names+ma_names).issubset(set(llh_paramset.names)):
-        mass_eigenvalues = [x.value for x in llh_paramset if x.name in m_eig_names]
-        sm_u = fr_utils.angles_to_u(
-            [x.value for x in llh_paramset if x.name in ma_names]
-        )
-    else:
-        mass_eigenvalues = fr_utils.MASS_EIGENVALUES
-        sm_u = fr_utils.NUFIT_U
-
-    if args.no_bsm:
-        fr = fr_utils.u_to_fr(source_flux, np.array(sm_u, dtype=np.complex256))
-    else:
-        mf_perbin = []
-        for i_sf, sf_perbin in enumerate(source_flux):
-            u = fr_utils.params_to_BSMu(
-                theta             = bsm_angles,
-                dim               = args.dimension,
-                energy            = bin_centers[i_sf],
-                mass_eigenvalues  = mass_eigenvalues,
-                sm_u              = sm_u,
-                no_bsm            = args.no_bsm,
-                texture           = args.texture,
-            )
-            fr = fr_utils.u_to_fr(sf_perbin, u)
-            mf_perbin.append(fr)
-        measured_flux = np.array(mf_perbin).T
-        intergrated_measured_flux = np.sum(measured_flux * bin_width, axis=1)
-        averaged_measured_flux = (1./(args.binning[-1] - args.binning[0])) * \
-            intergrated_measured_flux
-        fr = averaged_measured_flux / np.sum(averaged_measured_flux)
+    # Assigning llh_paramset values from theta happens in this function.
+    fr = fr_utils.flux_averaged_BSMu(theta, args, spectral_index, llh_paramset)
 
     flavour_angles = fr_utils.fr_to_angles(fr)
     # print 'flavour_angles', map(float, flavour_angles)

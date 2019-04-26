@@ -132,13 +132,15 @@ def parse_args(args=None):
     mcmc_utils.mcmc_argparse(parser)
     nuisance_argparse(parser)
     misc_utils.remove_option(parser, 'injected_ratio')
+    misc_utils.remove_option(parser, 'plot_angles')
+    misc_utils.remove_option(parser, 'plot_elements')
     if args is None: return parser.parse_args()
     else: return parser.parse_args(args.split())
 
 
 def gen_identifier(args):
     f = '_DIM{0}'.format(args.dimension)
-    f += '_sfr_' + misc_utils.solve_ratio(args.source_ratio)
+    f += '_SRC_' + misc_utils.solve_ratio(args.source_ratio)
     f += '_{0}'.format(misc_utils.str_enum(args.texture))
     return f
 
@@ -231,17 +233,9 @@ def main():
             ), samples),
             dtype=float
         )
-        mcmc_utils.save_chains(frs, outfile)
+        frs_scale = np.vstack((frs.T, samples[:-1].T)).T
+        mcmc_utils.save_chains(frs_scale, outfile)
 
-    of = outfile[:5]+outfile[5:].replace('data', 'plots')+'_posterior'
-    plot_utils.chainer_plot(
-        infile       = outfile+'.npy',
-        outfile      = of,
-        outformat    = ['png'],
-        args         = args,
-        llh_paramset = llh_paramset,
-        fig_text     = gen_figtext(args, llh_paramset)
-    )
     print "DONE!"
 
 

@@ -49,7 +49,7 @@ GLOBAL_PARAMS.update(dict(
     plot_elements = 'False',
 ))
 
-dagfile = 'dagman_mc_texture_{0}'.format(GLOBAL_PARAMS['data'])
+dagfile = 'dagman_mc_texture'
 dagfile += prefix + '.submit'
 
 with open(dagfile, 'w') as f:

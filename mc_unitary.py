@@ -107,12 +107,14 @@ def parse_args(args=None):
     )
     mcmc_utils.mcmc_argparse(parser)
     nuisance_argparse(parser)
+    misc_utils.remove_option(parser, 'plot_angles')
+    misc_utils.remove_option(parser, 'plot_elements')
     if args is None: return parser.parse_args()
     else: return parser.parse_args(args.split())
 
 
 def gen_identifier(args):
-    f = '_INJ_{0}'.format(misc_utils.solve_ratio(args.source_ratio))
+    f = '_SRC_{0}'.format(misc_utils.solve_ratio(args.source_ratio))
     return f
 
 

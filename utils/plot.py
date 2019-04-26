@@ -793,7 +793,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
         fig.text(
             0.02, 0.5,
             r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\Lambda_{' +
-            r'\:d={0}'.format(args.dimension)+r'}\:/\:{\rm M}_{\:\rm Planck}^{\:'+
+            r'\:{0}'.format(args.dimension)+r'}\:/\:{\rm M}_{\:\rm Planck}^{\:'+
             r'{0}'.format(args.dimension-4)+ r'}\right )\: ]$', ha='left',
             va='center', rotation='vertical', fontsize=largesize
         )
@@ -801,7 +801,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
         fig.text(
             0.02, 0.5,
             r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\Lambda_{' +
-            r'\:d={0}'.format(args.dimension)+r'}^{-1}\:' + get_units(args.dimension) +
+            r'\:{0}'.format(args.dimension)+r'}^{-1}\:' + get_units(args.dimension) +
             r'\right )\: ]$', ha='left',
             va='center', rotation='vertical', fontsize=largesize
         )

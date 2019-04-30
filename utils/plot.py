@@ -37,6 +37,9 @@ from ternary.heatmapping import polygon_generator
 
 import shapely.geometry as geometry
 
+from shapely.ops import cascaded_union, polygonize
+from scipy.spatial import Delaunay
+
 from utils.enums import DataType, str_enum
 from utils.enums import Likelihood, ParamTag, StatCateg, Texture
 from utils.misc import get_units, make_dir, solve_ratio, interval
@@ -205,18 +208,76 @@ def get_tax(ax, scale, ax_labels):
     return tax
 
 
-def flavour_contour(frs, ax, nbins, coverage, fill=False, **kwargs):
+def alpha_shape(points, alpha):
+    """
+    Compute the alpha shape (concave hull) of a set
+    of points.
+    @param points: Iterable container of points.
+    @param alpha: alpha value to influence the
+        gooeyness of the border. Smaller numbers
+        don't fall inward as much as larger numbers.
+        Too large, and you lose everything!
+    """
+    if len(points) < 4:
+        # When you have a triangle, there is no sense
+        # in computing an alpha shape.
+        return geometry.MultiPoint(list(points)).convex_hull
+    def add_edge(edges, edge_points, coords, i, j):
+        """
+        Add a line between the i-th and j-th points,
+        if not in the list already
+        """
+        if (i, j) in edges or (j, i) in edges:
+            # already added
+            return
+        edges.add( (i, j) )
+        edge_points.append(coords[ [i, j] ])
+    coords = np.array([point.coords[0]
+                       for point in points])
+    tri = Delaunay(coords)
+    edges = set()
+    edge_points = []
+    # loop over triangles:
+    # ia, ib, ic = indices of corner points of the
+    # triangle
+    for ia, ib, ic in tri.vertices:
+        pa = coords[ia]
+        pb = coords[ib]
+        pc = coords[ic]
+        # Lengths of sides of triangle
+        a = np.sqrt((pa[0]-pb[0])**2 + (pa[1]-pb[1])**2)
+        b = np.sqrt((pb[0]-pc[0])**2 + (pb[1]-pc[1])**2)
+        c = np.sqrt((pc[0]-pa[0])**2 + (pc[1]-pa[1])**2)
+        # Semiperimeter of triangle
+        s = (a + b + c)/2.0
+        # Area of triangle by Heron's formula
+        area = np.sqrt(s*(s-a)*(s-b)*(s-c))
+        circum_r = a*b*c/(4.0*area)
+        # Here's the radius filter.
+        #print circum_r
+        if circum_r < 1.0/alpha:
+            add_edge(edges, edge_points, coords, ia, ib)
+            add_edge(edges, edge_points, coords, ib, ic)
+            add_edge(edges, edge_points, coords, ic, ia)
+    m = geometry.MultiLineString(edge_points)
+    triangles = list(polygonize(m))
+    return cascaded_union(triangles), edge_points
+
+
+def flavour_contour(frs, ax, nbins, coverage, smoothing=0.4, fill=False,
+                    oversample=1, delaunay=False, d_alpha=1.5, **kwargs):
     """Plot the flavour contour for a specified coverage."""
     # Histogram in flavour space
+    os_nbins = nbins * oversample
     H, b = np.histogramdd(
         (frs[:,0], frs[:,1], frs[:,2]),
-        bins=(nbins+1, nbins+1, nbins+1), range=((0, 1), (0, 1), (0, 1))
+        bins=(os_nbins+1, os_nbins+1, os_nbins+1),
+        range=((0, 1), (0, 1), (0, 1))
     )
     H = H / np.sum(H)
 
     # 3D smoothing
-    smoothing = 0.05
-    H_s = gaussian_filter(H, sigma=smoothing)
+    H_s = gaussian_filter(H, sigma=0.05)
 
     # Finding coverage
     H_r = np.ravel(H_s)
@@ -228,27 +289,35 @@ def flavour_contour(frs, ax, nbins, coverage, fill=False, **kwargs):
     mask = mask_r.reshape(H_s.shape)
 
     # Get vertices inside covered region
-    binx = np.linspace(0, 1, nbins+1)
+    binx = np.linspace(0, 1, os_nbins+1)
     interp_dict = {}
     for i in xrange(len(binx)):
         for j in xrange(len(binx)):
             for k in xrange(len(binx)):
                 if mask[i][j][k] == 1:
                     interp_dict[(i, j, k)] = H_s[i, j, k]
-    vertices = np.array(heatmap(interp_dict, nbins))
+    vertices = np.array(heatmap(interp_dict, os_nbins))
     points = vertices.reshape((len(vertices)*3, 2))
 
-    # Convex full to find points forming exterior bound
     pc = geometry.MultiPoint(points)
-    polygon = pc.convex_hull
-    ex_cor = np.array(list(polygon.exterior.coords))
+    if not delaunay:
+        # Convex full to find points forming exterior bound
+        polygon = pc.convex_hull
+        ex_cor = np.array(list(polygon.exterior.coords))
+    else:
+        # Delaunay
+        concave_hull, edge_points = alpha_shape(pc, alpha=d_alpha)
+        polygon = geometry.Polygon(concave_hull.buffer(1))
+        ex_cor = gaussian_filter(
+            np.array(list(polygon.exterior.coords)), sigma=0.08
+        )
 
     # Join points with a spline
     tck, u = splprep([ex_cor.T[0], ex_cor.T[1]], s=0., per=1, k=1)
     xi, yi = map(np.array, splev(np.linspace(0, 1, 300), tck))
 
     # Spline again to smooth
-    tck, u = splprep([xi, yi], s=0.4, per=1, k=3)
+    tck, u = splprep([xi, yi], s=smoothing, per=1, k=3)
     xi, yi = map(np.array, splev(np.linspace(0, 1, 300), tck))
     ev_polygon = np.dstack((xi, yi))[0]
 
@@ -257,14 +326,14 @@ def flavour_contour(frs, ax, nbins, coverage, fill=False, **kwargs):
         x, y = p
         b = y / (np.sqrt(3)/2.)
         a = x - b/2.
-        return [a, b, nbins-a-b]
+        return [a, b, os_nbins-a-b]
 
     # Remove points interpolated outside flavour triangle
     f_ev_polygon = np.array(map(project_toflavour, ev_polygon))
     xf, yf, zf = f_ev_polygon.T
-    mask = np.array((xf < 0) | (yf < 0) | (zf < 0) | (xf > nbins) |
-                    (yf > nbins) | (zf > nbins))
-    ev_polygon = np.dstack((xi[~mask], yi[~mask]))[0]
+    mask = np.array((xf < 0) | (yf < 0) | (zf < 0) | (xf > os_nbins) |
+                    (yf > os_nbins) | (zf > os_nbins))
+    ev_polygon = np.dstack((xi[~mask], yi[~mask]))[0] / oversample
 
     # Plot
     if fill:

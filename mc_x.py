@@ -183,7 +183,6 @@ def main():
             threads  = args.threads
         )
 
-        print 'samples.shape', samples.shape
         nsamples = len(samples)
         srcs = [fr_utils.normalise_fr((x, 1-x, 0)) for x in samples.T[-1]]
         mmxs = map(fr_utils.angles_to_u, samples.T[:-1].T)

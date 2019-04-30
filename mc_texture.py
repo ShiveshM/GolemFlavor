@@ -145,19 +145,6 @@ def gen_identifier(args):
     return f
 
 
-def gen_figtext(args):
-    """Generate the figure text."""
-    t = r'$'
-    t += r'{\rm Source\:flavour\:ratio}'+r'\:=\:({0})'.format(
-        misc_utils.solve_ratio(args.source_ratio).replace('_', ':')
-    )
-    t += '$\n' + r'${\rm Texture}'+r' = {0}'.format(
-        misc_utils.str_enum(args.texture)
-    )
-    t += '$\n' + r'${\rm Dimension}'+r' = {0}$'.format(args.dimension)
-    return t
-
-
 def triangle_llh(theta, args, llh_paramset):
     """Log likelihood function for a given theta."""
     if len(theta) != len(llh_paramset):

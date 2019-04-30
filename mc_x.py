@@ -5,7 +5,7 @@
 # date   : March 17, 2018
 
 """
-Sample points only assuming unitarity
+Sample SM points for (x, 1-x, 0)
 """
 
 from __future__ import absolute_import, division
@@ -33,10 +33,14 @@ def define_nuisance():
     lg_prior = PriorsCateg.LIMITEDGAUSS
     e = 1e-9
     nuisance.extend([
-        Param(name='s_12_2', value=0.307,            seed=[0.26, 0.35],     ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2',    tag=tag),
-        Param(name='c_13_4', value=(1-(0.02206))**2, seed=[0.950, 0.961],   ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4',    tag=tag),
-        Param(name='s_23_2', value=0.538,            seed=[0.31, 0.75],     ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2',    tag=tag),
+        Param(name='s_12_2', value=0.307,            seed=[0.26, 0.35],     ranges=[0., 1.],      std=0.013,   tex=r's_{12}^2', prior=lg_prior,  tag=tag),
+        Param(name='c_13_4', value=(1-(0.02206))**2, seed=[0.950, 0.961],   ranges=[0., 1.],      std=0.00147, tex=r'c_{13}^4', prior=lg_prior,  tag=tag),
+        Param(name='s_23_2', value=0.538,            seed=[0.31, 0.75],     ranges=[0., 1.],      std=0.069,   tex=r's_{23}^2', prior=lg_prior,  tag=tag),
         Param(name='dcp',    value=4.08404,          seed=[0+e, 2*np.pi-e], ranges=[0., 2*np.pi], std=2.0,     tex=r'\delta_{CP}', tag=tag),
+    ])
+    tag = ParamTag.SRCANGLES
+    nuisance.extend([
+        Param(name='astroX', value=0.5, seed=[0., 1.], ranges=[0., 1.], std=0.1, tex=r'x', tag=tag)
     ])
     return ParamSet(nuisance)
 
@@ -49,7 +53,9 @@ def get_paramsets(args, nuisance_paramset):
     hypo_paramset = []
 
     hypo_paramset.extend(
-        [x for x in nuisance_paramset.from_tag(ParamTag.SM_ANGLES)]
+        [x for x in nuisance_paramset.from_tag((
+            ParamTag.SM_ANGLES, ParamTag.SRCANGLES
+        ))]
     )
 
     for parm in hypo_paramset:
@@ -58,11 +64,9 @@ def get_paramsets(args, nuisance_paramset):
     hypo_paramset = ParamSet(hypo_paramset)
 
     tag = ParamTag.BESTFIT
-    flavour_angles = fr_utils.fr_to_angles(args.source_ratio)
-
     asimov_paramset.extend([
-        Param(name='astroFlavorAngle1', value=flavour_angles[0], ranges=[ 0., 1.], std=0.2, tag=tag),
-        Param(name='astroFlavorAngle2', value=flavour_angles[1], ranges=[-1., 1.], std=0.2, tag=tag),
+        Param(name='astroFlavorAngle1', value=0., ranges=[ 0., 1.], std=0.2, tag=tag),
+        Param(name='astroFlavorAngle2', value=0., ranges=[-1., 1.], std=0.2, tag=tag),
     ])
     asimov_paramset = ParamSet(asimov_paramset)
 
@@ -80,7 +84,7 @@ def nuisance_argparse(parser):
 
 def process_args(args):
     """Process the input args."""
-    args.source_ratio = fr_utils.normalise_fr(args.source_ratio)
+    pass
 
 
 def parse_args(args=None):
@@ -88,10 +92,6 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser(
         description="BSM flavour ratio analysis",
         formatter_class=misc_utils.SortingHelpFormatter,
-    )
-    parser.add_argument(
-        '--source-ratio', type=float, nargs=3, default=[1, 2, 0],
-        help='Set the source flavour ratio'
     )
     parser.add_argument(
         '--seed', type=misc_utils.seed_parse, default='26',
@@ -107,15 +107,11 @@ def parse_args(args=None):
     )
     mcmc_utils.mcmc_argparse(parser)
     nuisance_argparse(parser)
+    misc_utils.remove_option(parser, 'injected_ratio')
     misc_utils.remove_option(parser, 'plot_angles')
     misc_utils.remove_option(parser, 'plot_elements')
     if args is None: return parser.parse_args()
     else: return parser.parse_args(args.split())
-
-
-def gen_identifier(args):
-    f = '_SRC_{0}'.format(misc_utils.solve_ratio(args.source_ratio))
-    return f
 
 
 def triangle_llh(theta, args, hypo_paramset):
@@ -154,7 +150,7 @@ def main():
     asimov_paramset, hypo_paramset = get_paramsets(args, define_nuisance())
 
     prefix = ''
-    outfile = args.datadir + '/mc_unitary' + prefix + gen_identifier(args)
+    outfile = args.datadir + '/mc_x' + prefix
     print '== {0:<25} = {1}'.format('outfile', outfile)
 
     print 'asimov_paramset', asimov_paramset
@@ -187,9 +183,12 @@ def main():
             threads  = args.threads
         )
 
-        mmxs = map(fr_utils.angles_to_u, samples)
+        print 'samples.shape', samples.shape
+        nsamples = len(samples)
+        srcs = [fr_utils.normalise_fr((x, 1-x, 0)) for x in samples.T[-1]]
+        mmxs = map(fr_utils.angles_to_u, samples.T[:-1].T)
         frs = np.array(
-            [fr_utils.u_to_fr(args.source_ratio, x) for x in mmxs]
+            [fr_utils.u_to_fr(srcs[i], mmxs[i]) for i in xrange(nsamples)]
         )
         mcmc_utils.save_chains(frs, outfile)
 
@@ -201,3 +200,4 @@ main.__doc__ = __doc__
 
 if __name__ == '__main__':
     main()
+

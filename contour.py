@@ -28,8 +28,6 @@ from utils.enums import DataType, Likelihood, MCMCSeedType, ParamTag
 from utils.enums import PriorsCateg
 from utils.param import Param, ParamSet
 
-from pymultinest import Analyzer, run
-
 
 def define_nuisance():
     """Define the nuisance parameters."""

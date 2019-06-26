@@ -505,7 +505,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
 
     min_idx = np.argmin(scales)
     null = statistic[min_idx]
-    fig_text += '\nnull lnZ = {0:.2f}'.format(null)
+    # fig_text += '\nnull lnZ = {0:.2f}'.format(null)
 
     if args.stat_method is StatCateg.BAYESIAN:
         reduced_ev = -(statistic_rm - null)

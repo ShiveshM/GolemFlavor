@@ -101,57 +101,48 @@ def main():
     print n_params
 
     # Data
+    prefix = 'austin'
     # data_path = '/home/aschneider/programs/GOLEMSPACE/sources/GolemFit/scripts/diffuse/mcmcs/results/dpl_numu_prior_flavor_20190302-162221-a747f528-8aa6-4488-8c80-059572c099fe.json'
-    data_path = '/home/aschneider/programs/GOLEMSPACE/sources/GolemFit/scripts/diffuse/mcmcs/results/spl_flavor_20190311-170924-5297d736-3c6e-447f-8de7-4a0653a51bb6.json'
+    # data_path = '/home/aschneider/programs/GOLEMSPACE/sources/GolemFit/scripts/diffuse/mcmcs/results/spl_flavor_20190311-170924-5297d736-3c6e-447f-8de7-4a0653a51bb6.json'
+    data_path = '/home/aschneider/programs/GOLEMSPACE/sources/GolemFit/scripts/diffuse/mcmcs/results/spl_flavor_20190420-161513-524f1731-0bcb-49e3-a2ea-ff3c69b4e53c.json'
     with open(data_path) as f:
         d_json = json.load(f)
-
     names = d_json['func_args']
     chains = np.array(d_json['chain'])
     print 'names', names
     print 'chains.shape', chains.shape
-
     flavour_angles = chains[:,4:6]
     flavour_ratios = np.array(
         map(fr_utils.angles_to_fr, flavour_angles)
     )
 
+    # # Load HESE contour.
+    # prefix = 'shivesh'
+    # contour_infile = '/data/user/smandalia/flavour_ratio/data/contour/contour_REAL.npy'
+    # contour_angles = np.load(contour_infile)[:,-2:]
+    # flavour_ratios = np.array(map(fr_utils.angles_to_fr, contour_angles))
+
     nbins = 25
+    ax_labels = [r'$f_{e}^{\oplus}$', r'$f_{\mu}^{\oplus}$', r'$f_{\tau}^{\oplus}$']
 
     fig = plt.figure(figsize=(8, 8))
     ax = fig.add_subplot(111)
-    tax = plot_utils.get_tax(ax, scale=nbins)
+    tax = plot_utils.get_tax(ax, scale=nbins, ax_labels=ax_labels)
 
-    plot_utils.flavour_contour(
-        frs = flavour_ratios,
-        ax = ax,
-        nbins = nbins,
-        coverage = 99,
-        linewidth = 2,
-        color = 'green'
-    )
-
-    plot_utils.flavour_contour(
-        frs = flavour_ratios,
-        ax = ax,
-        nbins = nbins,
-        coverage = 90,
-        linewidth = 2,
-        color = 'blue'
-    )
-
-    plot_utils.flavour_contour(
-        frs = flavour_ratios,
-        ax = ax,
-        nbins = nbins,
-        coverage = 68,
-        linewidth = 2,
-        color = 'red'
-    )
+    levels = [10, 20, 40, 60, 68, 80, 90, 99]
+    for l in levels:
+        plot_utils.flavour_contour(
+            frs = flavour_ratios,
+            ax = ax,
+            nbins = nbins,
+            coverage = l,
+            linewidth = 2,
+            # color = 'green'
+        )
 
     ax.legend()
 
-    fig.savefig('test_austin.png', bbox_inches='tight', dpi=150)
+    fig.savefig('contour_{0}.png'.format(prefix), bbox_inches='tight', dpi=150)
 
     print "DONE!"
 

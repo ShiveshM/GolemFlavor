@@ -187,7 +187,8 @@ def main():
         srcs = [fr_utils.normalise_fr((x, 1-x, 0)) for x in samples.T[-1]]
         mmxs = map(fr_utils.angles_to_u, samples.T[:-1].T)
         frs = np.array(
-            [fr_utils.u_to_fr(srcs[i], mmxs[i]) for i in xrange(nsamples)]
+            [fr_utils.u_to_fr(srcs[i], mmxs[i]) for i in xrange(nsamples)],
+            dtype=np.float64
         )
         mcmc_utils.save_chains(frs, outfile)
 

@@ -13,3 +13,6 @@ mnrun/
 plot_llh/frs
 plot_llh/chains
 test/
+*.tar.gz
+*.tar
+*.gz

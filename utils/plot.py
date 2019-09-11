@@ -176,7 +176,7 @@ def heatmap(data, scale, vmin=None, vmax=None, style='triangular'):
     return vertices
 
 
-def get_tax(ax, scale, ax_labels):
+def get_tax(ax, scale, ax_labels, rot_ax_labels=False, fontsize=23):
     ax.set_aspect('equal')
 
     # Boundary and Gridlines
@@ -184,14 +184,24 @@ def get_tax(ax, scale, ax_labels):
 
     # Draw Boundary and Gridlines
     tax.boundary(linewidth=2.0)
-    tax.gridlines(color='grey', multiple=scale/5., linewidth=1.0, alpha=0.4, ls='--')
-    tax.gridlines(color='grey', multiple=scale/10., linewidth=0.5, alpha=0.4, ls=':')
+    tax.gridlines(color='grey', multiple=scale/5., linewidth=0.5, alpha=0.7, ls='--')
+    # tax.gridlines(color='grey', multiple=scale/10., linewidth=0.2, alpha=1, ls=':')
 
     # Set Axis labels and Title
-    fontsize = 23
-    tax.bottom_axis_label(ax_labels[0], fontsize=fontsize+8, position=(0.55, -0.20/2, 0.5), rotation=0)
-    tax.right_axis_label(ax_labels[1], fontsize=fontsize+8, offset=0.2, rotation=0)
-    tax.left_axis_label(ax_labels[2], fontsize=fontsize+8, offset=0.2, rotation=0)
+    if rot_ax_labels: roty, rotz = (-60, 60)
+    else: roty, rotz = (0, 0)
+    tax.bottom_axis_label(
+        ax_labels[0], fontsize=fontsize+4,
+        position=(0.55, -0.10/2, 0.5), rotation=0
+    )
+    tax.right_axis_label(
+        ax_labels[1], fontsize=fontsize+4,
+        position=(2./5+0.1, 3./5+0.06, 0), rotation=roty
+    )
+    tax.left_axis_label(
+        ax_labels[2], fontsize=fontsize+4,
+        position=(-0.15, 3./5+0.1, 2./5), rotation=rotz
+    )
 
     # Remove default Matplotlib axis
     tax.get_axes().axis('off')
@@ -199,13 +209,28 @@ def get_tax(ax, scale, ax_labels):
 
     # Set ticks
     ticks = np.linspace(0, 1, 6)
-    tax.ticks(ticks=ticks, locations=ticks*scale, axis='blr', linewidth=1,
+    tax.ticks(ticks=ticks, locations=ticks*scale, axis='lr', linewidth=1,
               offset=0.03, fontsize=fontsize, tick_formats='%.1f')
+    tax.ticks(ticks=ticks, locations=ticks*scale, axis='b', linewidth=1,
+              offset=0.02, fontsize=fontsize, tick_formats='%.1f')
     # tax.ticks()
 
     tax._redraw_labels()
 
     return tax
+
+
+def project(p):
+    """Convert from flavour to cartesian."""
+    a, b, c = p
+    x = a + b/2.
+    y = b * np.sqrt(3)/2.
+    return [x, y]
+
+
+def tax_fill(ax, points, nbins, **kwargs):
+    pol = np.array(map(project, points))
+    ax.fill(pol.T[0]*nbins, pol.T[1]*nbins, **kwargs)
 
 
 def alpha_shape(points, alpha):

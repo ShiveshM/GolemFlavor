@@ -32,22 +32,11 @@ B_v = np.vectorize(
     lambda x, y, z: np.max([0] + [S1(x, y, z)] + S2(x, y, z) + S3(x, y, z))
 )
 
-def norm_quad(x):
-    """Normalise to quadrant -pi -> pi."""
-    return x
-    # n = deepcopy(x)
-    # while np.abs(n) > np.pi:
-    #     if n > np.pi: n -= 2*np.pi
-    #     else: n += 2*np.pi
-    # return n
-
 def Bn(B, omega, chi):
     """Normalised B."""
-    nchi = norm_quad(chi)
-    nomega = norm_quad(omega)
-    if np.abs(nchi - nomega) >= (np.pi / 2.):
+    if np.abs(chi - omega) >= (np.pi / 2.):
         return np.inf
-    return B / np.cos(nchi - omega)
+    return B / np.cos(chi - omega)
 
 def calc_unitarity_bounds(f_s, n_samples):
     """Calculate unitarity boundary for a given source flavour ratio.

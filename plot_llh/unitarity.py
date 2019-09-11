@@ -34,11 +34,12 @@ B_v = np.vectorize(
 
 def norm_quad(x):
     """Normalise to quadrant -pi -> pi."""
-    n = deepcopy(x)
-    while np.abs(n) > np.pi:
-        if n > np.pi: n -= 2*np.pi
-        else: n += 2*np.pi
-    return n
+    return x
+    # n = deepcopy(x)
+    # while np.abs(n) > np.pi:
+    #     if n > np.pi: n -= 2*np.pi
+    #     else: n += 2*np.pi
+    # return n
 
 def Bn(B, omega, chi):
     """Normalised B."""
@@ -64,20 +65,21 @@ def calc_unitarity_bounds(f_s, n_samples):
     numpy ndarray measured flavour ratios of shape (n_samples, 3)
 
     """
-    omega = np.linspace(-np.pi, np.pi, n_samples)
-    chi = np.linspace(-np.pi, np.pi, n_samples)
-
-    x = (1 - f_s[0] - 2*f_s[1]) * np.sin(omega)
-    y = (1 - 2*f_s[0] - f_s[1]) * np.cos(omega)
-    z = (f_s[1] - f_s[0]) * (np.cos(omega) - np.sin(omega))
-
-    B = B_v(x, y, z)
-    if np.any(~np.isfinite(B)):
-        print 'B', B
-        raise AssertionError('inf elements found!')
+    chi = np.linspace(0., 2*np.pi, n_samples)
+    domega = np.linspace(-np.pi/2., np.pi/2, n_samples)
 
     eta = np.full_like(chi, np.inf, dtype=np.float)
     for i_chi in xrange(n_samples):
+        omega = chi[i_chi] + domega
+        x = (1 - f_s[0] - 2*f_s[1]) * np.sin(omega)
+        y = (1 - 2*f_s[0] - f_s[1]) * np.cos(omega)
+        z = (f_s[1] - f_s[0]) * (np.cos(omega) - np.sin(omega))
+
+        B = B_v(x, y, z)
+        if np.any(~np.isfinite(B)):
+            print 'B', B
+            raise AssertionError('inf elements found!')
+
         nB = []
         for i_ome in xrange(n_samples):
             nB.append(Bn(B[i_ome], omega[i_ome], chi[i_chi]))

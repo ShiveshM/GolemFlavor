@@ -228,6 +228,14 @@ def project(p):
     return [x, y]
 
 
+def project_toflavour(p, nbins):
+    """Convert from cartesian to flavour space."""
+    x, y = p
+    b = y / (np.sqrt(3)/2.)
+    a = x - b/2.
+    return [a, b, nbins-a-b]
+
+
 def tax_fill(ax, points, nbins, **kwargs):
     pol = np.array(map(project, points))
     ax.fill(pol.T[0]*nbins, pol.T[1]*nbins, **kwargs)
@@ -289,8 +297,9 @@ def alpha_shape(points, alpha):
     return cascaded_union(triangles), edge_points
 
 
-def flavour_contour(frs, ax, nbins, coverage, smoothing=0.4, fill=False,
-                    oversample=1, delaunay=False, d_alpha=1.5, **kwargs):
+def flavour_contour(frs, nbins, coverage, ax=None, smoothing=0.4,
+                    hist_smooth=0.05, plot=True, fill=False, oversample=1,
+                    delaunay=False, d_alpha=1.5, d_gauss=0.08, **kwargs):
     """Plot the flavour contour for a specified coverage."""
     # Histogram in flavour space
     os_nbins = nbins * oversample
@@ -302,7 +311,7 @@ def flavour_contour(frs, ax, nbins, coverage, smoothing=0.4, fill=False,
     H = H / np.sum(H)
 
     # 3D smoothing
-    H_s = gaussian_filter(H, sigma=0.05)
+    H_s = gaussian_filter(H, sigma=hist_smooth)
 
     # Finding coverage
     H_r = np.ravel(H_s)
@@ -333,46 +342,45 @@ def flavour_contour(frs, ax, nbins, coverage, smoothing=0.4, fill=False,
         # Delaunay
         concave_hull, edge_points = alpha_shape(pc, alpha=d_alpha)
         polygon = geometry.Polygon(concave_hull.buffer(1))
-        ex_cor = gaussian_filter(
-            np.array(list(polygon.exterior.coords)), sigma=0.08
-        )
+        if d_gauss == 0.:
+            ex_cor = np.array(list(polygon.exterior.coords))
+        else:
+            ex_cor = gaussian_filter(
+                np.array(list(polygon.exterior.coords)), sigma=d_gauss
+            )
 
     # Join points with a spline
     tck, u = splprep([ex_cor.T[0], ex_cor.T[1]], s=0., per=1, k=1)
     xi, yi = map(np.array, splev(np.linspace(0, 1, 300), tck))
 
     # Spline again to smooth
-    tck, u = splprep([xi, yi], s=smoothing, per=1, k=3)
-    xi, yi = map(np.array, splev(np.linspace(0, 1, 300), tck))
+    if smoothing != 0:
+        tck, u = splprep([xi, yi], s=smoothing, per=1, k=3)
+        xi, yi = map(np.array, splev(np.linspace(0, 1, 300), tck))
+
     ev_polygon = np.dstack((xi, yi))[0]
 
-    def project_toflavour(p):
-        """Convert from cartesian to flavour space."""
-        x, y = p
-        b = y / (np.sqrt(3)/2.)
-        a = x - b/2.
-        return [a, b, os_nbins-a-b]
-
     # Remove points interpolated outside flavour triangle
-    f_ev_polygon = np.array(map(project_toflavour, ev_polygon))
+    f_ev_polygon = np.array(map(lambda x: project_toflavour(x, os_nbins), ev_polygon))
     xf, yf, zf = f_ev_polygon.T
     mask = np.array((xf < 0) | (yf < 0) | (zf < 0) | (xf > os_nbins) |
                     (yf > os_nbins) | (zf > os_nbins))
     ev_polygon = np.dstack((xi[~mask], yi[~mask]))[0] / oversample
 
     # Plot
-    if fill:
-        ax.fill(
-            ev_polygon.T[0], ev_polygon.T[1], label=r'{0}\%'.format(int(coverage)),
-            **kwargs
-        )
+    if plot:
+        if fill:
+            ax.fill(
+                ev_polygon.T[0], ev_polygon.T[1],
+                label=r'{0}\%'.format(int(coverage)), **kwargs
+            )
+        else:
+            ax.plot(
+                ev_polygon.T[0], ev_polygon.T[1],
+                label=r'{0}\%'.format(int(coverage)), **kwargs
+            )
     else:
-        ax.plot(
-            ev_polygon.T[0], ev_polygon.T[1], label=r'{0}\%'.format(int(coverage)),
-            **kwargs
-        )
-    # ax.scatter(points.T[0], points.T[1], marker='o', s=2, alpha=1, zorder=3,
-    #           **kwargs)
+        return ev_polygon
 
 
 def plot_Tchain(Tchain, axes_labels, ranges):

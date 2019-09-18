@@ -11,8 +11,6 @@ Calculation follows from DOI 10.1103/PhysRevD.98.123023
 
 from __future__ import absolute_import, division
 
-from copy import deepcopy
-
 import numpy as np
 
 def Sp(x, y, z):

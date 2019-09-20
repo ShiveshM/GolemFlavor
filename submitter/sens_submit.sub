@@ -1,5 +1,5 @@
 Executable = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/sens.py
-Arguments = "--ast $(ast) --data $(data) --dimension $(dimension) --no-bsm $(no_bsm) --datadir $(datadir) --seed $(seed) --source-ratio $(sr0) $(sr1) $(sr2) --threads $(threads) --binning $(binning) --texture $(texture) --segments $(segments) --eval-segment $(eval_segment) --stat-method $(stat_method) --mn-live-points $(mn_live_points) --mn-tolerance $(mn_tolerance) --mn-output $(mn_output) --run-mn $(run_mn)"
+Arguments = "--ast $(ast) --data $(data) --dimension $(dimension) --no-bsm $(no_bsm) --datadir $(datadir) --seed $(seed) --source-ratio $(sr0) $(sr1) $(sr2) --threads $(threads) --binning $(binning) --texture $(texture) --segments $(segments) --eval-segment $(eval_segment) --stat-method $(stat_method) --mn-live-points $(mn_live_points) --mn-tolerance $(mn_tolerance) --mn_efficiency $(mn_efficiency) --mn-output $(mn_output) --run-mn $(run_mn)"
 
 # All logs will go to a single file 
 log    = /scratch/smandalia/flavour_ratio/submitter/logs/job_$(Cluster).log

@@ -55,6 +55,10 @@ def mn_argparse(parser):
         help='Tolerance for MultiNest'
     )
     parser.add_argument(
+        '--mn-efficiency', type=float, default=0.3,
+        help='Sampling efficiency for MultiNest'
+    )
+    parser.add_argument(
         '--mn-output', type=str, default='./mnrun/',
         help='Folder to store MultiNest evaluations'
     )
@@ -88,6 +92,7 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, prefix='mn'):
             n_dims                     = n_params,
             n_live_points              = args.mn_live_points,
             evidence_tolerance         = args.mn_tolerance,
+            sampling_efficiency        = args.mn_efficiency,
             outputfiles_basename       = prefix,
             importance_nested_sampling = True,
             # resume                     = False,

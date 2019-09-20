@@ -9,7 +9,9 @@ import numpy as np
 #     (0, 1, 0),
 # ]
 
-XLIMS = (0., 0.3)
+# XLIMS = (0., 0.3)
+XLIMS = (0.89, 1.0)
+
 x_segments = 100
 x_array = np.linspace(0, 1, x_segments)
 sources = []
@@ -22,14 +24,15 @@ dims = [
 ]
 
 textures = [
-    # 'OEU', 'OET', 'OUT'
-    'OET'
+    # 'OET'
+    'OUT'
 ]
 
 datadir = '/data/user/smandalia/flavour_ratio/data/sensitivity'
 
 # prefix = ''
-prefix = '_OET'
+# prefix = '_OET'
+prefix = '_OUT'
 
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/sens_submit.sub'
@@ -46,10 +49,10 @@ GLOBAL_PARAMS.update(dict(
 # MultiNest
 GLOBAL_PARAMS.update(dict(
     # mn_live_points = 1000,
-    # mn_live_points = 600,
-    mn_live_points = 200,
-    # mn_tolerance   = 0.1,
+    mn_live_points = 600,
+    # mn_live_points = 200,
     mn_tolerance   = 0.3,
+    mn_efficiency  = 0.3,
     mn_output      = './mnrun',
     run_mn         = 'True'
 ))

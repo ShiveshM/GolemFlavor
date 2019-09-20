@@ -14,7 +14,7 @@ sp = gf.SteeringParams(gf.sampleTag.MagicTau)
 sp.quiet = False
 if FASTMODE:
     sp.fastmode = True
-sp.frequentist = True
+# sp.frequentist = True
 sp.load_data_from_text_file = False
 
 golem = gf.GolemFit(dp, sp, npp)

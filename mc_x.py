@@ -5,7 +5,7 @@
 # date   : March 17, 2018
 
 """
-Sample SM points for (x, 1-x, 0)
+emcee sample SM points for (x, 1-x, 0)
 """
 
 from __future__ import absolute_import, division

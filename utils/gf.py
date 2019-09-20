@@ -71,11 +71,6 @@ def steering_params(args):
     params.simToLoad= steering_categ.name.lower()
     params.evalThreads = args.threads
 
-    if args.likelihood is Likelihood.GOLEMFIT:
-        params.frequentist = False;
-    elif args.likelihood is Likelihood.GF_FREQ:
-        params.frequentist = True;
-
     if hasattr(args, 'binning'):
         params.minFitEnergy = args.binning[0]  # GeV
         params.maxFitEnergy = args.binning[-1] # GeV
@@ -83,13 +78,8 @@ def steering_params(args):
         params.minFitEnergy = 6E4 # GeV
         params.maxFitEnergy = 1E7 # GeV
     params.load_data_from_text_file = False
-
-    params.sampleToLoad = gf.sampleTag.MagicTau
+    params.do_HESE_reshuffle=False
     params.use_legacy_selfveto_calculation = False
-    # params.spline_hole_ice = False
-    # params.spline_dom_efficiency = False
-    params.spline_hole_ice = True
-    params.spline_dom_efficiency = True
 
     return params
 

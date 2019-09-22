@@ -1,0 +1,38 @@
+Executable = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/fr.py
+Arguments = "--ast $(ast) --data $(data) --source-ratio $(sr0) $(sr1) $(sr2) --datadir $(datadir) --seed $(seed) --threads $(threads) --run-mcmc $(run_mcmc) --burnin $(burnin) --nsteps $(nsteps) --nwalkers $(nwalkers) --mcmc-seed-type $(mcmc_seed_type) --plot-angles $(plot_angles) --plot-elements $(plot_elements) --dimension $(dimension) --texture $(texture) --no-bsm $(no_bsm) --binning $(binning)"
+
+# All logs will go to a single file 
+log    = /scratch/smandalia/flavour_ratio/submitter/logs/job_$(Cluster).log
+output = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/logs/job_$(Cluster).out
+error  = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/submitter/logs/job_$(Cluster).err
+
+getenv = True
+# environment = "X509_USER_PROXY=x509up_u14830" 
+
+request_memory = 8GB
+request_cpus = 12
+
+initialdir = /home/smandalia/condor
+
+Universe        = vanilla 
+Notification    = never 
+
+# +AccountingGroup="quicktest.$ENV(USER)"
+# +AccountingGroup="sanctioned.$ENV(USER)"
+# run on both SL5 and 6
+# +WantRHEL6 = True
+# +WantSLC6 = False
+
+# # run on OSG
+# +WantGlidein = True
+
+# +TransferOutput=""
+
++NATIVE_OS = True
+# Requirements = IS_GLIDEIN && HAS_CVMFS_icecube_opensciencegrid_org && (OpSysAndVer =?= "CentOS6" || OpSysAndVer =?= "RedHat6" || OpSysAndVer =?= "SL6")
+# Requirements = IS_GLIDEIN
+# Requirements = (OpSysMajorVer =?= 6)
+
+# GO! 
+queue
+

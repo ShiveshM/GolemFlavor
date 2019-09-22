@@ -60,7 +60,7 @@ def mcmc_argparse(parser):
         help='Amount to burnin'
     )
     parser.add_argument(
-        '--nwalkers', type=int, default=100,
+        '--nwalkers', type=int, default=60,
         help='Number of walkers'
     )
     parser.add_argument(

@@ -98,5 +98,5 @@ with open(dagfile, 'w') as f:
                     f.write('VARS\tjob{0}\tdatadir="{1}"\n'.format(job_number, of_d))
                     job_number += 1
 
-    print 'total jobs = {0}'.format(job_number - 1)
-    print 'dag file = {0}'.format(dagfile)
+print 'total jobs = {0}'.format(job_number - 1)
+print 'dag file = {0}'.format(dagfile)

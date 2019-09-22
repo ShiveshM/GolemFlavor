@@ -4,8 +4,8 @@ import os
 import numpy as np
 
 scenarios = [
-    ((1, 0, 0), 'OUT'),
-    ((0, 1, 0), 'OET')
+    ((0, 1, 0), 'OET'),
+    ((1, 0, 0), 'OUT')
 ]
 
 dims = [

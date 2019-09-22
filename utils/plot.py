@@ -78,18 +78,27 @@ elif os.environ.get('GOLEMSOURCEPATH') is not None:
 if 'submitter' in socket.gethostname():
     rc('text', usetex=False)
 
+mpl.rcParams['text.latex.preamble'] = [
+    r'\usepackage{xcolor}',
+    r'\usepackage{amsmath}',
+    r'\usepackage{amssymb}']
+mpl.rcParams['text.latex.unicode'] = True
+
 
 def gen_figtext(args):
     """Generate the figure text."""
     t = r'$'
-    t += r'{\rm Source\:flavour\:ratio}'+r'\:=\:({0})'.format(
+    if args.data is DataType.REAL:
+        t += r'\textbf{IceCube\:Preliminary}' + '$\n$'
+    elif args.data in [DataType.ASIMOV, DataType.REALISATION]:
+        t += r'{\rm\bf IceCube\:Simulation}' + '$\n$'
+        t += r'\rm{Injected\:flavour\:ratio}'+r'\:=\:({0})_\oplus'.format(
+            solve_ratio(args.injected_ratio).replace('_', ':')
+        ) + '$\n$'
+    t += r'{\rm Source\:flavour\:ratio}'+r'\:=\:({0})_S'.format(
         solve_ratio(args.source_ratio).replace('_', ':')
     )
-    if args.data in [DataType.ASIMOV, DataType.REALISATION]:
-        t += '\n' + r'\rm{Injected\:flavour\:ratio}'+r'\:=\:({0})'.format(
-            solve_ratio(args.injected_ratio).replace('_', ':')
-        )
-    t += '$\n' + r'${\rm Dimension}'+r' = {0}$'.format(args.dimension)
+    t += '$\n$' + r'{\rm Dimension}'+r' = {0}$'.format(args.dimension)
     return t
 
 
@@ -382,7 +391,6 @@ def flavour_contour(frs, nbins, coverage, ax=None, smoothing=0.4,
     else:
         return ev_polygon
 
-
 def plot_Tchain(Tchain, axes_labels, ranges):
     """Plot the Tchain using getdist."""
     Tsample = mcsamples.MCSamples(
@@ -390,21 +398,22 @@ def plot_Tchain(Tchain, axes_labels, ranges):
     )
 
     Tsample.updateSettings({'contours': [0.90, 0.99]})
-    Tsample.num_bins_2D=500
-    Tsample.fine_bins_2D=500
-    Tsample.smooth_scale_2D=0.03
+    Tsample.num_bins_2D=10
+    Tsample.fine_bins_2D=50
+    Tsample.smooth_scale_2D=0.05
 
     g = plots.getSubplotPlotter()
     g.settings.num_plot_contours = 2
-    g.settings.axes_fontsize = 10
+    g.settings.axes_fontsize = 9
     g.settings.figure_legend_frame = False
     g.triangle_plot(
-        [Tsample], filled=True,
+        [Tsample], filled=True#, contour_colors=['green', 'lightgreen']
     )
     return g
 
 
-def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None):
+def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None,
+                 labels=None, ranges=None):
     """Make the triangle plot."""
     if hasattr(args, 'plot_elements'):
         if not args.plot_angles and not args.plot_elements:
@@ -423,25 +432,26 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None):
     if fig_text is None:
         fig_text = gen_figtext(args)
 
-    axes_labels = llh_paramset.labels
-    ranges = llh_paramset.ranges
+    if labels is None: axes_labels = llh_paramset.labels
+    else: axes_labels = labels
+    if ranges is None: ranges = llh_paramset.ranges
 
     if args.plot_angles:
         print "Making triangle plots"
         Tchain = raw
         g = plot_Tchain(Tchain, axes_labels, ranges)
 
-        mpl.pyplot.figtext(0.5, 0.7, fig_text, fontsize=15)
+        mpl.pyplot.figtext(0.6, 0.7, fig_text, fontsize=20)
 
-        for i_ax_1, ax_1 in enumerate(g.subplots):
-            for i_ax_2, ax_2 in enumerate(ax_1):
-                if i_ax_1 == i_ax_2:
-                    itv = interval(Tchain[:,i_ax_1], percentile=90.)
-                    for l in itv:
-                        ax_2.axvline(l, color='gray', ls='--')
-                        ax_2.set_title(r'${0:.2f}_{{{1:.2f}}}^{{+{2:.2f}}}$'.format(
-                            itv[1], itv[0]-itv[1], itv[2]-itv[1]
-                        ), fontsize=10)
+        # for i_ax_1, ax_1 in enumerate(g.subplots):
+        #     for i_ax_2, ax_2 in enumerate(ax_1):
+        #         if i_ax_1 == i_ax_2:
+        #             itv = interval(Tchain[:,i_ax_1], percentile=90.)
+        #             for l in itv:
+        #                 ax_2.axvline(l, color='gray', ls='--')
+        #                 ax_2.set_title(r'${0:.2f}_{{{1:.2f}}}^{{+{2:.2f}}}$'.format(
+        #                     itv[1], itv[0]-itv[1], itv[2]-itv[1]
+        #                 ), fontsize=10)
 
         # if not args.fix_mixing:
         #     sc_index = llh_paramset.from_tag(ParamTag.SCALE, index=True)
@@ -450,13 +460,6 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None):
         #         0.5, 0.3, 'Scale 90% Interval = [1E{0}, 1E{1}], Center = '
         #         '1E{2}'.format(itv[0], itv[2], itv[1])
         #     )
-
-        if args.data is DataType.REAL:
-            plt.text(0.8, 0.9, 'IceCube Preliminary', color='red', fontsize=15,
-                     ha='center', va='center')
-        elif args.data in [DataType.ASIMOV, DataType.REALISATION]:
-            plt.text(0.8, 0.9, 'IceCube Simulation', color='red', fontsize=15,
-                     ha='center', va='center')
 
         for of in outformat:
             print 'Saving', outfile+'_angles.'+of
@@ -700,7 +703,7 @@ def plot_table_sens(data, outfile, outformat, args):
                 ))
 
     ax.get_xaxis().set_visible(True)
-    ax.set_xlabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda^{-1}\:/\:{\rm GeV}^{-d+4})\: ]$',
+    ax.set_xlabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda^{-1}_{(d)}\:/\:{\rm GeV}^{-d+4})\: ]$',
                  fontsize=19)
     ax.tick_params(axis='x', labelsize=16)
 
@@ -894,8 +897,8 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     if normalise:
         fig.text(
             0.02, 0.5,
-            r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\Lambda_{' +
-            r'\:{0}'.format(args.dimension)+r'}\:/\:{\rm M}_{\:\rm Planck}^{\:'+
+            r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\Lambda^{-1}_{(' +
+            r'\:{0}'.format(args.dimension)+r')}\:\cdot\:{\rm M}_{\:\rm Planck}^{\:'+
             r'{0}'.format(args.dimension-4)+ r'}\right )\: ]$', ha='left',
             va='center', rotation='vertical', fontsize=largesize
         )

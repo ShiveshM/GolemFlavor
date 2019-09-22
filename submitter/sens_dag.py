@@ -3,36 +3,27 @@
 import os
 import numpy as np
 
-# sources = [
-#     (1, 2, 0),
-#     (1, 0, 0),
-#     (0, 1, 0),
-# ]
-
-# XLIMS = (0., 0.3)
-XLIMS = (0.89, 1.0)
-
 x_segments = 100
-x_array = np.linspace(0, 1, x_segments)
-sources = []
-for x in x_array:
-    if x >= XLIMS[0] and x <= XLIMS[1]:
-        sources.append([x, 1-x, 0])
+scenarios = [
+    [(0.00, 0.30), 'OET'],
+    [(0.89, 1.00), 'OUT']
+]
 
 dims = [
     6
 ]
 
-textures = [
-    # 'OET'
-    'OUT'
-]
+for i, (xlims, tex) in enumerate(scenarios):
+    x_array = np.linspace(0, 1, x_segments)
+    sources = []
+    for x in x_array:
+        if x >= xlims[0] and x <= xlims[1]:
+            sources.append([x, 1-x, 0])
+    scenarios[i][0] = tuple(sources)
 
 datadir = '/data/user/smandalia/flavour_ratio/data/sensitivity'
 
-# prefix = ''
-# prefix = '_OET'
-prefix = '_OUT'
+prefix = ''
 
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/sens_submit.sub'
@@ -80,10 +71,10 @@ with open(dagfile, 'w') as f:
     for dim in dims:
         print 'dims', dim
         of_d = datadir + '/DIM{0}/{1}'.format(dim, prefix)
-        for src in sources:
-            print 'source flavour', src
-            for tex in textures:
-                print 'texture', tex
+        for sources, tex in scenarios:
+            print 'texture', tex
+            for src in sources:
+                print 'source flavour', src
                 for r in xrange(GLOBAL_PARAMS['segments']):
                     print 'run', r
                     f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))

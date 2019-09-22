@@ -207,12 +207,38 @@ def main():
         )
         mcmc_utils.save_chains(samples, outfile)
 
+    raw = np.load(outfile+'.npy')
+    raw[:,4] *= 1E23
+    raw[:,5] *= 1E21
+    ranges = list(llh_paramset.ranges)
+    ranges[4] = [x*1E23 for x in ranges[4]]
+    ranges[5] = [x*1E21 for x in ranges[5]]
+
+    labels = [
+        r'${\rm sin}^2\theta_{12}$',
+        r'${\rm cos}^4\theta_{13}$',
+        r'${\rm sin}^2\theta_{23}$',
+        r'$\delta$',
+        r'$\Delta m_{21}^2\left[10^{-5}\,{\rm eV}^2\right]$',
+        r'$\Delta m_{31}^2\left[10^{-3}\,{\rm eV}^2\right]$',
+        r'$N_{\rm conv}$',
+        r'$N_{\rm prompt}$',
+        r'$N_{\rm muon}$',
+        r'$N_{\rm astro}$',
+        r'$\gamma_{\rm astro}$',
+        r'${\rm log}_{10}\left[\Lambda^{-1}_{('+ \
+        r'{0}'.format(args.dimension)+r')}'+ \
+        misc_utils.get_units(args.dimension)+r'\right]$'
+    ]
+
     plot_utils.chainer_plot(
-        infile       = outfile+'.npy',
+        infile       = raw,
         outfile      = outfile[:5]+outfile[5:].replace('data', 'plots'),
         outformat    = ['pdf'],
         args         = args,
-        llh_paramset = llh_paramset
+        llh_paramset = llh_paramset,
+        labels       = labels,
+        ranges       = ranges
     )
     print "DONE!"
 

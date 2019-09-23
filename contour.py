@@ -138,17 +138,17 @@ def gen_identifier(args):
     return f
 
 
-def gen_figtext(args, asimov_paramset):
-    f = ''
+def gen_figtext(args):
+    """Generate the figure text."""
+    t = r'$'
     if args.data is DataType.REAL:
-        f += 'IceCube Preliminary'
-    else:
-        f += '_INJ_{0}'.format(misc_utils.solve_ratio(args.injected_ratio))
-        for param in asimov_paramset:
-            f += '\nInjected {0:20s} = {1:.3f}'.format(
-                param.name, param.nominal_value
-            )
-    return f
+        t += r'\textbf{IceCube\:Preliminary}$'
+    elif args.data in [DataType.ASIMOV, DataType.REALISATION]:
+        t += r'{\rm\bf IceCube\:Simulation}' + '$\n$'
+        t += r'\rm{Injected\:composition}'+r'\:=\:({0})_\oplus'.format(
+            solve_ratio(args.injected_ratio).replace('_', ':')
+        ) + '$'
+    return t
 
 
 def triangle_llh(theta, args, hypo_paramset):
@@ -229,14 +229,25 @@ def main():
         )
         mcmc_utils.save_chains(samples, outfile)
 
+    labels = [
+        r'$N_{\rm conv}$',
+        r'$N_{\rm prompt}$',
+        r'$N_{\rm muon}$',
+        r'$N_{\rm astro}$',
+        r'$\gamma_{\rm astro}$',
+        r'$\text{sin}^4\phi_\oplus$',
+        r'$\text{cos}\left(2\psi\right)_\oplus$',
+    ]
+
     of = outfile[:5]+outfile[5:].replace('data', 'plots')+'_posterior'
     plot_utils.chainer_plot(
         infile       = outfile+'.npy',
         outfile      = of,
-        outformat    = ['png'],
+        outformat    = ['pdf'],
         args         = args,
         llh_paramset = hypo_paramset,
-        fig_text     = gen_figtext(args, hypo_paramset)
+        fig_text     = gen_figtext(args),
+        labels       = labels
     )
 
     print "DONE!"

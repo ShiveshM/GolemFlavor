@@ -92,12 +92,12 @@ def gen_figtext(args):
         t += r'\textbf{IceCube\:Preliminary}' + '$\n$'
     elif args.data in [DataType.ASIMOV, DataType.REALISATION]:
         t += r'{\rm\bf IceCube\:Simulation}' + '$\n$'
-        t += r'\rm{Injected\:flavour\:ratio}'+r'\:=\:({0})_\oplus'.format(
+        t += r'\rm{Injected\:composition}'+r'\:=\:({0})_\oplus'.format(
             solve_ratio(args.injected_ratio).replace('_', ':')
         ) + '$\n$'
-    t += r'{\rm Source\:flavour\:ratio}'+r'\:=\:({0})_S'.format(
+    t += r'{\rm Source\:composition}'+r'\:=\:({0})'.format(
         solve_ratio(args.source_ratio).replace('_', ':')
-    )
+    ) + r'_\text{S}'
     t += '$\n$' + r'{\rm Dimension}'+r' = {0}$'.format(args.dimension)
     return t
 
@@ -771,7 +771,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     ax = fig.add_subplot(111)
 
     if normalise:
-        ylims = (-10, 8)
+        ylims = (-12, 8)
     else:
         ylims = (-60, -20)
     xlims = (0, 1)
@@ -792,24 +792,24 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     ax.set_xticks([], minor=True)
     ax.set_xticks(xticks, minor=False)
     ax.set_xticklabels(xlabels, fontsize=largesize)
-    for ymaj in ax.yaxis.get_majorticklocs():
-        ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.2, linewidth=1)
+    # for ymaj in ax.yaxis.get_majorticklocs():
+    #     ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.2, linewidth=1)
     for xmaj in xticks:
         if xmaj == 1/3.:
-            ax.axvline(x=xmaj, ls='-', color='gray', alpha=0.5, linewidth=1)
-        else:
-            ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.2, linewidth=1)
+            ax.axvline(x=xmaj, ls='--', color='gray', alpha=0.5, linewidth=0.7)
+        # else:
+        #     ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.2, linewidth=1)
 
     ax.text(
-        (1/3.)+0.01, 0.01,  r'$f_{\alpha}^S=(1:2:0)$', fontsize=labelsize,
+        (1/3.)+0.01, 0.01,  r'$(1:2:0)_\text{S}$', fontsize=labelsize,
         transform=ax.transAxes, rotation='vertical', va='bottom'
     )
     ax.text(
-        0.96, 0.01, r'$f_{\alpha}^S=(1:0:0)$', fontsize=labelsize,
+        0.96, 0.01, r'$(1:0:0)_\text{S}$', fontsize=labelsize,
         transform=ax.transAxes, rotation='vertical', va='bottom', ha='left'
     )
     ax.text(
-        0.01, 0.01, r'$f_{\alpha}^S=(0:1:0)$', fontsize=labelsize,
+        0.01, 0.01, r'$(0:1:0)_\text{S}$', fontsize=labelsize,
         transform=ax.transAxes, rotation='vertical', va='bottom'
     )
     ax.text(
@@ -897,8 +897,8 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     if normalise:
         fig.text(
             0.02, 0.5,
-            r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\Lambda^{-1}_{(' +
-            r'\:{0}'.format(args.dimension)+r')}\:\cdot\:{\rm M}_{\:\rm Planck}^{\:'+
+            r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\Lambda^{-1}_{' +
+            r'\:{0}'.format(args.dimension)+r'}\:\cdot\:{\rm M}_{\:\rm Planck}^{\:'+
             r'{0}'.format(args.dimension-4)+ r'}\right )\: ]$', ha='left',
             va='center', rotation='vertical', fontsize=largesize
         )
@@ -912,7 +912,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
         )
 
     ax.set_xlabel(
-        r'${\rm Source\:Flavour\:Ratio}\:[\:f_{\alpha}^S=\left (\:x:1-x:0\:\right )\:]$',
+        r'${\rm Source\:Composition}\:[\:f_{\alpha,\text{S}}=\left (\:x:1-x:0\:\right )_\text{S}\:]$',
         fontsize=largesize
     )
     ax.tick_params(axis='x', labelsize=largesize-1)

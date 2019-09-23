@@ -307,8 +307,9 @@ def alpha_shape(points, alpha):
 
 
 def flavour_contour(frs, nbins, coverage, ax=None, smoothing=0.4,
-                    hist_smooth=0.05, plot=True, fill=False, oversample=1,
-                    delaunay=False, d_alpha=1.5, d_gauss=0.08, **kwargs):
+                    hist_smooth=0.05, plot=True, fill=False, oversample=1.,
+                    delaunay=False, d_alpha=1.5, d_gauss=0.08, debug=False,
+                    **kwargs):
     """Plot the flavour contour for a specified coverage."""
     # Histogram in flavour space
     os_nbins = nbins * oversample
@@ -341,6 +342,8 @@ def flavour_contour(frs, nbins, coverage, ax=None, smoothing=0.4,
                     interp_dict[(i, j, k)] = H_s[i, j, k]
     vertices = np.array(heatmap(interp_dict, os_nbins))
     points = vertices.reshape((len(vertices)*3, 2))
+    if debug:
+        ax.scatter(*(points/float(oversample)).T, marker='o', s=3, alpha=1.0, color=kwargs['color'], zorder=9)
 
     pc = geometry.MultiPoint(points)
     if not delaunay:
@@ -365,16 +368,19 @@ def flavour_contour(frs, nbins, coverage, ax=None, smoothing=0.4,
     # Spline again to smooth
     if smoothing != 0:
         tck, u = splprep([xi, yi], s=smoothing, per=1, k=3)
-        xi, yi = map(np.array, splev(np.linspace(0, 1, 300), tck))
+        xi, yi = map(np.array, splev(np.linspace(0, 1, 600), tck))
 
+    xi /= float(oversample)
+    yi /= float(oversample)
     ev_polygon = np.dstack((xi, yi))[0]
 
     # Remove points interpolated outside flavour triangle
-    f_ev_polygon = np.array(map(lambda x: project_toflavour(x, os_nbins), ev_polygon))
+    f_ev_polygon = np.array(map(lambda x: project_toflavour(x, nbins), ev_polygon))
+
     xf, yf, zf = f_ev_polygon.T
-    mask = np.array((xf < 0) | (yf < 0) | (zf < 0) | (xf > os_nbins) |
-                    (yf > os_nbins) | (zf > os_nbins))
-    ev_polygon = np.dstack((xi[~mask], yi[~mask]))[0] / oversample
+    mask = np.array((xf < 0) | (yf < 0) | (zf < 0) | (xf > nbins) |
+                    (yf > nbins) | (zf > nbins))
+    ev_polygon = np.dstack((xi[~mask], yi[~mask]))[0]
 
     # Plot
     if plot:

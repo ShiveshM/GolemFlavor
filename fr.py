@@ -226,8 +226,8 @@ def main():
         r'$N_{\rm muon}$',
         r'$N_{\rm astro}$',
         r'$\gamma_{\rm astro}$',
-        r'${\rm log}_{10}\left[\Lambda^{-1}_{('+ \
-        r'{0}'.format(args.dimension)+r')}'+ \
+        r'${\rm log}_{10}\left[\Lambda^{-1}_{'+ \
+        r'{0}'.format(args.dimension)+r'}'+ \
         misc_utils.get_units(args.dimension)+r'\right]$'
     ]
 

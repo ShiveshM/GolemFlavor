@@ -6,11 +6,11 @@ import numpy as np
 x_segments = 100
 scenarios = [
     [(0.00, 0.30), 'OET'],
-    [(0.89, 1.00), 'OUT']
+    [(0.70, 1.00), 'OUT']
 ]
 
 dims = [
-    6
+    3
 ]
 
 for i, (xlims, tex) in enumerate(scenarios):
@@ -23,7 +23,7 @@ for i, (xlims, tex) in enumerate(scenarios):
 
 datadir = '/data/user/smandalia/flavour_ratio/data/sensitivity'
 
-prefix = ''
+prefix = '_dim3'
 
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/sens_submit.sub'
@@ -34,7 +34,8 @@ GLOBAL_PARAMS = {}
 GLOBAL_PARAMS.update(dict(
     stat_method = 'bayesian',
     segments    = 10,
-    seed        = 26
+    seed        = 26,
+    overwrite   = 'False'
 ))
 
 # MultiNest

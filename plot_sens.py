@@ -27,7 +27,7 @@ from utils.misc import gen_identifier, SortingHelpFormatter
 from utils.param import Param, ParamSet
 
 
-MASK_X = (0.3, 0.89)
+MASK_X = (0.3, 0.7)
 
 
 def process_args(args):
@@ -212,7 +212,7 @@ def main():
                     outfile = basename[:5]+basename[5:].replace('data', 'plots')
                     outfile += '/' + os.path.basename(base_infile)
 
-                    label = plot_utils.texture_label(texture)[:-1]+r'=\pi/4$'
+                    label = r'$\text{Texture}=' + plot_utils.texture_label(texture)[1:]
                     plot_utils.plot_statistic(
                         data        = data[idim][isrc][itex],
                         outfile     = outfile,

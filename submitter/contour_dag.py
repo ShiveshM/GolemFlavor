@@ -29,7 +29,7 @@ GLOBAL_PARAMS.update(dict(
 GLOBAL_PARAMS.update(dict(
     run_mcmc = 'True',
     burnin   = 1000,
-    nsteps   = 8000,
+    nsteps   = 10000,
     nwalkers = 60,
     mcmc_seed_type = 'uniform'
 ))

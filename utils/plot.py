@@ -164,7 +164,7 @@ def get_limit(scales, statistic, args, mask_initial=False):
             'DIM {0} [{1}, {2}, {3}]!'.format(
                 args.dimension, *args.source_ratio
             )
-        # return None
+        return None
     lim = al[0]
     print 'limit = {0}'.format(lim)
     return lim
@@ -536,12 +536,14 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
 
     print 'data', data
     print 'data.shape', data.shape
-    scales, statistic = ma.compress_rows(data).T
+    print 'outfile', outfile
     try:
+        scales, statistic = ma.compress_rows(data).T
+        lim = get_limit(scales, statistic, args, mask_initial=True)
         tck, u = splprep([scales, statistic], s=0)
     except:
         return
-    sc, st = splev(np.linspace(0, 1, 10000), tck)
+    sc, st = splev(np.linspace(0, 1, 1000), tck)
     scales_rm = sc[sc >= scales[1]]
     statistic_rm = st[sc >= scales[1]]
 
@@ -559,10 +561,12 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
 
     xlims = SCALE_BOUNDARIES[args.dimension]
     ax.set_xlim(xlims)
-    ax.set_xlabel(r'${\mathrm {log}}_{10} \left (\Lambda^{-1}' + \
-                  get_units(args.dimension) +r'\right )$', fontsize=16)
+    ax.set_xlabel(r'${\rm log}_{10}\left[\Lambda^{-1}_{'+ \
+                  r'{0}'.format(args.dimension)+r'}'+ \
+                  get_units(args.dimension)+r'\right]$', fontsize=16)
+
     if args.stat_method is StatCateg.BAYESIAN:
-        ax.set_ylabel(r'log(Bayes Factor)')
+        ax.set_ylabel(r'$\text{Bayes\:Factor}\:\left[\text{ln}\left(B_{0/1}\right)\right]$')
     elif args.stat_method is StatCateg.FREQUENTIST:
         ax.set_ylabel(r'$-2\Delta {\rm LLH}$')
 
@@ -570,21 +574,10 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     # ymax = np.round(np.max(reduced_ev) + 1.5)
     # ax.set_ylim((ymin, ymax))
 
-    ax.plot(scales_rm, reduced_ev)
+    ax.plot(scales_rm, reduced_ev, color='k', linewidth=1, alpha=1, ls='-')
 
-    ax.axhline(y=np.log(10**(BAYES_K)), color='red', alpha=1., linewidth=1.3)
-
-    for ymaj in ax.yaxis.get_majorticklocs():
-        ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.3, linewidth=1)
-    for xmaj in ax.xaxis.get_majorticklocs():
-        ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.3, linewidth=1)
-
-    if args.data is DataType.REAL:
-        fig.text(0.8, 0.14, 'IceCube Preliminary', color='red', fontsize=9,
-                 ha='center', va='center')
-    elif args.data in [DataType.ASIMOV, DataType.REALISATION]:
-        fig.text(0.8, 0.14, 'IceCube Simulation', color='red', fontsize=9,
-                 ha='center', va='center')
+    ax.axhline(y=np.log(10**(BAYES_K)), color='red', alpha=1., linewidth=1.2, ls='--')
+    ax.axvline(x=lim, color='red', alpha=1., linewidth=1.2, ls='--')
 
     at = AnchoredText(
         fig_text, prop=dict(size=10), frameon=True, loc=4
@@ -777,7 +770,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     ax = fig.add_subplot(111)
 
     if normalise:
-        ylims = (-12, 8)
+        ylims = (-10, 8)
     else:
         ylims = (-60, -20)
     xlims = (0, 1)
@@ -802,7 +795,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     #     ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.2, linewidth=1)
     for xmaj in xticks:
         if xmaj == 1/3.:
-            ax.axvline(x=xmaj, ls='--', color='gray', alpha=0.5, linewidth=0.7)
+            ax.axvline(x=xmaj, ls='-', color='gray', alpha=0.5, linewidth=0.7)
         # else:
         #     ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.2, linewidth=1)
 
@@ -819,11 +812,11 @@ def plot_x(data, outfile, outformat, args, normalise=False):
         transform=ax.transAxes, rotation='vertical', va='bottom'
     )
     ax.text(
-        0.07, 0.46, r'${\rm \bf Excluded}$', fontsize=largesize,
+        0.05, 0.47, r'${\rm \bf Excluded}$', fontsize=largesize,
         transform=ax.transAxes, color = 'g', rotation='vertical', zorder=10
     )
     ax.text(
-        0.95, 0.46, r'${\rm \bf Excluded}$', fontsize=largesize,
+        0.95, 0.47, r'${\rm \bf Excluded}$', fontsize=largesize,
         transform=ax.transAxes, color = 'b', rotation='vertical', zorder=10
     )
 

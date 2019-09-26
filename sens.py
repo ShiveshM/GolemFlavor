@@ -167,6 +167,10 @@ def parse_args(args=None):
         '--eval-segment', type=str, default='all',
         help='Which point to evalaute'
     )
+    parser.add_argument(
+        '--overwrite', type=misc_utils.parse_bool, default='False',
+        help='Overwrite chains'
+    )
     fr_utils.fr_argparse(parser)
     gf_utils.gf_argparse(parser)
     llh_utils.llh_argparse(parser)
@@ -203,6 +207,11 @@ def main():
     outfile = args.datadir + '/{0}/{1}/fr_stat'.format(
         *map(misc_utils.parse_enum, [args.stat_method, args.data])
     ) + misc_utils.gen_identifier(args)
+
+    if not args.overwrite and os.path.isfile(outfile+'.npy'):
+        print 'FILE EXISTS {0}'.format(outfile+'.npy')
+        print 'Exiting...'
+        return
 
     # Setup Golemfit.
     if args.run_mn:

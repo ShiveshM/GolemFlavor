@@ -12,7 +12,7 @@ getenv = True
 request_memory = 8GB
 request_cpus = 1
 
-initialdir = /home/smandalia/condor
+initialdir = /data/user/smandalia/flavour_ratio/
 
 Universe        = vanilla 
 Notification    = never 

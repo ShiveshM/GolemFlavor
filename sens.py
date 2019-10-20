@@ -227,6 +227,16 @@ def main():
             else: continue
         print '|||| SCALE = {0:.0E}'.format(np.power(10, scale))
 
+        if not args.overwrite and os.path.isfile(outfile+'.npy'):
+            print 'FILE EXISTS {0}'.format(outfile+'.npy')
+            t = np.load(outfile+'.npy')
+            if np.any(~np.isfinite(t)):
+                print 'nan found, rerunning...'
+                pass
+            else:
+                print 'Exiting...'
+                return
+
         # Lower scale boundary for first (NULL) point and set the scale param.
         reset_range = None
         if scale < scale_prm.ranges[0]:

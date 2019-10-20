@@ -10,7 +10,7 @@ scenarios = [
 ]
 
 dims = [
-    3
+    3, 6
 ]
 
 for i, (xlims, tex) in enumerate(scenarios):
@@ -23,7 +23,9 @@ for i, (xlims, tex) in enumerate(scenarios):
 
 datadir = '/data/user/smandalia/flavour_ratio/data/sensitivity'
 
-prefix = '_dim3'
+# prefix = ''
+prefix = '_d36'
+# prefix = '_kfarrag'
 
 golemfitsourcepath = os.environ['GOLEMSOURCEPATH'] + '/GolemFit'
 condor_script = golemfitsourcepath + '/scripts/flavour_ratio/submitter/sens_submit.sub'

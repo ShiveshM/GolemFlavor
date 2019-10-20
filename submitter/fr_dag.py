@@ -9,7 +9,7 @@ scenarios = [
 ]
 
 dims = [
-    6
+    3, 4, 5, 7, 8
 ]
 
 datadir = '/data/user/smandalia/flavour_ratio/data/fr'

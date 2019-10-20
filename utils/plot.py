@@ -30,6 +30,10 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.patches import Arrow
 
+tRed = list(np.array([226,101,95]) / 255.)
+tBlue = list(np.array([96,149,201]) / 255.)
+tGreen = list(np.array([170,196,109]) / 255.)
+
 from getdist import plots, mcsamples
 
 import ternary
@@ -46,10 +50,9 @@ from utils.misc import get_units, make_dir, solve_ratio, interval
 from utils.fr import angles_to_u, angles_to_fr, SCALE_BOUNDARIES
 
 
-BAYES_K = 1.   # Substantial degree of belief.
-# BAYES_K = 3/2. # Strong degree of belief.
-# BAYES_K = 2.   # Very strong degree of belief
-# BAYES_K = 5/2. # Decisive degree of belief
+BAYES_K = 1.   # Strong degree of belief.
+# BAYES_K = 3/2. # Very strong degree of belief.
+# BAYES_K = 2.   # Decisive degree of belief
 
 
 LV_ATMO_90PC_LIMITS = {
@@ -124,7 +127,7 @@ def cmap_discretize(cmap, N):
     return mpl.colors.LinearSegmentedColormap(cmap.name + "_%d"%N, cdict, 1024)
 
 
-def get_limit(scales, statistic, args, mask_initial=False):
+def get_limit(scales, statistic, args, mask_initial=False, return_interp=False):
     max_st = np.max(statistic)
     print 'scales, stat', zip(scales, statistic)
     if args.stat_method is StatCateg.BAYESIAN:
@@ -148,6 +151,12 @@ def get_limit(scales, statistic, args, mask_initial=False):
 
     min_idx = np.argmin(scales)
     null = statistic[min_idx]
+    # if np.abs(statistic_rm[0] - null) > 0.8:
+    #     print 'Warning, null incompatible with smallest scanned scale! For ' \
+    #         'DIM {0} [{1}, {2}, {3}]!'.format(
+    #             args.dimension, *args.source_ratio
+    #         )
+    #     null = statistic_rm[0]
     if args.stat_method is StatCateg.BAYESIAN:
         reduced_ev = -(statistic_rm - null)
         print '[reduced_ev > np.log(10**(BAYES_K))]', np.sum([reduced_ev > np.log(10**(BAYES_K))])
@@ -159,12 +168,23 @@ def get_limit(scales, statistic, args, mask_initial=False):
             args.dimension, *args.source_ratio
         )
         return None
-    if reduced_ev[-1] < np.log(10**(BAYES_K)) - 0.1:
+    re = -(statistic-null)[scales > al[0]]
+    if np.sum(re < np.log(10**(BAYES_K)) - 0.1) >= 2:
         print 'Warning, peaked contour does not exclude large scales! For ' \
             'DIM {0} [{1}, {2}, {3}]!'.format(
                 args.dimension, *args.source_ratio
             )
         return None
+    if np.sum(re >= np.log(10**(BAYES_K)) + 0.0) < 2:
+        print 'Warning, only single point above threshold! For ' \
+            'DIM {0} [{1}, {2}, {3}]!'.format(
+                args.dimension, *args.source_ratio
+            )
+        return None
+
+    if return_interp:
+        return (scales_rm, reduced_ev)
+
     lim = al[0]
     print 'limit = {0}'.format(lim)
     return lim
@@ -539,7 +559,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     print 'outfile', outfile
     try:
         scales, statistic = ma.compress_rows(data).T
-        lim = get_limit(scales, statistic, args, mask_initial=True)
+        lim = get_limit(deepcopy(scales), deepcopy(statistic), args, mask_initial=True)
         tck, u = splprep([scales, statistic], s=0)
     except:
         return
@@ -574,6 +594,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     # ymax = np.round(np.max(reduced_ev) + 1.5)
     # ax.set_ylim((ymin, ymax))
 
+    ax.scatter(scales[1:], -(statistic[1:]-null), color='r')
     ax.plot(scales_rm, reduced_ev, color='k', linewidth=1, alpha=1, ls='-')
 
     ax.axhline(y=np.log(10**(BAYES_K)), color='red', alpha=1., linewidth=1.2, ls='--')
@@ -597,7 +618,7 @@ def plot_table_sens(data, outfile, outformat, args):
     dims = args.dimensions
     srcs = args.source_ratios
     if args.texture is Texture.NONE:
-        textures = [Texture.OEU, Texture.OET, Texture.OUT]
+        textures = [Texture.OET, Texture.OUT]
     else:
         textures = [args.texture]
 
@@ -607,18 +628,18 @@ def plot_table_sens(data, outfile, outformat, args):
     xlims = (-60, -20)
     ylims = (0.5, 1.5)
 
-    colour = {0:'red', 1:'blue', 2:'green'}
-    rgb_co = {0:[1,0,0], 1:[0,0,1], 2:[0.0, 0.5019607843137255, 0.0]}
+    colour = {2:'red', 1:'blue', 0:'green'}
+    rgb_co = {2:[1,0,0], 1:[0,0,1], 0:[0.0, 0.5019607843137255, 0.0]}
 
     fig = plt.figure(figsize=(8, 6))
-    gs = gridspec.GridSpec(dims, 1)
+    gs = gridspec.GridSpec(len(dims), 1)
     gs.update(hspace=0.15)
 
     first_ax = None
     legend_log = []
     legend_elements = []
 
-    for idim, dim in enumerate(dimensions):
+    for idim, dim in enumerate(dims):
         print '|||| DIM = {0}'.format(dim)
         argsc.dimension = dim
         gs0 = gridspec.GridSpecFromSubplotSpec(
@@ -626,8 +647,8 @@ def plot_table_sens(data, outfile, outformat, args):
         )
 
         for itex, tex in enumerate(textures):
-            argcs.texture = tex
-            ylabel = texture_label(texture)
+            argsc.texture = tex
+            ylabel = texture_label(tex)
             # if angles == 2 and ian == 0: continue
             ax = fig.add_subplot(gs0[itex])
 
@@ -636,22 +657,22 @@ def plot_table_sens(data, outfile, outformat, args):
 
             ax.set_xlim(xlims)
             ax.set_ylim(ylims)
-            ax.set_yticks([1.])
+            ax.set_yticks([], minor=True)
+            ax.set_yticks([1.], minor=False)
             ax.set_yticklabels([ylabel], fontsize=13)
             ax.yaxis.tick_right()
             for xmaj in ax.xaxis.get_majorticklocs():
                 ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.2, linewidth=1)
             ax.get_xaxis().set_visible(False)
-            # TODO(shivesh): check this
-            if itex == len(tex) - 2:
+            if itex == len(textures) - 2:
                 ax.spines['bottom'].set_alpha(0.6)
-            elif itex == len(tex) - 1:
+            elif itex == len(textures) - 1:
                 ax.text(
-                    -0.04, ylims[0], '$d = {0}$'.format(dim), fontsize=16,
+                    -0.04, 1.0, '$d = {0}$'.format(dim), fontsize=16,
                     rotation='90', verticalalignment='center',
                     transform=ax.transAxes
                 )
-                dim_label_flag = False
+                # dim_label_flag = False
                 ax.spines['top'].set_alpha(0.6)
                 ax.spines['bottom'].set_alpha(0.6)
 
@@ -676,8 +697,10 @@ def plot_table_sens(data, outfile, outformat, args):
                     else:
                         ax.axvline(x=ps, color='purple', alpha=1., linewidth=1.5)
 
-                scales, statistic = ma.compress_rows(data[idim][isrc][itex]).T
-                lim = get_limit(scales, statistic, argsc, mask_initial=True)
+                try:
+                    scales, statistic = ma.compress_rows(data[idim][isrc][itex]).T
+                except: continue
+                lim = get_limit(deepcopy(scales), deepcopy(statistic), argsc, mask_initial=True)
                 if lim is None: continue
 
                 ax.axvline(x=lim, color=colour[isrc], alpha=1., linewidth=1.5)
@@ -688,30 +711,31 @@ def plot_table_sens(data, outfile, outformat, args):
 
                 if isrc not in legend_log:
                     legend_log.append(isrc)
-                    label = '{0} at source'.format(solve_ratio(src))
+                    label = r'$\left('+r'{0}'.format(solve_ratio(src)).replace('_',':')+ \
+                            r'\right)_{\text{S}}\:\text{at\:source}$'
                     legend_elements.append(
                         Patch(facecolor=rgb_co[isrc]+[0.3],
                               edgecolor=rgb_co[isrc]+[1], label=label)
                     )
 
-            if itex == 2:
+            if itex == len(textures)-1:
                 LV_lim = np.log10(LV_ATMO_90PC_LIMITS[dim])
                 ax.add_patch(patches.Rectangle(
-                    (LV_lim[1], ylim[0]), LV_lim[0]-LV_lim[1], np.diff(ylim),
+                    (LV_lim[1], ylims[0]), LV_lim[0]-LV_lim[1], np.diff(ylims),
                     fill=False, hatch='\\\\'
                 ))
 
     ax.get_xaxis().set_visible(True)
-    ax.set_xlabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda^{-1}_{(d)}\:/\:{\rm GeV}^{-d+4})\: ]$',
-                 fontsize=19)
+    ax.set_xlabel(r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} (\Lambda^{-1}_{d}\:/\:{\rm GeV}^{-d+4})\: ]$',
+                 labelpad=5, fontsize=19)
     ax.tick_params(axis='x', labelsize=16)
 
     purple = [0.5019607843137255, 0.0, 0.5019607843137255]
     legend_elements.append(
-        Patch(facecolor=purple+[0.7], edgecolor=purple+[1], label='Planck Scale Expectation')
+        Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube, Nature.Phy.14,961(2018)')
     )
     legend_elements.append(
-        Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube, Nature.Phy.14,961(2018)')
+        Patch(facecolor=purple+[0.7], edgecolor=purple+[1], label='Planck Scale Expectation')
     )
     legend = first_ax.legend(
         handles=legend_elements, prop=dict(size=11), loc='upper left',
@@ -745,6 +769,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     texture."""
     print 'Making X sensitivity plot'
     dim = args.dimension
+    if dim < 5: normalise = False
     srcs = args.source_ratios
     x_arr = np.array([i[0] for i in srcs])
     if args.texture is Texture.NONE:
@@ -763,20 +788,23 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     r_data = ma.masked_invalid(r_data)
     print r_data.shape, 'r_data.shape'
 
-    if normalise:
-        fig = plt.figure(figsize=(7, 6))
-    else:
-        fig = plt.figure(figsize=(8, 6))
+    fig = plt.figure(figsize=(7, 6))
     ax = fig.add_subplot(111)
 
+    ylims = SCALE_BOUNDARIES[dim]
     if normalise:
-        ylims = (-10, 8)
+        if dim == 5: ylims = (-24, -8)
+        if dim == 6: ylims = (-12, 8)
+        if dim == 7: ylims = (0, 20)
+        if dim == 8: ylims = (12, 36)
     else:
-        ylims = (-60, -20)
+        if dim == 3: ylims = (-28, -22)
+        if dim == 4: ylims = (-35, -26)
+        if dim == 5: SCALE_BOUNDARIES[5]
     xlims = (0, 1)
 
-    colour = {0:'red', 1:'green', 2:'blue'}
-    rgb_co = {0:[1,0,0], 1:[0.0, 0.5019607843137255, 0.0], 2:[0,0,1]}
+    colour = {0:'red', 2:'blue', 1:'green'}
+    rgb_co = {0:[1,0,0], 2:[0,0,1], 1:[0.0, 0.5019607843137255, 0.0]}
 
     legend_log = []
     legend_elements = []
@@ -791,11 +819,14 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     ax.set_xticks([], minor=True)
     ax.set_xticks(xticks, minor=False)
     ax.set_xticklabels(xlabels, fontsize=largesize)
+    if dim != 4 or dim != 3:
+        yticks = range(ylims[0], ylims[1], 2) + [ylims[1]]
+        ax.set_yticks(yticks, minor=False)
     # for ymaj in ax.yaxis.get_majorticklocs():
     #     ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.2, linewidth=1)
     for xmaj in xticks:
         if xmaj == 1/3.:
-            ax.axvline(x=xmaj, ls='-', color='gray', alpha=0.5, linewidth=0.7)
+            ax.axvline(x=xmaj, ls='--', color='gray', alpha=0.5, linewidth=0.3)
         # else:
         #     ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.2, linewidth=1)
 
@@ -811,12 +842,14 @@ def plot_x(data, outfile, outformat, args, normalise=False):
         0.01, 0.01, r'$(0:1:0)_\text{S}$', fontsize=labelsize,
         transform=ax.transAxes, rotation='vertical', va='bottom'
     )
+    yl = 0.55
+    if dim == 3: yl = 0.65
     ax.text(
-        0.05, 0.47, r'${\rm \bf Excluded}$', fontsize=largesize,
+        0.03, yl, r'${\rm \bf Excluded}$', fontsize=largesize,
         transform=ax.transAxes, color = 'g', rotation='vertical', zorder=10
     )
     ax.text(
-        0.95, 0.47, r'${\rm \bf Excluded}$', fontsize=largesize,
+        0.95, 0.55, r'${\rm \bf Excluded}$', fontsize=largesize,
         transform=ax.transAxes, color = 'b', rotation='vertical', zorder=10
     )
 
@@ -829,10 +862,9 @@ def plot_x(data, outfile, outformat, args, normalise=False):
             print '|||| X = {0}'.format(x)
             args.source_ratio = src
             d = r_data[itex][isrc]
-            if np.sum(d.mask) > 0:
-                continue
+            if np.sum(d.mask) > 2: continue
             scales, statistic = ma.compress_rows(d).T
-            lim = get_limit(scales, statistic, args, mask_initial=True)
+            lim = get_limit(deepcopy(scales), deepcopy(statistic), args, mask_initial=True)
             if lim is None: continue
             if normalise:
                 lim -= np.log10(PLANCK_SCALE[dim])
@@ -848,12 +880,46 @@ def plot_x(data, outfile, outformat, args, normalise=False):
         else:
             zeropoint = 0
         lims[lims.mask] = zeropoint
-        tck, u = splprep([x_arr, lims], s=0, k=1)
-        x, y = splev(np.linspace(0, 1, 1000), tck)
-        y = gaussian_filter(y, sigma=4)
-        ax.fill_between(x, y, zeropoint, color=colour[itex], alpha=0.3)
+
+        l0 = np.argwhere(lims == zeropoint)[0]
+        h0 = len(lims) - np.argwhere(np.flip(lims, 0) == zeropoint)[0]
+        lims[int(l0):int(h0)] = zeropoint
+
+        x_arr_a = [x_arr[0]-0.1] + list(x_arr)
+        x_arr_a = list(x_arr_a) + [x_arr_a[-1]+0.1]
+        lims = [lims[0]] + list(lims)
+        lims = list(lims) + [lims[-1]]
+
+        s = 0.2
+        g = 2
+        if dim == 3 and tex == Texture.OUT:
+            s = 0.4
+            g = 4
+        if dim in (4,5) and tex == Texture.OUT:
+            s = 0.5
+            g = 5
+        if dim == 7 and tex == Texture.OET:
+            s = 1.6
+            g = 2
+        if dim == 7 and tex == Texture.OUT:
+            s = 2.0
+            g = 20
+        if dim == 8 and tex == Texture.OET:
+            s = 0.8
+            g = 6
+        if dim == 8 and tex == Texture.OUT:
+            s = 1.7
+            g = 8
+
+        # ax.scatter(x_arr_a, lims, color='black', s=1)
+        tck, u = splprep([x_arr_a, lims], s=0, k=1)
+        x, y = splev(np.linspace(0, 1, 200), tck)
+        tck, u = splprep([x, y], s=s)
+        x, y = splev(np.linspace(0, 1, 400), tck)
+        y = gaussian_filter(y, sigma=g)
+        ax.fill_between(x, y, zeropoint, color=rgb_co[itex]+[0.3])
         # ax.scatter(x, y, color='black', s=1)
-        # ax.scatter(x_arr, lims, color=colour[itex], s=8)
+        # ax.scatter(x_arr_a, lims, color=rgb_co[itex], s=8)
 
         if itex not in legend_log:
             legend_log.append(itex)
@@ -873,37 +939,39 @@ def plot_x(data, outfile, outformat, args, normalise=False):
 
     if dim in PLANCK_SCALE:
         ps = np.log10(PLANCK_SCALE[dim])
-        if normalise:
+        if normalise and dim == 6:
             ps -= np.log10(PLANCK_SCALE[dim])
             ax.add_patch(Arrow(
-                0.27, -0.009, 0, -5, width=0.12, capstyle='butt',
+                0.24, -0.009, 0, -5, width=0.12, capstyle='butt',
                 facecolor='purple', fill=True, alpha=0.8,
                 edgecolor='darkmagenta'
             ))
             ax.add_patch(Arrow(
-                0.82, -0.009, 0, -5, width=0.12, capstyle='butt',
+                0.78, -0.009, 0, -5, width=0.12, capstyle='butt',
                 facecolor='purple', fill=True, alpha=0.8,
                 edgecolor='darkmagenta'
             ))
 
             ax.text(
-                0.3, 0.4, r'${\rm \bf Quantum\:Gravity\:Frontier}$',
+                0.26, 0.5, r'${\rm \bf Quantum\:Gravity\:Frontier}$',
                 fontsize=largesize-2, transform=ax.transAxes, va='top',
                 ha='left', color='purple'
             )
-        ax.axhline(y=ps, color='purple', alpha=1., linewidth=1.5)
+        if dim > 5:
+            ax.axhline(y=ps, color='purple', alpha=1., linewidth=1.5)
 
     if normalise:
+        ft = r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\Lambda^{-1}_{' + \
+                r'\:{0}'.format(args.dimension)+r'}\:\cdot\:{\rm M}_{\:\rm Planck}'
+        if dim > 5: ft += r'^{\:'+ r'{0}'.format(args.dimension-4)+ r'}'
+        ft += r'\right )\: ]$'
         fig.text(
-            0.02, 0.5,
-            r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\Lambda^{-1}_{' +
-            r'\:{0}'.format(args.dimension)+r'}\:\cdot\:{\rm M}_{\:\rm Planck}^{\:'+
-            r'{0}'.format(args.dimension-4)+ r'}\right )\: ]$', ha='left',
+            0.01, 0.5, ft, ha='left',
             va='center', rotation='vertical', fontsize=largesize
         )
     else:
         fig.text(
-            0.02, 0.5,
+            0.01, 0.5,
             r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\Lambda_{' +
             r'\:{0}'.format(args.dimension)+r'}^{-1}\:' + get_units(args.dimension) +
             r'\right )\: ]$', ha='left',
@@ -912,35 +980,35 @@ def plot_x(data, outfile, outformat, args, normalise=False):
 
     ax.set_xlabel(
         r'${\rm Source\:Composition}\:[\:f_{\alpha,\text{S}}=\left (\:x:1-x:0\:\right )_\text{S}\:]$',
-        fontsize=largesize
+        labelpad=10, fontsize=largesize
     )
     ax.tick_params(axis='x', labelsize=largesize-1)
 
     purple = [0.5019607843137255, 0.0, 0.5019607843137255]
-    legend_elements.append(
-        Patch(facecolor=purple+[0.7], edgecolor=purple+[1], label='Planck Scale Expectation')
-    )
+    # legend_elements.append(
+    #     Patch(facecolor=purple+[0.7], edgecolor=purple+[1], label='Planck Scale Expectation')
+    # )
     legend_elements.append(
         Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube, Nature.Phy.14,961(2018)')
     )
     legend = ax.legend(
         handles=legend_elements, prop=dict(size=labelsize-2),
         loc='upper center', title='Excluded regions', framealpha=1.,
-        edgecolor='black', frameon=True, bbox_to_anchor=(0.55, 1)
+        edgecolor='black', frameon=True, bbox_to_anchor=(0.5, 1)
     )
     plt.setp(legend.get_title(), fontsize=labelsize)
     legend.get_frame().set_linestyle('-')
 
-    # ybound = 0.61
-    # if args.data is DataType.REAL:
-    #     fig.text(0.278, ybound, r'\bf IceCube Preliminary', color='red', fontsize=13,
-    #              ha='center', va='center', zorder=11)
-    # elif args.data is DataType.REALISATION:
-    #     fig.text(0.278, ybound-0.05, r'\bf IceCube Simulation', color='red', fontsize=13,
-    #              ha='center', va='center', zorder=11)
-    # else:
-    #     fig.text(0.278, ybound, r'\bf IceCube Simulation', color='red', fontsize=13,
-    #              ha='center', va='center', zorder=11)
+    ybound = 0.14
+    if args.data is DataType.REAL:
+        fig.text(0.7, ybound, r'\bf IceCube Preliminary', color='red', fontsize=13,
+                 ha='center', va='center', zorder=11)
+    elif args.data is DataType.REALISATION:
+        fig.text(0.7, ybound-0.05, r'\bf IceCube Simulation', color='red', fontsize=13,
+                 ha='center', va='center', zorder=11)
+    else:
+        fig.text(0.7, ybound, r'\bf IceCube Simulation', color='red', fontsize=13,
+                 ha='center', va='center', zorder=11)
 
     make_dir(outfile)
     for of in outformat:

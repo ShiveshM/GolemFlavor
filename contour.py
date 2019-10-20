@@ -236,7 +236,7 @@ def main():
         r'$N_{\rm astro}$',
         r'$\gamma_{\rm astro}$',
         r'$\text{sin}^4\phi_\oplus$',
-        r'$\text{cos}\left(2\psi\right)_\oplus$',
+        r'$\text{cos}\left(2\psi_\oplus\right)$',
     ]
 
     of = outfile[:5]+outfile[5:].replace('data', 'plots')+'_posterior'

@@ -35,6 +35,34 @@ def process_args(args):
     if args.data is not DataType.REAL:
         args.injected_ratio = fr_utils.normalise_fr(args.injected_ratio)
 
+    # Anon points
+    anon = []
+    if args.dimensions[0] == 3:
+        anon.append([0.825, 0.845])
+        anon.append([0.865, 0.875])
+        anon.append([0.875, 0.885])
+        anon.append([0.905, 0.915])
+        anon.append([0.925, 0.935])
+    if args.dimensions[0] == 4:
+        anon.append([0.165, 0.175])
+        anon.append([0.805, 0.825])
+        anon.append([0.835, 0.845])
+        anon.append([0.855, 0.885])
+        anon.append([0.965, 0.975])
+    if args.dimensions[0] == 5:
+        anon.append([0.895, 0.905])
+        anon.append([0.955, 0.965])
+    if args.dimensions[0] == 6:
+        anon.append([0.115, 0.125])
+        anon.append([0.855, 0.865])
+    if args.dimensions[0] == 7:
+        # anon.append([0.815, 0.835])
+        anon.append([0.875, 0.885])
+    if args.dimensions[0] == 8:
+        anon.append([0.915, 0.935])
+        anon.append([0.875, 0.895])
+        anon.append([0.845, 0.855])
+
     if args.source_ratios is not None:
         if args.x_segments is not None:
             raise ValueError('Cannot do both --source-ratios and --x-segments')
@@ -50,7 +78,14 @@ def process_args(args):
         x_array = np.linspace(0, 1, args.x_segments)
         sources = []
         for x in x_array:
-            if x > MASK_X[0] and x < MASK_X[1]: continue
+            if x >= MASK_X[0] and x <= MASK_X[1]: continue
+            skip = False
+            for a in anon:
+                if (a[1] > x) & (x > a[0]):
+                    print 'Skipping src', x
+                    skip = True
+                    break
+            if skip: continue
             sources.append([x, 1-x, 0])
         args.source_ratios = sources
     else:
@@ -124,6 +159,8 @@ def main():
     srcs = len(args.source_ratios)
     if args.texture is Texture.NONE:
         textures = [Texture.OEU, Texture.OET, Texture.OUT]
+        if args.plot_table:
+            textures = [Texture.OET, Texture.OUT]
     else:
         textures = [args.texture]
     texs = len(textures)
@@ -149,6 +186,7 @@ def main():
 
         for isrc, src in enumerate(args.source_ratios):
             argsc.source_ratio = src
+
             for itex, texture in enumerate(textures):
                 argsc.texture = texture
 

@@ -44,12 +44,12 @@ def fit_flags(fitter):
             flags.__setattr__(param, False)
     fitter.SetFitParametersFlag(flags)
 
-def set_up_as(fitter, params):
+def setup_asimov(fitter, params):
     print 'Injecting the model', params
     asimov_params = gf.FitParameters(gf.sampleTag.MagicTau)
     for x in params.keys():
         asimov_params.__setattr__(x, float(params[x]))
-    fitter.SetFitParametersSeed(asimov_params)
+    fitter.SetupAsimov(asimov_params)
 
 def get_bf_freq(fitter):
     bf = fitter.MinLLH()
@@ -61,7 +61,7 @@ fit_flags(fitter)
 
 params = {'astroFlavorAngle1': 4/9., 'astroFlavorAngle2': 0.}
 print
-set_up_as(fitter, params)
+setup_asimov(fitter, params)
 print 'fitting...'
 bf = get_bf_freq(fitter)
 print 'bestfit params = astroFlavorAngle1:', bf.params.astroFlavorAngle1, \
@@ -71,7 +71,7 @@ print
 
 params = {'astroFlavorAngle1': 2/6., 'astroFlavorAngle2': 1/2.}
 print
-set_up_as(fitter, params)
+setup_asimov(fitter, params)
 print 'fitting...'
 bf = get_bf_freq(fitter)
 print 'bestfit params = astroFlavorAngle1:', bf.params.astroFlavorAngle1, \

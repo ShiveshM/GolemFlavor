@@ -822,6 +822,9 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     if dim != 4 or dim != 3:
         yticks = range(ylims[0], ylims[1], 2) + [ylims[1]]
         ax.set_yticks(yticks, minor=False)
+    if dim == 3 or dim == 4:
+        yticks = range(ylims[0], ylims[1], 1) + [ylims[1]]
+        ax.set_yticks(yticks, minor=False)
     # for ymaj in ax.yaxis.get_majorticklocs():
     #     ax.axhline(y=ymaj, ls=':', color='gray', alpha=0.2, linewidth=1)
     for xmaj in xticks:

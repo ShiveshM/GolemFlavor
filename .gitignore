@@ -12,7 +12,7 @@ mnrun_*
 mnrun/
 plot_llh/frs
 plot_llh/chains
-test/
+test/bayesian
 *.tar.gz
 *.tar
 *.gz

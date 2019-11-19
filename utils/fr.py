@@ -364,16 +364,15 @@ def params_to_BSMu(bsm_angles, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
 
     z = 0.+1e-9
     if texture is Texture.OEU:
-        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = 0.5, 1.0, z, z, bsm_angles
+        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc = 0.5, 1.0, z, z, bsm_angles
     elif texture is Texture.OET:
-        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = z, 0.25,  z, z, bsm_angles
+        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc = z, 0.25,  z, z, bsm_angles
     elif texture is Texture.OUT:
-        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = z, 1.0, 0.5, z, bsm_angles
+        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc = z, 1.0, 0.5, z, bsm_angles
     else:
-        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc2 = bsm_angles
+        np_s12_2, np_c13_4, np_s23_2, np_dcp, sc = bsm_angles
 
-    sc2 = np.power(10., sc2)
-    sc1 = sc2 / 100.
+    sc = np.power(10., sc)
 
     mass_matrix = np.array(
         [[0, 0, 0], [0, mass_eigenvalues[0], 0], [0, 0, mass_eigenvalues[1]]]
@@ -384,7 +383,7 @@ def params_to_BSMu(bsm_angles, dim, energy, mass_eigenvalues=MASS_EIGENVALUES,
     else:
         NP_U = angles_to_u((np_s12_2, np_c13_4, np_s23_2, np_dcp))
         SC_U = np.array(
-            [[0, 0, 0], [0, sc1, 0], [0, 0, sc2]]
+            [[-sc, 0, 0], [0, 0, 0], [0, 0, sc]]
         )
         bsm_term = (energy**(dim-3)) * np.dot(NP_U, np.dot(SC_U, NP_U.conj().T))
         bsm_ham = sm_ham + bsm_term

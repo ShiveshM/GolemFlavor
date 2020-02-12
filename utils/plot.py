@@ -34,6 +34,7 @@ tRed = list(np.array([226,101,95]) / 255.)
 tBlue = list(np.array([96,149,201]) / 255.)
 tGreen = list(np.array([170,196,109]) / 255.)
 
+import getdist
 from getdist import plots, mcsamples
 
 import ternary
@@ -105,13 +106,17 @@ def gen_figtext(args):
     return t
 
 
-def texture_label(x):
+def texture_label(x, dim):
+    cpt = r'c' if dim % 2 == 0 else r'a'
     if x == Texture.OEU:
-        return r'$\mathcal{O}_{e\mu}$'
+        # return r'$\mathcal{O}_{e\mu}$'
+        return r'$\mathring{'+cpt+r'}_{e\mu}^{('+str(int(dim))+r')}$'
     elif x == Texture.OET:
-        return r'$\mathcal{O}_{e\tau}$'
+        # return r'$\mathcal{O}_{e\tau}$'
+        return r'$\mathring{'+cpt+r'}_{\tau e}^{('+str(int(dim))+r')}$'
     elif x == Texture.OUT:
-        return r'$\mathcal{O}_{\mu\tau}$'
+        # return r'$\mathcal{O}_{\mu\tau}$'
+        return r'$\mathring{'+cpt+r'}_{\mu\tau}^{('+str(int(dim))+r')}$'
     else:
         raise AssertionError
 
@@ -185,7 +190,9 @@ def get_limit(scales, statistic, args, mask_initial=False, return_interp=False):
     if return_interp:
         return (scales_rm, reduced_ev)
 
-    lim = al[0]
+    # Divide by 2 to convert to standard SME coefficient
+    lim = al[0] - np.log10(2.)
+    # lim = al[0]
     print 'limit = {0}'.format(lim)
     return lim
 
@@ -430,10 +437,11 @@ def plot_Tchain(Tchain, axes_labels, ranges):
 
     g = plots.getSubplotPlotter()
     g.settings.num_plot_contours = 2
-    g.settings.axes_fontsize = 9
+    g.settings.axes_fontsize = 10
     g.settings.figure_legend_frame = False
+    g.settings.lab_fontsize = 20
     g.triangle_plot(
-        [Tsample], filled=True#, contour_colors=['green', 'lightgreen']
+        [Tsample], filled=True,# contour_colors=['green', 'lightgreen']
     )
     return g
 
@@ -648,7 +656,7 @@ def plot_table_sens(data, outfile, outformat, args):
 
         for itex, tex in enumerate(textures):
             argsc.texture = tex
-            ylabel = texture_label(tex)
+            ylabel = texture_label(tex, dim)
             # if angles == 2 and ian == 0: continue
             ax = fig.add_subplot(gs0[itex])
 
@@ -834,7 +842,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
         #     ax.axvline(x=xmaj, ls=':', color='gray', alpha=0.2, linewidth=1)
 
     ax.text(
-        (1/3.)+0.01, 0.01,  r'$(1:2:0)_\text{S}$', fontsize=labelsize,
+        (1/3.)+0.01, 0.01,  r'$(0.33:0.66:0)_\text{S}$', fontsize=labelsize,
         transform=ax.transAxes, rotation='vertical', va='bottom'
     )
     ax.text(
@@ -926,7 +934,8 @@ def plot_x(data, outfile, outformat, args, normalise=False):
 
         if itex not in legend_log:
             legend_log.append(itex)
-            label = texture_label(tex)[:-1] + r'\:{\rm\:texture}$'
+            # label = texture_label(tex, dim)[:-1] + r'\:{\rm\:texture}$'
+            label = texture_label(tex, dim)[:-1] + r'\:({\rm this\:work})$'
             legend_elements.append(
                 Patch(facecolor=rgb_co[itex]+[0.3],
                       edgecolor=rgb_co[itex]+[1], label=label)
@@ -963,9 +972,10 @@ def plot_x(data, outfile, outformat, args, normalise=False):
         if dim > 5:
             ax.axhline(y=ps, color='purple', alpha=1., linewidth=1.5)
 
+    cpt = r'c' if dim % 2 == 0 else r'a'
     if normalise:
-        ft = r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\Lambda^{-1}_{' + \
-                r'\:{0}'.format(args.dimension)+r'}\:\cdot\:{\rm M}_{\:\rm Planck}'
+        ft = r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\mathring{'+cpt+r'}^{(' + \
+                r'{0}'.format(args.dimension)+r')}\cdot{\rm E}_{\:\rm P}'
         if dim > 5: ft += r'^{\:'+ r'{0}'.format(args.dimension-4)+ r'}'
         ft += r'\right )\: ]$'
         fig.text(
@@ -975,14 +985,14 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     else:
         fig.text(
             0.01, 0.5,
-            r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\Lambda_{' +
-            r'\:{0}'.format(args.dimension)+r'}^{-1}\:' + get_units(args.dimension) +
+            r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\mathring{'+cpt+r'}^{(' +
+            r'{0}'.format(args.dimension)+r')}\:' + get_units(args.dimension) +
             r'\right )\: ]$', ha='left',
             va='center', rotation='vertical', fontsize=largesize
         )
 
     ax.set_xlabel(
-        r'${\rm Source\:Composition}\:[\:f_{\alpha,\text{S}}=\left (\:x:1-x:0\:\right )_\text{S}\:]$',
+        r'${\rm Source\:Composition}\:[\:\left (\:x:1-x:0\:\right )_\text{S}\:]$',
         labelpad=10, fontsize=largesize
     )
     ax.tick_params(axis='x', labelsize=largesize-1)
@@ -992,7 +1002,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     #     Patch(facecolor=purple+[0.7], edgecolor=purple+[1], label='Planck Scale Expectation')
     # )
     legend_elements.append(
-        Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube, Nature.Phy.14,961(2018)')
+        Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube [TODO]')
     )
     legend = ax.legend(
         handles=legend_elements, prop=dict(size=labelsize-2),
@@ -1002,16 +1012,16 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     plt.setp(legend.get_title(), fontsize=labelsize)
     legend.get_frame().set_linestyle('-')
 
-    ybound = 0.14
-    if args.data is DataType.REAL:
-        fig.text(0.7, ybound, r'\bf IceCube Preliminary', color='red', fontsize=13,
-                 ha='center', va='center', zorder=11)
-    elif args.data is DataType.REALISATION:
-        fig.text(0.7, ybound-0.05, r'\bf IceCube Simulation', color='red', fontsize=13,
-                 ha='center', va='center', zorder=11)
-    else:
-        fig.text(0.7, ybound, r'\bf IceCube Simulation', color='red', fontsize=13,
-                 ha='center', va='center', zorder=11)
+    # ybound = 0.14
+    # if args.data is DataType.REAL:
+    #     fig.text(0.7, ybound, r'\bf IceCube Preliminary', color='red', fontsize=13,
+    #              ha='center', va='center', zorder=11)
+    # elif args.data is DataType.REALISATION:
+    #     fig.text(0.7, ybound-0.05, r'\bf IceCube Simulation', color='red', fontsize=13,
+    #              ha='center', va='center', zorder=11)
+    # else:
+    #     fig.text(0.7, ybound, r'\bf IceCube Simulation', color='red', fontsize=13,
+    #              ha='center', va='center', zorder=11)
 
     make_dir(outfile)
     for of in outformat:

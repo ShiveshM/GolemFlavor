@@ -30,8 +30,8 @@ golem.Swallow(golem.SpitRealization(fp, seed))
 fp_sh = gf.FitParameters(gf.sampleTag.MagicTau)
 # fp_sh.astroFlavorAngle1 = 0.36
 # fp_sh.astroFlavorAngle2 = -0.57
-fp_sh.astroFlavorAngle1 = 1.
-fp_sh.astroFlavorAngle2 = 0.
+fp_sh.astroFlavorAngle1 = 0.
+fp_sh.astroFlavorAngle2 = 1.
 
 print 'Eval fp = {0}'.format(golem.EvalLLH(fp))
 

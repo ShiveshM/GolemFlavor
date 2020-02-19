@@ -284,6 +284,7 @@ def main():
             outfile   = baseoutfile + '/hese_table',
             outformat = ['png', 'pdf'],
             args      = args,
+            show_lvatmo = True
         )
 
 

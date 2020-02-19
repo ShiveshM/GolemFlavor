@@ -619,7 +619,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
 
 
-def plot_table_sens(data, outfile, outformat, args):
+def plot_table_sens(data, outfile, outformat, args, show_lvatmo=True):
     print 'Making TABLE sensitivity plot'
     argsc = deepcopy(args)
 
@@ -726,7 +726,7 @@ def plot_table_sens(data, outfile, outformat, args):
                               edgecolor=rgb_co[isrc]+[1], label=label)
                     )
 
-            if itex == len(textures)-1:
+            if itex == len(textures)-1 and show_lvatmo:
                 LV_lim = np.log10(LV_ATMO_90PC_LIMITS[dim])
                 ax.add_patch(patches.Rectangle(
                     (LV_lim[1], ylims[0]), LV_lim[0]-LV_lim[1], np.diff(ylims),
@@ -739,9 +739,10 @@ def plot_table_sens(data, outfile, outformat, args):
     ax.tick_params(axis='x', labelsize=16)
 
     purple = [0.5019607843137255, 0.0, 0.5019607843137255]
-    legend_elements.append(
-        Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube, Nature.Phy.14,961(2018)')
-    )
+    if show_lvatmo:
+        legend_elements.append(
+            Patch(facecolor='none', hatch='\\\\', edgecolor='k', label='IceCube, Nature.Phy.14,961(2018)')
+        )
     legend_elements.append(
         Patch(facecolor=purple+[0.7], edgecolor=purple+[1], label='Planck Scale Expectation')
     )

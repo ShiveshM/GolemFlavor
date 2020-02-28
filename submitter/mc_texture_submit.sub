@@ -1,4 +1,4 @@
-Executable = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/mc_texture.py
+Executable = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/scripts/mc_texture.py
 Arguments = "--source-ratio $(sr0) $(sr1) $(sr2) --datadir $(datadir) --seed $(seed) --threads $(threads) --run-mcmc $(run_mcmc) --burnin $(burnin) --nsteps $(nsteps) --nwalkers $(nwalkers) --mcmc-seed-type $(mcmc_seed_type) --plot-angles $(plot_angles) --plot-elements $(plot_elements) --binning $(binning) --dimension $(dimension) --no-bsm $(no_bsm) --texture $(texture)"
 
 # All logs will go to a single file 

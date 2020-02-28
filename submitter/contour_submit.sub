@@ -1,4 +1,4 @@
-Executable = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/contour.py
+Executable = /data/user/smandalia/GolemTools/sources/GolemFit/scripts/flavour_ratio/scripts/contour.py
 Arguments = "--ast $(ast) --data $(data) --injected-ratio $(ir0) $(ir1) $(ir2) --datadir $(datadir) --seed $(seed) --threads $(threads) --run-mcmc $(run_mcmc) --burnin $(burnin) --nsteps $(nsteps) --nwalkers $(nwalkers) --mcmc-seed-type $(mcmc_seed_type) --plot-angles $(plot_angles) --plot-elements $(plot_elements)"
 
 # All logs will go to a single file 

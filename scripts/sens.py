@@ -209,8 +209,8 @@ def main():
     ) + misc_utils.gen_identifier(args)
 
     if not args.overwrite and os.path.isfile(outfile+'.npy'):
-        print 'FILE EXISTS {0}'.format(outfile+'.npy')
-        print 'Exiting...'
+        print('FILE EXISTS {0}'.format(outfile+'.npy'))
+        print('Exiting...')
         return
 
     # Setup Golemfit.
@@ -225,16 +225,16 @@ def main():
             if idx_sc == args.eval_segment:
                 outfile += '_scale_{0:.0E}'.format(np.power(10, scale))
             else: continue
-        print '|||| SCALE = {0:.0E}'.format(np.power(10, scale))
+        print('|||| SCALE = {0:.0E}'.format(np.power(10, scale)))
 
         if not args.overwrite and os.path.isfile(outfile+'.npy'):
-            print 'FILE EXISTS {0}'.format(outfile+'.npy')
+            print('FILE EXISTS {0}'.format(outfile+'.npy'))
             t = np.load(outfile+'.npy')
             if np.any(~np.isfinite(t)):
-                print 'nan found, rerunning...'
+                print('nan found, rerunning...')
                 pass
             else:
-                print 'Exiting...'
+                print('Exiting...')
                 return
 
         # Lower scale boundary for first (NULL) point and set the scale param.
@@ -262,9 +262,9 @@ def main():
                 prefix          = prefix
             )
         except:
-            print 'Failed run'
+            print('Failed run')
             raise
-        print '## Evidence = {0}'.format(stat)
+        print('## Evidence = {0}'.format(stat))
 
         if args.eval_segment is not None:
             stat_arr[0] = np.array([scale, stat])
@@ -278,14 +278,14 @@ def main():
         if args.run_mn and not args.debug:
             try:
                 for f in glob.glob(prefix + '*'):
-                    print 'cleaning file {0}'.format(f)
+                    print('cleaning file {0}'.format(f))
                     os.remove(f)
             except:
-                print 'got error trying to cleanup, continuing'
+                print('got error trying to cleanup, continuing')
                 pass
 
     misc_utils.make_dir(outfile)
-    print 'Saving to {0}'.format(outfile+'.npy')
+    print('Saving to {0}'.format(outfile+'.npy'))
     np.save(outfile+'.npy', stat_arr)
 
 

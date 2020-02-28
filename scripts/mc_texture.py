@@ -182,10 +182,10 @@ def main():
 
     prefix = ''
     outfile = args.datadir + '/mc_texture' + prefix + gen_identifier(args)
-    print '== {0:<25} = {1}'.format('outfile', outfile)
+    print('== {0:<25} = {1}'.format('outfile', outfile))
 
-    print 'asimov_paramset', asimov_paramset
-    print 'llh_paramset', llh_paramset
+    print('asimov_paramset', asimov_paramset)
+    print('llh_paramset', llh_paramset)
 
     if args.run_mcmc:
         ln_prob_eval = partial(
@@ -223,7 +223,7 @@ def main():
         frs_scale = np.vstack((frs.T, samples[:-1].T)).T
         mcmc_utils.save_chains(frs_scale, outfile)
 
-    print "DONE!"
+    print("DONE!")
 
 
 main.__doc__ = __doc__

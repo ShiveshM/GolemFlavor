@@ -77,7 +77,7 @@ def parse_bool(s):
     Examples
     ----------
     >>> from misc import parse_bool
-    >>> print parse_bool('true')
+    >>> print(parse_bool('true'))
     True
 
     """

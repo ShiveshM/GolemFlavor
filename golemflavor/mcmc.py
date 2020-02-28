@@ -26,26 +26,26 @@ def mcmc(p0, ln_prob, ndim, nwalkers, burnin, nsteps, args, threads=1):
         nwalkers, ndim, ln_prob, threads=threads
     )
 
-    print "Running burn-in"
+    print("Running burn-in")
     for result in tqdm.tqdm(sampler.sample(p0, iterations=burnin), total=burnin):
         pos, prob, state = result
     sampler.reset()
-    print "Finished burn-in"
+    print("Finished burn-in")
     args.burnin = False
 
-    print "Running"
+    print("Running")
     for _ in tqdm.tqdm(sampler.sample(pos, iterations=nsteps), total=nsteps):
         pass
-    print "Finished"
+    print("Finished")
 
     samples = sampler.chain.reshape((-1, ndim))
-    print 'acceptance fraction', sampler.acceptance_fraction
-    print 'sum of acceptance fraction', np.sum(sampler.acceptance_fraction)
-    print 'np.unique(samples[:,0]).shape', np.unique(samples[:,0]).shape
+    print('acceptance fraction', sampler.acceptance_fraction)
+    print('sum of acceptance fraction', np.sum(sampler.acceptance_fraction))
+    print('np.unique(samples[:,0]).shape', np.unique(samples[:,0]).shape)
     try:
-        print 'autocorrelation', sampler.acor
+        print('autocorrelation', sampler.acor)
     except:
-        print 'WARNING : NEED TO RUN MORE SAMPLES'
+        print('WARNING : NEED TO RUN MORE SAMPLES')
 
     return samples
 
@@ -115,6 +115,6 @@ def save_chains(chains, outfile):
 
     """
     make_dir(outfile)
-    print 'Saving chains to location {0}'.format(outfile+'.npy')
+    print('Saving chains to location {0}'.format(outfile+'.npy'))
     np.save(outfile+'.npy', chains)
 

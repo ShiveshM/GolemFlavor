@@ -157,10 +157,10 @@ def get_limit(scales, statistic, args, mask_initial=False, return_interp=False):
     min_idx = np.argmin(scales)
     null = statistic[min_idx]
     # if np.abs(statistic_rm[0] - null) > 0.8:
-    #     print 'Warning, null incompatible with smallest scanned scale! For ' \
+    #     print('Warning, null incompatible with smallest scanned scale! For ' \
     #         'DIM {0} [{1}, {2}, {3}]!'.format(
     #             args.dimension, *args.source_ratio
-    #         )
+    #         ))
     #     null = statistic_rm[0]
     if args.stat_method is StatCateg.BAYESIAN:
         reduced_ev = -(statistic_rm - null)
@@ -175,16 +175,16 @@ def get_limit(scales, statistic, args, mask_initial=False, return_interp=False):
         return None
     re = -(statistic-null)[scales > al[0]]
     if np.sum(re < np.log(10**(BAYES_K)) - 0.1) >= 2:
-        print 'Warning, peaked contour does not exclude large scales! For ' \
+        print('Warning, peaked contour does not exclude large scales! For ' \
             'DIM {0} [{1}, {2}, {3}]!'.format(
                 args.dimension, *args.source_ratio
-            )
+            ))
         return None
     if np.sum(re >= np.log(10**(BAYES_K)) + 0.0) < 2:
-        print 'Warning, only single point above threshold! For ' \
+        print('Warning, only single point above threshold! For ' \
             'DIM {0} [{1}, {2}, {3}]!'.format(
                 args.dimension, *args.source_ratio
-            )
+            ))
         return None
 
     if return_interp:
@@ -193,7 +193,7 @@ def get_limit(scales, statistic, args, mask_initial=False, return_interp=False):
     # Divide by 2 to convert to standard SME coefficient
     lim = al[0] - np.log10(2.)
     # lim = al[0]
-    print 'limit = {0}'.format(lim)
+    print('limit = {0}'.format(lim))
     return lim
 
 
@@ -323,7 +323,7 @@ def alpha_shape(points, alpha):
         area = np.sqrt(s*(s-a)*(s-b)*(s-c))
         circum_r = a*b*c/(4.0*area)
         # Here's the radius filter.
-        #print circum_r
+        #print(circum_r)
         if circum_r < 1.0/alpha:
             add_edge(edges, edge_points, coords, ia, ib)
             add_edge(edges, edge_points, coords, ib, ic)
@@ -562,9 +562,9 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     fig_text = gen_figtext(args)
     if label is not None: fig_text += '\n' + label
 
-    print 'data', data
-    print 'data.shape', data.shape
-    print 'outfile', outfile
+    print('data', data)
+    print('data.shape', data.shape)
+    print('outfile', outfile)
     try:
         scales, statistic = ma.compress_rows(data).T
         lim = get_limit(deepcopy(scales), deepcopy(statistic), args, mask_initial=True)
@@ -620,7 +620,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
 
 
 def plot_table_sens(data, outfile, outformat, args, show_lvatmo=True):
-    print 'Making TABLE sensitivity plot'
+    print('Making TABLE sensitivity plot')
     argsc = deepcopy(args)
 
     dims = args.dimensions
@@ -648,7 +648,7 @@ def plot_table_sens(data, outfile, outformat, args, show_lvatmo=True):
     legend_elements = []
 
     for idim, dim in enumerate(dims):
-        print '|||| DIM = {0}'.format(dim)
+        print('|||| DIM = {0}'.format(dim))
         argsc.dimension = dim
         gs0 = gridspec.GridSpecFromSubplotSpec(
             len(textures), 1, subplot_spec=gs[idim], hspace=0

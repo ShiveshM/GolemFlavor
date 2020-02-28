@@ -16,7 +16,7 @@ import numpy as np
 try:
     import GolemFitPy as gf
 except:
-    print 'Running without GolemFit'
+    print('Running without GolemFit')
     pass
 
 from golemflavor.enums import DataType, Likelihood, SteeringCateg
@@ -53,8 +53,8 @@ def fit_flags(llh_paramset):
     gf_nuisance = []
     for param in llh_paramset:
         if param.name in default_flags:
-            print 'Setting param {0:<15} to float in the ' \
-                'minimisation'.format(param.name)
+            print('Setting param {0:<15} to float in the ' \
+                'minimisation'.format(param.name))
             flags.__setattr__(param.name, False)
             gf_nuisance.append(param)
     return flags, ParamSet(gf_nuisance)
@@ -85,7 +85,7 @@ def steering_params(args):
 
 
 def setup_asimov(params):
-    print 'Injecting the model', params
+    print('Injecting the model', params)
     asimov_params = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         asimov_params.__setattr__(parm.name, float(parm.value))
@@ -93,7 +93,7 @@ def setup_asimov(params):
 
 
 def setup_realisation(params, seed):
-    print 'Injecting the model', params
+    print('Injecting the model', params)
     asimov_params = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         asimov_params.__setattr__(parm.name, float(parm.value))
@@ -112,7 +112,7 @@ def setup_fitter(args, asimov_paramset):
         seed = args.seed if args.seed is not None else 1
         setup_realisation(FITTER, asimov_paramset, seed)
     elif args.data is DataType.REAL:
-        print 'Using MagicTau DATA'
+        print('Using MagicTau DATA')
 
 
 def get_llh(params):
@@ -124,7 +124,7 @@ def get_llh(params):
 
 
 def get_llh_freq(params):
-    print 'setting to {0}'.format(params)
+    print('setting to {0}'.format(params))
     fitparams = gf.FitParameters(gf.sampleTag.MagicTau)
     for parm in params:
         fitparams.__setattr__(parm.name, float(parm.value))

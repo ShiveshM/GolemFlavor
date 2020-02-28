@@ -151,10 +151,10 @@ def main():
 
     prefix = ''
     outfile = args.datadir + '/mc_x' + prefix
-    print '== {0:<25} = {1}'.format('outfile', outfile)
+    print('== {0:<25} = {1}'.format('outfile', outfile))
 
-    print 'asimov_paramset', asimov_paramset
-    print 'hypo_paramset', hypo_paramset
+    print('asimov_paramset', asimov_paramset)
+    print('hypo_paramset', hypo_paramset)
 
     if args.run_mcmc:
         ln_prob_eval = partial(
@@ -192,7 +192,7 @@ def main():
         )
         mcmc_utils.save_chains(frs, outfile)
 
-    print "DONE!"
+    print("DONE!")
 
 
 main.__doc__ = __doc__

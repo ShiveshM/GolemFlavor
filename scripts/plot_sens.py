@@ -82,7 +82,7 @@ def process_args(args):
             skip = False
             for a in anon:
                 if (a[1] > x) & (x > a[0]):
-                    print 'Skipping src', x
+                    print('Skipping src', x)
                     skip = True
                     break
             if skip: continue
@@ -171,7 +171,7 @@ def main():
     # Initialise data structure.
     statistic_arr = np.full((dims, srcs, texs, args.segments, 2), np.nan)
 
-    print 'Loading data'
+    print('Loading data')
     argsc = deepcopy(args)
     for idim, dim in enumerate(args.dimensions):
         argsc.dimension = dim
@@ -194,7 +194,7 @@ def main():
                     *map(parse_enum, [args.stat_method, args.data])
                 ) + r'{0}/fr_stat'.format(prefix) + gen_identifier(argsc)
 
-                print '== {0:<25} = {1}'.format('base_infile', base_infile)
+                print('== {0:<25} = {1}'.format('base_infile', base_infile))
 
                 if args.split_jobs:
                     for idx_sc, scale in enumerate(eval_scales):
@@ -202,31 +202,31 @@ def main():
                             np.power(10, scale)
                         )
                         try:
-                            print 'Loading from {0}'.format(infile+'.npy')
+                            print('Loading from {0}'.format(infile+'.npy'))
                             statistic_arr[idim][isrc][itex][idx_sc] = \
                                 np.load(infile+'.npy')[0]
                         except:
-                            print 'Unable to load file {0}'.format(
+                            print('Unable to load file {0}'.format(
                                 infile+'.npy'
-                            )
+                            ))
                             # raise
                             continue
                 else:
-                    print 'Loading from {0}'.format(base_infile+'.npy')
+                    print('Loading from {0}'.format(base_infile+'.npy'))
                     try:
                         statistic_arr[idim][isrc][itex] = \
                             np.load(base_infile+'.npy')
                     except:
-                        print 'Unable to load file {0}'.format(
+                        print('Unable to load file {0}'.format(
                             base_infile+'.npy'
-                        )
+                        ))
                         continue
 
     data = ma.masked_invalid(statistic_arr)
 
-    print 'data', data
+    print('data', data)
     if args.plot_statistic:
-        print 'Plotting statistic'
+        print('Plotting statistic')
 
         for idim, dim in enumerate(args.dimensions):
             argsc.dimension = dim
@@ -268,7 +268,7 @@ def main():
     argsc = deepcopy(args)
     if args.plot_x:
         for idim, dim in enumerate(args.dimensions):
-            print '|||| DIM = {0}'.format(dim)
+            print('|||| DIM = {0}'.format(dim))
             argsc.dimension = dim
             plot_utils.plot_x(
                 data      = data[idim],

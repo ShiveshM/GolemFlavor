@@ -171,13 +171,13 @@ def main():
     outfile = args.datadir + '/{0}/{1}/chains_'.format(
         *map(misc_utils.parse_enum, [args.stat_method, args.data])
     ) + misc_utils.gen_identifier(args)
-    print '== {0:<25} = {1}'.format('outfile', outfile)
+    print('== {0:<25} = {1}'.format('outfile', outfile))
 
     if args.run_mcmc:
         gf_utils.setup_fitter(args, asimov_paramset)
 
-        print 'asimov_paramset', asimov_paramset
-        print 'llh_paramset', llh_paramset
+        print('asimov_paramset', asimov_paramset)
+        print('llh_paramset', llh_paramset)
 
         ln_prob = partial(
             llh_utils.ln_prob,
@@ -240,7 +240,7 @@ def main():
         labels       = labels,
         ranges       = ranges
     )
-    print "DONE!"
+    print("DONE!")
 
 
 main.__doc__ = __doc__

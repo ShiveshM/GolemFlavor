@@ -85,7 +85,7 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, prefix='mn'):
 
     if args.run_mn:
         make_dir(prefix)
-        print 'Running evidence calculation for {0}'.format(prefix)
+        print('Running evidence calculation for {0}'.format(prefix))
         run(
             LogLikelihood              = lnProbEval,
             Prior                      = CubePrior,

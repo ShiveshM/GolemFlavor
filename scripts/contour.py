@@ -194,10 +194,10 @@ def main():
 
     prefix = ''
     outfile = args.datadir + '/contour' + prefix + gen_identifier(args)
-    print '== {0:<25} = {1}'.format('outfile', outfile)
+    print('== {0:<25} = {1}'.format('outfile', outfile))
 
-    print 'asimov_paramset', asimov_paramset
-    print 'hypo_paramset', hypo_paramset
+    print('asimov_paramset', asimov_paramset)
+    print('hypo_paramset', hypo_paramset)
 
     if args.run_mcmc:
         gf_utils.setup_fitter(args, asimov_paramset)
@@ -250,7 +250,7 @@ def main():
         labels       = labels
     )
 
-    print "DONE!"
+    print("DONE!")
 
 
 main.__doc__ = __doc__

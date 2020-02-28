@@ -7,7 +7,7 @@
 Useful functions for the BSM flavour ratio analysis
 """
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 from functools import partial
 
@@ -483,7 +483,7 @@ def test_unitarity(x, prnt=False, rse=False, epsilon=None):
     """
     f = np.abs(np.dot(x, x.conj().T), dtype=DTYPE)
     if prnt:
-        print 'Unitarity test:\n{0}'.format(f)
+        print('Unitarity test:\n{0}'.format(f))
     if rse:
         if not np.abs(np.trace(f) - 3.) < epsilon or \
            not np.abs(np.sum(f) - 3.) < epsilon:

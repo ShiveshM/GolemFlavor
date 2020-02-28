@@ -9,7 +9,7 @@ Calculation follows from DOI 10.1103/PhysRevD.98.123023
 "Unitary bounds of astrophysical neutrinos" by M. Ahlers, M. Bustamante, S. Mu
 """
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
 
@@ -56,7 +56,7 @@ def calc_unitarity_bounds(f_s, n_samples):
     domega = np.linspace(-np.pi/2., np.pi/2, n_samples)
 
     eta = np.full_like(chi, np.inf, dtype=np.float)
-    for i_chi in xrange(n_samples):
+    for i_chi in range(n_samples):
         omega = chi[i_chi] + domega
         x = (1 - f_s[0] - 2*f_s[1]) * np.sin(omega)
         y = (1 - 2*f_s[0] - f_s[1]) * np.cos(omega)
@@ -64,15 +64,15 @@ def calc_unitarity_bounds(f_s, n_samples):
 
         B = B_v(x, y, z)
         if np.any(~np.isfinite(B)):
-            print 'B', B
+            print('B', B)
             raise AssertionError('inf elements found!')
 
         nB = []
-        for i_ome in xrange(n_samples):
+        for i_ome in range(n_samples):
             nB.append(Bn(B[i_ome], omega[i_ome], chi[i_chi]))
         eta[i_chi] = np.min(nB)
     if np.any(~np.isfinite(eta)):
-        print 'eta', eta
+        print('eta', eta)
         raise AssertionError('inf elements found!')
 
     df_em = eta * np.cos(chi)

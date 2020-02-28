@@ -58,15 +58,13 @@ setup(
     packages=find_packages(),
     install_requires=INSTALL_REQUIRES,
     setup_requires=['setuptools>=38.6.0'],
-    entry_points={
-        'console_scripts': [
-            'contour=scripts.contour::main',
-            'fr=scripts.fr::main',
-            'mc_texture=scripts.mc_texture::main',
-            'mc_unitary=scripts.mc_unitary::main',
-            'mc_x=scripts.mc_x::main',
-            'plot_sens=scripts.plot_sens::main',
-            'sens=scripts.sens::main'
-        ]
-    }
+    scripts=[
+        'scripts/contour.py',
+        'scripts/fr.py',
+        'scripts/mc_texture.py',
+        'scripts/mc_unitary.py',
+        'scripts/mc_x.py',
+        'scripts/plot_sens.py',
+        'scripts/sens.py'
+    ]
 )

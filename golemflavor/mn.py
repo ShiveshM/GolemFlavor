@@ -15,8 +15,8 @@ import numpy as np
 
 from pymultinest import analyse, run
 
-from utils import llh as llh_utils
-from utils.misc import gen_identifier, make_dir, parse_bool, solve_ratio
+from golemflavor import llh as llh_utils
+from golemflavor.misc import gen_identifier, make_dir, parse_bool, solve_ratio
 
 
 def CubePrior(cube, ndim, n_params):

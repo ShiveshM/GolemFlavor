@@ -20,15 +20,15 @@ import numpy as np
 import numpy.ma as ma
 from scipy.optimize import minimize
 
-from utils import fr as fr_utils
-from utils import gf as gf_utils
-from utils import llh as llh_utils
-from utils import misc as misc_utils
-from utils import mn as mn_utils
-from utils.enums import str_enum
-from utils.enums import DataType, Likelihood, ParamTag
-from utils.enums import PriorsCateg, StatCateg, Texture
-from utils.param import Param, ParamSet
+from golemflavor import fr as fr_utils
+from golemflavor import gf as gf_utils
+from golemflavor import llh as llh_utils
+from golemflavor import misc as misc_utils
+from golemflavor import mn as mn_utils
+from golemflavor.enums import str_enum
+from golemflavor.enums import DataType, Likelihood, ParamTag
+from golemflavor.enums import PriorsCateg, StatCateg, Texture
+from golemflavor.param import Param, ParamSet
 
 
 def define_nuisance():

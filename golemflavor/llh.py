@@ -16,10 +16,10 @@ import numpy as np
 import scipy
 from scipy.stats import multivariate_normal, truncnorm
 
-from utils import fr as fr_utils
-from utils import gf as gf_utils
-from utils.enums import Likelihood, ParamTag, PriorsCateg, StatCateg
-from utils.misc import enum_parse, gen_identifier, parse_bool
+from golemflavor import fr as fr_utils
+from golemflavor import gf as gf_utils
+from golemflavor.enums import Likelihood, ParamTag, PriorsCateg, StatCateg
+from golemflavor.misc import enum_parse, gen_identifier, parse_bool
 
 
 def GaussianBoundedRV(loc=0., sigma=1., lower=-np.inf, upper=np.inf):

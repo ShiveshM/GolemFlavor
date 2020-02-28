@@ -45,10 +45,10 @@ import shapely.geometry as geometry
 from shapely.ops import cascaded_union, polygonize
 from scipy.spatial import Delaunay
 
-from utils.enums import DataType, str_enum
-from utils.enums import Likelihood, ParamTag, StatCateg, Texture
-from utils.misc import get_units, make_dir, solve_ratio, interval
-from utils.fr import angles_to_u, angles_to_fr, SCALE_BOUNDARIES
+from golemflavor.enums import DataType, str_enum
+from golemflavor.enums import Likelihood, ParamTag, StatCateg, Texture
+from golemflavor.misc import get_units, make_dir, solve_ratio, interval
+from golemflavor.fr import angles_to_u, angles_to_fr, SCALE_BOUNDARIES
 
 
 BAYES_K = 1.   # Strong degree of belief.

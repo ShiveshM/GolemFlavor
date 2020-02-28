@@ -16,15 +16,15 @@ from functools import partial
 
 import numpy as np
 
-from utils import fr as fr_utils
-from utils import gf as gf_utils
-from utils import llh as llh_utils
-from utils import mcmc as mcmc_utils
-from utils import misc as misc_utils
-from utils import plot as plot_utils
-from utils.enums import DataType, Likelihood, MCMCSeedType
-from utils.enums import ParamTag, PriorsCateg, Texture
-from utils.param import Param, ParamSet
+from golemflavor import fr as fr_utils
+from golemflavor import gf as gf_utils
+from golemflavor import llh as llh_utils
+from golemflavor import mcmc as mcmc_utils
+from golemflavor import misc as misc_utils
+from golemflavor import plot as plot_utils
+from golemflavor.enums import DataType, Likelihood, MCMCSeedType
+from golemflavor.enums import ParamTag, PriorsCateg, Texture
+from golemflavor.param import Param, ParamSet
 
 
 def define_nuisance():

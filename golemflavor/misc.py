@@ -19,8 +19,8 @@ from operator import attrgetter
 
 import numpy as np
 
-from utils.enums import str_enum
-from utils.enums import DataType, Likelihood, Texture
+from golemflavor.enums import str_enum
+from golemflavor.enums import DataType, Likelihood, Texture
 
 
 class SortingHelpFormatter(argparse.HelpFormatter):

@@ -13,8 +13,8 @@ from functools import partial
 
 import numpy as np
 
-from utils.enums import ParamTag, Texture
-from utils.misc import enum_parse, parse_bool
+from golemflavor.enums import ParamTag, Texture
+from golemflavor.misc import enum_parse, parse_bool
 
 import mpmath as mp
 mp.mp.dps = 100 # Computation precision

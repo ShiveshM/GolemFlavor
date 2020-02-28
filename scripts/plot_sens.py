@@ -18,13 +18,13 @@ from copy import deepcopy
 import numpy as np
 import numpy.ma as ma
 
-from utils import fr as fr_utils
-from utils import llh as llh_utils
-from utils import plot as plot_utils
-from utils.enums import DataType, Texture
-from utils.misc import enum_parse, parse_bool, parse_enum, print_args
-from utils.misc import gen_identifier, SortingHelpFormatter
-from utils.param import Param, ParamSet
+from golemflavor import fr as fr_utils
+from golemflavor import llh as llh_utils
+from golemflavor import plot as plot_utils
+from golemflavor.enums import DataType, Texture
+from golemflavor.misc import enum_parse, parse_bool, parse_enum, print_args
+from golemflavor.misc import gen_identifier, SortingHelpFormatter
+from golemflavor.param import Param, ParamSet
 
 
 MASK_X = (0.3, 0.7)

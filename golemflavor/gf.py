@@ -19,9 +19,9 @@ except:
     print 'Running without GolemFit'
     pass
 
-from utils.enums import DataType, Likelihood, SteeringCateg
-from utils.misc import enum_parse, parse_bool, thread_factors
-from utils.param import ParamSet
+from golemflavor.enums import DataType, Likelihood, SteeringCateg
+from golemflavor.misc import enum_parse, parse_bool, thread_factors
+from golemflavor.param import ParamSet
 
 
 FITTER = None

@@ -16,8 +16,8 @@ import tqdm
 
 import numpy as np
 
-from utils.enums import MCMCSeedType
-from utils.misc import enum_parse, make_dir, parse_bool
+from golemflavor.enums import MCMCSeedType
+from golemflavor.misc import enum_parse, make_dir, parse_bool
 
 
 def mcmc(p0, ln_prob, ndim, nwalkers, burnin, nsteps, args, threads=1):

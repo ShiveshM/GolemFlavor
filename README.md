@@ -32,7 +32,9 @@ GolemFlavor has the following dependencies:
 * [`python-ternary`](https://github.com/marcharper/python-ternary)
 * [`GetDist`](https://getdist.readthedocs.io/en/latest/)
 
-You can use `pip` to install the above automatically.
+You can use `pip` to install the above automatically. Note that `PyMultiNest`
+requires the `MultiNest` Bayesian inference library, see [the `PyMultiNest`
+documentation for install instructions.](https://johannesbuchner.github.io/PyMultiNest/install.html#prerequisites-for-building-the-libraries)
 
 Additional dependencies:
 * [`GolemFit`](https://github.com/IceCubeOpenSource/GolemFit)

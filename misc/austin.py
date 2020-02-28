@@ -15,12 +15,12 @@ from functools import partial
 
 import numpy as np
 
-from utils import fr as fr_utils
-from utils import misc as misc_utils
-from utils import plot as plot_utils
-from utils.enums import str_enum
-from utils.enums import Likelihood, ParamTag, PriorsCateg
-from utils.param import Param, ParamSet
+from golemflavor import fr as fr_utils
+from golemflavor import misc as misc_utils
+from golemflavor import plot as plot_utils
+from golemflavor.enums import str_enum
+from golemflavor.enums import Likelihood, ParamTag, PriorsCateg
+from golemflavor.param import Param, ParamSet
 
 from matplotlib import pyplot as plt
 

@@ -7,7 +7,7 @@
 Likelihood functions for the BSM flavour ratio analysis
 """
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 from copy import deepcopy
 from functools import partial

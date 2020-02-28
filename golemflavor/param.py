@@ -7,7 +7,7 @@
 Param class and functions for the BSM flavour ratio analysis
 """
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 import sys
 

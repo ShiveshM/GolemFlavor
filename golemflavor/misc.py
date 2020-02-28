@@ -7,7 +7,7 @@
 Misc functions for the BSM flavour ratio analysis
 """
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 import os
 import errno
@@ -104,7 +104,7 @@ def print_args(args):
     """
     arg_vars = vars(args)
     for key in sorted(arg_vars):
-        print '== {0:<25} = {1}'.format(key, arg_vars[key])
+        print('== {0:<25} = {1}'.format(key, arg_vars[key]))
 
 
 def enum_parse(s, c):

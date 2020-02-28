@@ -7,7 +7,7 @@
 Useful functions to use MultiNest for the BSM flavour ratio analysis
 """
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 from functools import partial
 

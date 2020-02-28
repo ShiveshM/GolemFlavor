@@ -7,7 +7,7 @@
 Plotting functions for the BSM flavour ratio analysis
 """
 
-from __future__ import absolute_import, division
+from __future__ import absolute_import, division, print_function
 
 import os
 import socket
@@ -127,14 +127,14 @@ def cmap_discretize(cmap, N):
     indices = np.linspace(0, 1., N+1)
     cdict = {}
     for ki,key in enumerate(('red','green','blue')):
-        cdict[key] = [ (indices[i], colors_rgba[i-1,ki], colors_rgba[i,ki]) for i in xrange(N+1) ]
+        cdict[key] = [ (indices[i], colors_rgba[i-1,ki], colors_rgba[i,ki]) for i in range(N+1) ]
     # Return colormap object.
     return mpl.colors.LinearSegmentedColormap(cmap.name + "_%d"%N, cdict, 1024)
 
 
 def get_limit(scales, statistic, args, mask_initial=False, return_interp=False):
     max_st = np.max(statistic)
-    print 'scales, stat', zip(scales, statistic)
+    print('scales, stat', zip(scales, statistic))
     if args.stat_method is StatCateg.BAYESIAN:
         if (statistic[0] - max_st) > np.log(10**(BAYES_K)):
             raise AssertionError('Discovered LV!')
@@ -142,7 +142,7 @@ def get_limit(scales, statistic, args, mask_initial=False, return_interp=False):
     try:
         tck, u = splprep([scales, statistic], s=0)
     except:
-        print 'Failed to spline'
+        print('Failed to spline')
         # return None
         raise
     sc, st = splev(np.linspace(0, 1, 1000), tck)
@@ -164,14 +164,14 @@ def get_limit(scales, statistic, args, mask_initial=False, return_interp=False):
     #     null = statistic_rm[0]
     if args.stat_method is StatCateg.BAYESIAN:
         reduced_ev = -(statistic_rm - null)
-        print '[reduced_ev > np.log(10**(BAYES_K))]', np.sum([reduced_ev > np.log(10**(BAYES_K))])
+        print('[reduced_ev > np.log(10**(BAYES_K))]', np.sum([reduced_ev > np.log(10**(BAYES_K))]))
         al = scales_rm[reduced_ev > np.log(10**(BAYES_K))]
     else:
         assert 0
     if len(al) == 0:
-        print 'No points for DIM {0} [{1}, {2}, {3}]!'.format(
+        print('No points for DIM {0} [{1}, {2}, {3}]!'.format(
             args.dimension, *args.source_ratio
-        )
+        ))
         return None
     re = -(statistic-null)[scales > al[0]]
     if np.sum(re < np.log(10**(BAYES_K)) - 0.1) >= 2:
@@ -362,9 +362,9 @@ def flavour_contour(frs, nbins, coverage, ax=None, smoothing=0.4,
     # Get vertices inside covered region
     binx = np.linspace(0, 1, os_nbins+1)
     interp_dict = {}
-    for i in xrange(len(binx)):
-        for j in xrange(len(binx)):
-            for k in xrange(len(binx)):
+    for i in range(len(binx)):
+        for j in range(len(binx)):
+            for k in range(len(binx)):
                 if mask[i][j][k] == 1:
                     interp_dict[(i, j, k)] = H_s[i, j, k]
     vertices = np.array(heatmap(interp_dict, os_nbins))
@@ -459,8 +459,8 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None,
         raw = np.load(infile)
     else:
         raw = infile
-    print 'raw.shape', raw.shape
-    print 'raw', raw
+    print('raw.shape', raw.shape)
+    print('raw', raw)
 
     make_dir(outfile), make_dir
     if fig_text is None:
@@ -471,7 +471,7 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None,
     if ranges is None: ranges = llh_paramset.ranges
 
     if args.plot_angles:
-        print "Making triangle plots"
+        print("Making triangle plots")
         Tchain = raw
         g = plot_Tchain(Tchain, axes_labels, ranges)
 
@@ -496,14 +496,14 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None,
         #     )
 
         for of in outformat:
-            print 'Saving', outfile+'_angles.'+of
+            print('Saving', outfile+'_angles.'+of)
             g.export(outfile+'_angles.'+of)
 
     if not hasattr(args, 'plot_elements'):
         return
 
     if args.plot_elements:
-        print "Making triangle plots"
+        print("Making triangle plots")
         if args.fix_mixing_almost:
             raise NotImplementedError
         nu_index = llh_paramset.from_tag(ParamTag.NUISANCE, index=True)
@@ -552,13 +552,13 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None,
 
         mpl.pyplot.figtext(0.5, 0.7, fig_text, fontsize=15)
         for of in outformat:
-            print 'Saving', outfile+'_elements'+of
+            print('Saving', outfile+'_elements'+of)
             g.export(outfile+'_elements.'+of)
 
 
 def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     """Make MultiNest factor or LLH value plot."""
-    print 'Making Statistic plot'
+    print('Making Statistic plot')
     fig_text = gen_figtext(args)
     if label is not None: fig_text += '\n' + label
 
@@ -615,7 +615,7 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     ax.add_artist(at)
     make_dir(outfile)
     for of in outformat:
-        print 'Saving as {0}'.format(outfile+'.'+of)
+        print('Saving as {0}'.format(outfile+'.'+of))
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
 
 
@@ -685,7 +685,7 @@ def plot_table_sens(data, outfile, outformat, args, show_lvatmo=True):
                 ax.spines['bottom'].set_alpha(0.6)
 
             for isrc, src in enumerate(srcs):
-                print '== src', src
+                print('== src', src)
                 argsc.source_ratio = src
 
                 if dim in PLANCK_SCALE.iterkeys():
@@ -769,14 +769,14 @@ def plot_table_sens(data, outfile, outformat, args, show_lvatmo=True):
 
     make_dir(outfile)
     for of in outformat:
-        print 'Saving plot as {0}'.format(outfile+'.'+of)
+        print('Saving plot as {0}'.format(outfile+'.'+of))
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
 
 
 def plot_x(data, outfile, outformat, args, normalise=False):
     """Limit plot as a function of the source flavour ratio for each operator
     texture."""
-    print 'Making X sensitivity plot'
+    print('Making X sensitivity plot')
     dim = args.dimension
     if dim < 5: normalise = False
     srcs = args.source_ratios
@@ -791,11 +791,11 @@ def plot_x(data, outfile, outformat, args, normalise=False):
         data.shape[1], data.shape[0], data.shape[2], data.shape[3]
     ), np.nan)
 
-    for isrc in xrange(data.shape[0]):
-        for itex in xrange(data.shape[1]):
+    for isrc in range(data.shape[0]):
+        for itex in range(data.shape[1]):
             r_data[itex][isrc] = data[isrc][itex]
     r_data = ma.masked_invalid(r_data)
-    print r_data.shape, 'r_data.shape'
+    print(r_data.shape, 'r_data.shape')
 
     fig = plt.figure(figsize=(7, 6))
     ax = fig.add_subplot(111)
@@ -866,12 +866,12 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     )
 
     for itex, tex in enumerate(textures):
-        print '|||| TEX = {0}'.format(tex)
+        print('|||| TEX = {0}'.format(tex))
         lims = np.full(len(srcs), np.nan)
 
         for isrc, src in enumerate(srcs):
             x = src[0]
-            print '|||| X = {0}'.format(x)
+            print('|||| X = {0}'.format(x))
             args.source_ratio = src
             d = r_data[itex][isrc]
             if np.sum(d.mask) > 2: continue
@@ -886,7 +886,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
         size = np.sum(~lims.mask)
         if size == 0: continue
 
-        print 'x_arr, lims', zip(x_arr, lims)
+        print('x_arr, lims', zip(x_arr, lims))
         if normalise:
             zeropoint = 100
         else:
@@ -1026,5 +1026,5 @@ def plot_x(data, outfile, outformat, args, normalise=False):
 
     make_dir(outfile)
     for of in outformat:
-        print 'Saving plot as {0}'.format(outfile + '.' + of)
+        print('Saving plot as {0}'.format(outfile + '.' + of))
         fig.savefig(outfile + '.' + of, bbox_inches='tight', dpi=150)

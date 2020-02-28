@@ -1,8 +1,0 @@
-python contour.py --data real --debug true --nsteps 100 --burnin 10 --nwalkers 20 --datadir ./test_ --seed 26 --threads max
-python sens.py --debug True --data real --datadir ./test --dimension 6 --eval-segment 1 --mn-live-points 100 --mn-output ./test --mn-tolerance 0.3 --seed 26 --segments 10 --source-ratio 1 2 0 --stat-method bayesian --threads 4 --texture oeu
-
-python plot_sens.py --data real --datadir /data/user/smandalia/flavour_ratio/data/sensitivity/ --dimensions 6 --plot-x True --segments 10 --x-segments 20 --split-jobs True --stat-method bayesian --texture none
-python mc_unitary.py --burnin 100 --datadir=/data/user/smandalia/flavour_ratio/data/mc_unitary --nsteps 1000 --nwalkers 60 --run-mcmc True --seed 26 --source-ratio 1 2 0 --threads 1
-python mc_x.py --burnin 200 --datadir=/data/user/smandalia/flavour_ratio/data/mc_x --nsteps 1000 --nwalkers 60 --seed 26 --threads max
-python fr.py --data real --datadir ./test/ --dimension 6 --nsteps 20 --nwalkers 60 --burnin 20 --seed 26 --source-ratio 0 1 0 --texture oet --threads max --debug True
-python plot_sens.py --data real --datadir /data/user/smandalia/flavour_ratio/data/sensitivity/ --dimensions 3 4 5 6 7 8 --plot-table True --segments 10 --source-ratios 0 1 0 1 0 0 --split-jobs True --stat-method bayesian --plot-statistic False

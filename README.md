@@ -36,7 +36,7 @@ GolemFlavor has the following dependencies:
 
 You can use `pip` to install the above automatically. Note that `PyMultiNest`
 requires the `MultiNest` Bayesian inference library, see [the `PyMultiNest`
-documentation]](https://johannesbuchner.github.io/PyMultiNest/install.html#prerequisites-for-building-the-libraries)
+documentation](https://johannesbuchner.github.io/PyMultiNest/install.html#prerequisites-for-building-the-libraries)
 for install instructions.
 
 Additional dependencies:

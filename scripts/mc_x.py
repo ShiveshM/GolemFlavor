@@ -90,7 +90,7 @@ def process_args(args):
 def parse_args(args=None):
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
-        description="BSM flavour ratio analysis",
+        description="BSM flavor ratio analysis",
         formatter_class=misc_utils.SortingHelpFormatter,
     )
     parser.add_argument(

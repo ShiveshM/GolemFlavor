@@ -5,7 +5,7 @@
 # date   : April 28, 2018
 
 """
-HESE BSM flavour ratio analysis plotting script
+HESE BSM flavor ratio analysis plotting script
 """
 
 from __future__ import absolute_import, division
@@ -97,7 +97,7 @@ def process_args(args):
 def parse_args(args=None):
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
-        description="HESE BSM flavour ratio analysis plotting script",
+        description="HESE BSM flavor ratio analysis plotting script",
         formatter_class=SortingHelpFormatter,
     )
     parser.add_argument(
@@ -119,7 +119,7 @@ def parse_args(args=None):
     )
     parser.add_argument(
         '--source-ratios', type=int, nargs='*', default=None,
-        required=False, help='Set the source flavour ratios'
+        required=False, help='Set the source flavor ratios'
     )
     parser.add_argument(
         '--x-segments', type=int, default=None,

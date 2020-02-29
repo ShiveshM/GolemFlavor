@@ -4,7 +4,7 @@
 # date   : April 04, 2018
 
 """
-Likelihood functions for the BSM flavour ratio analysis
+Likelihood functions for the BSM flavor ratio analysis
 """
 
 from __future__ import absolute_import, division, print_function
@@ -87,10 +87,10 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset):
     # Assigning llh_paramset values from theta happens in this function.
     fr = fr_utils.flux_averaged_BSMu(theta, args, spectral_index, llh_paramset)
 
-    flavour_angles = fr_utils.fr_to_angles(fr)
-    # print('flavour_angles', map(float, flavour_angles))
+    flavor_angles = fr_utils.fr_to_angles(fr)
+    # print('flavor_angles', map(float, flavor_angles))
     for idx, param in enumerate(hypo_paramset.from_tag(ParamTag.BESTFIT)):
-        param.value = flavour_angles[idx]
+        param.value = flavor_angles[idx]
 
     if args.likelihood is Likelihood.GOLEMFIT:
         llh = gf_utils.get_llh(hypo_paramset)

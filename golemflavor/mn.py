@@ -4,7 +4,7 @@
 # date   : April 19, 2018
 
 """
-Useful functions to use MultiNest for the BSM flavour ratio analysis
+Useful functions to use MultiNest for the BSM flavor ratio analysis
 """
 
 from __future__ import absolute_import, division, print_function

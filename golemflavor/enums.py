@@ -4,7 +4,7 @@
 # date   : March 17, 2018
 
 """
-Define Enums for the BSM flavour ratio analysis
+Define Enums for the BSM flavor ratio analysis
 """
 
 from enum import Enum

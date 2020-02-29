@@ -4,7 +4,7 @@
 # date   : March 17, 2018
 
 """
-Useful GolemFit wrappers for the BSM flavour ratio analysis
+Useful GolemFit wrappers for the BSM flavor ratio analysis
 """
 
 from __future__ import absolute_import, division, print_function

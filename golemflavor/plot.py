@@ -4,7 +4,7 @@
 # date   : March 19, 2018
 
 """
-Plotting functions for the BSM flavour ratio analysis
+Plotting functions for the BSM flavor ratio analysis
 """
 
 from __future__ import absolute_import, division, print_function
@@ -258,15 +258,15 @@ def get_tax(ax, scale, ax_labels, rot_ax_labels=False, fontsize=23):
 
 
 def project(p):
-    """Convert from flavour to cartesian."""
+    """Convert from flavor to cartesian."""
     a, b, c = p
     x = a + b/2.
     y = b * np.sqrt(3)/2.
     return [x, y]
 
 
-def project_toflavour(p, nbins):
-    """Convert from cartesian to flavour space."""
+def project_toflavor(p, nbins):
+    """Convert from cartesian to flavor space."""
     x, y = p
     b = y / (np.sqrt(3)/2.)
     a = x - b/2.
@@ -334,12 +334,12 @@ def alpha_shape(points, alpha):
     return cascaded_union(triangles), edge_points
 
 
-def flavour_contour(frs, nbins, coverage, ax=None, smoothing=0.4,
+def flavor_contour(frs, nbins, coverage, ax=None, smoothing=0.4,
                     hist_smooth=0.05, plot=True, fill=False, oversample=1.,
                     delaunay=False, d_alpha=1.5, d_gauss=0.08, debug=False,
                     **kwargs):
-    """Plot the flavour contour for a specified coverage."""
-    # Histogram in flavour space
+    """Plot the flavor contour for a specified coverage."""
+    # Histogram in flavor space
     os_nbins = nbins * oversample
     H, b = np.histogramdd(
         (frs[:,0], frs[:,1], frs[:,2]),
@@ -402,8 +402,8 @@ def flavour_contour(frs, nbins, coverage, ax=None, smoothing=0.4,
     yi /= float(oversample)
     ev_polygon = np.dstack((xi, yi))[0]
 
-    # Remove points interpolated outside flavour triangle
-    f_ev_polygon = np.array(map(lambda x: project_toflavour(x, nbins), ev_polygon))
+    # Remove points interpolated outside flavor triangle
+    f_ev_polygon = np.array(map(lambda x: project_toflavor(x, nbins), ev_polygon))
 
     xf, yf, zf = f_ev_polygon.T
     mask = np.array((xf < 0) | (yf < 0) | (zf < 0) | (xf > nbins) |
@@ -775,7 +775,7 @@ def plot_table_sens(data, outfile, outformat, args, show_lvatmo=True):
 
 
 def plot_x(data, outfile, outformat, args, normalise=False):
-    """Limit plot as a function of the source flavour ratio for each operator
+    """Limit plot as a function of the source flavor ratio for each operator
     texture."""
     print('Making X sensitivity plot')
     dim = args.dimension

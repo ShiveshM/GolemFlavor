@@ -4,7 +4,7 @@
 # date   : April 19, 2018
 
 """
-Param class and functions for the BSM flavour ratio analysis
+Param class and functions for the BSM flavor ratio analysis
 """
 
 from __future__ import absolute_import, division

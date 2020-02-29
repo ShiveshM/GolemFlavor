@@ -5,7 +5,7 @@
 # date   : March 17, 2018
 
 """
-HESE BSM flavour ratio analysis script
+HESE BSM flavor ratio analysis script
 """
 
 from __future__ import absolute_import, division
@@ -94,14 +94,14 @@ def get_paramsets(args, nuisance_paramset):
 
     tag = ParamTag.BESTFIT
     if args.data is not DataType.REAL:
-        flavour_angles = fr_utils.fr_to_angles(args.injected_ratio)
+        flavor_angles = fr_utils.fr_to_angles(args.injected_ratio)
     else:
-        flavour_angles = fr_utils.fr_to_angles([1, 1, 1])
+        flavor_angles = fr_utils.fr_to_angles([1, 1, 1])
 
     asimov_paramset.extend(gf_nuisance)
     asimov_paramset.extend([
-        Param(name='astroFlavorAngle1', value=flavour_angles[0], ranges=[ 0., 1.], std=0.2, tag=tag),
-        Param(name='astroFlavorAngle2', value=flavour_angles[1], ranges=[-1., 1.], std=0.2, tag=tag),
+        Param(name='astroFlavorAngle1', value=flavor_angles[0], ranges=[ 0., 1.], std=0.2, tag=tag),
+        Param(name='astroFlavorAngle2', value=flavor_angles[1], ranges=[-1., 1.], std=0.2, tag=tag),
     ])
     asimov_paramset = ParamSet(asimov_paramset)
 
@@ -144,7 +144,7 @@ def process_args(args):
 def parse_args(args=None):
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
-        description="BSM flavour ratio analysis",
+        description="BSM flavor ratio analysis",
         formatter_class=misc_utils.SortingHelpFormatter,
     )
     parser.add_argument(

@@ -4,7 +4,7 @@
 # date   : March 17, 2018
 
 """
-Useful functions for the BSM flavour ratio analysis
+Useful functions for the BSM flavor ratio analysis
 """
 
 from __future__ import absolute_import, division, print_function
@@ -80,8 +80,8 @@ def determinant(x):
 
 
 def angles_to_fr(src_angles):
-    """Convert angular projection of the source flavour ratio back into the
-    flavour ratio.
+    """Convert angular projection of the source flavor ratio back into the
+    flavor ratio.
 
     Parameters
     ----------
@@ -90,7 +90,7 @@ def angles_to_fr(src_angles):
 
     Returns
     ----------
-    flavour ratios (nue, numu, nutau)
+    flavor ratios (nue, numu, nutau)
 
     Examples
     ----------
@@ -238,16 +238,16 @@ def cardano_eqn(ham):
 
 
 def normalise_fr(fr):
-    """Normalise an input flavour combination to a flavour ratio.
+    """Normalise an input flavor combination to a flavor ratio.
 
     Parameters
     ----------
     fr : list, length = 3
-        flavour combination
+        flavor combination
 
     Returns
     ----------
-    numpy ndarray flavour ratio
+    numpy ndarray flavor ratio
 
     Examples
     ----------
@@ -266,7 +266,7 @@ def fr_argparse(parser):
     )
     parser.add_argument(
         '--source-ratio', type=float, nargs=3, default=[1, 2, 0],
-        help='Set the source flavour ratio for the case when you want to fix it'
+        help='Set the source flavor ratio for the case when you want to fix it'
     )
     parser.add_argument(
         '--no-bsm', type=parse_bool, default='False',
@@ -287,7 +287,7 @@ def fr_argparse(parser):
 
 
 def fr_to_angles(ratios):
-    """Convert from flavour ratio into the angular projection of the flavour
+    """Convert from flavor ratio into the angular projection of the flavor
     ratios.
 
     Parameters
@@ -500,19 +500,19 @@ def test_unitarity(x, prnt=False, rse=False, epsilon=None):
 
 
 def u_to_fr(source_fr, matrix):
-    """Compute the observed flavour ratio assuming decoherence.
+    """Compute the observed flavor ratio assuming decoherence.
 
     Parameters
     ----------
     source_fr : list, length = 3
-        Source flavour ratio components
+        Source flavor ratio components
 
     matrix : numpy ndarray, dimension 3
         Mixing matrix
 
     Returns
     ----------
-    Measured flavour ratio
+    Measured flavor ratio
 
     Examples
     ----------

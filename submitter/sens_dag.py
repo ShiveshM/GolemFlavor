@@ -77,7 +77,7 @@ with open(dagfile, 'w') as f:
         for sources, tex in scenarios:
             print 'texture', tex
             for src in sources:
-                print 'source flavour', src
+                print 'source flavor', src
                 for r in xrange(GLOBAL_PARAMS['segments']):
                     print 'run', r
                     f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))

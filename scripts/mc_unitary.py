@@ -58,11 +58,11 @@ def get_paramsets(args, nuisance_paramset):
     hypo_paramset = ParamSet(hypo_paramset)
 
     tag = ParamTag.BESTFIT
-    flavour_angles = fr_utils.fr_to_angles(args.source_ratio)
+    flavor_angles = fr_utils.fr_to_angles(args.source_ratio)
 
     asimov_paramset.extend([
-        Param(name='astroFlavorAngle1', value=flavour_angles[0], ranges=[ 0., 1.], std=0.2, tag=tag),
-        Param(name='astroFlavorAngle2', value=flavour_angles[1], ranges=[-1., 1.], std=0.2, tag=tag),
+        Param(name='astroFlavorAngle1', value=flavor_angles[0], ranges=[ 0., 1.], std=0.2, tag=tag),
+        Param(name='astroFlavorAngle2', value=flavor_angles[1], ranges=[-1., 1.], std=0.2, tag=tag),
     ])
     asimov_paramset = ParamSet(asimov_paramset)
 
@@ -86,12 +86,12 @@ def process_args(args):
 def parse_args(args=None):
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
-        description="BSM flavour ratio analysis",
+        description="BSM flavor ratio analysis",
         formatter_class=misc_utils.SortingHelpFormatter,
     )
     parser.add_argument(
         '--source-ratio', type=float, nargs=3, default=[1, 2, 0],
-        help='Set the source flavour ratio'
+        help='Set the source flavor ratio'
     )
     parser.add_argument(
         '--seed', type=misc_utils.seed_parse, default='26',

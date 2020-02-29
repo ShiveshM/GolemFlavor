@@ -35,7 +35,6 @@ dagman_*
 dagman_FR*
 submitter/logs/
 mnrun_*
-*.png
 mnrun/
 ipynbs/frs
 ipynbs/chains

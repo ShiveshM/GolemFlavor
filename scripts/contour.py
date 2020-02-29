@@ -146,7 +146,7 @@ def gen_figtext(args):
     elif args.data in [DataType.ASIMOV, DataType.REALISATION]:
         t += r'{\rm\bf IceCube\:Simulation}' + '$\n$'
         t += r'\rm{Injected\:composition}'+r'\:=\:({0})_\oplus'.format(
-            solve_ratio(args.injected_ratio).replace('_', ':')
+            misc_utils.solve_ratio(args.injected_ratio).replace('_', ':')
         ) + '$'
     return t
 

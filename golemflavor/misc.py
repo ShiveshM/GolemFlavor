@@ -212,11 +212,6 @@ def interval(arr, percentile=68.):
     return sarr[curr_low], center, sarr[curr_up]
 
 
-def flat_angles_to_u(x):
-    """Convert from angles to mixing elements."""
-    return abs(angles_to_u(x)).astype(np.float32).flatten().tolist()
-
-
 def myround(x, base=2, up=False, down=False):
     if up == down and up is True: assert 0
     if up: return int(base * np.round(float(x)/base-0.5))

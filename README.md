@@ -1,6 +1,7 @@
 # GolemFlavor
 
 [![Build Status](https://api.travis-ci.org/ShiveshM/GolemFlavor.svg?branch=master)](https://travis-ci.org/ShiveshM/GolemFlavor)
+![Python 2.7](https://img.shields.io/badge/python-2.7-blue.svg)
 [![license](https://img.shields.io/github/license/ShiveshM/GolemFlavor 'license')](https://github.com/ShiveshM/GolemFlavor/blob/master/LICENSE)
 
 GolemFlavor is a Python package for running an analysis pipeline using
@@ -11,7 +12,7 @@ GolemFlavor is a Python package for running an analysis pipeline using
 ## Installation
 GolemFlavor can be installed using `pip`
 ```
-pip install git+https://github.com/ShiveshM/flavour_ratio.git
+pip install git+https://github.com/ShiveshM/GolemFlavor.git
 ```
 This installs GolemFlavor, along with all the necessary dependencies such as
 NumPy and SciPy.

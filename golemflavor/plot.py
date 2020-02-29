@@ -48,7 +48,8 @@ from scipy.spatial import Delaunay
 from golemflavor.enums import DataType, str_enum
 from golemflavor.enums import Likelihood, ParamTag, StatCateg, Texture
 from golemflavor.misc import get_units, make_dir, solve_ratio, interval
-from golemflavor.fr import angles_to_u, angles_to_fr, SCALE_BOUNDARIES
+from golemflavor.fr import angles_to_u, flat_angles_to_u, angles_to_fr
+from golemflavor.fr import SCALE_BOUNDARIES
 
 
 BAYES_K = 1.   # Strong degree of belief.
@@ -528,7 +529,7 @@ def chainer_plot(infile, outfile, outformat, args, llh_paramset, fig_text=None,
 
         trns_ranges = np.array(ranges)[nu_index,].tolist()
         trns_axes_labels = np.array(axes_labels)[nu_index,].tolist()
-        if args.fix_mixing is not MixingScenario.NONE:
+        if args.fix_mixing is not Texture.NONE:
             trns_axes_labels += \
                 [r'\mid \tilde{U}_{e1} \mid'    , r'\mid \tilde{U}_{e2} \mid'    , r'\mid \tilde{U}_{e3} \mid'     , \
                  r'\mid \tilde{U}_{\mu1} \mid'  , r'\mid \tilde{U}_{\mu2} \mid'  , r'\mid \tilde{U}_{\mu3} \mid'   , \

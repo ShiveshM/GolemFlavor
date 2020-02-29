@@ -162,6 +162,11 @@ def angles_to_u(bsm_angles):
     return u
 
 
+def flat_angles_to_u(x):
+    """Convert from angles to mixing elements."""
+    return abs(angles_to_u(x)).astype(np.float32).flatten().tolist()
+
+
 def cardano_eqn(ham):
     """Diagonalise the effective Hamiltonian 3x3 matrix into the form
     h_{eff} = UE_{eff}U^{dagger} using the procedure in PRD91, 052003 (2015).

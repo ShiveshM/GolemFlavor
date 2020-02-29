@@ -9,7 +9,7 @@ NAME = 'GolemFlavor'
 DESCRIPTION = 'GolemFlavor: A Python package for Astrophysical Flavor analysis with GolemFit'
 MAINTAINER = 'Shivesh Mandalia'
 MAINTAINER_EMAIL = 's.p.mandalia@qmul.ac.uk'
-URL = 'https://github.com/ShiveshM/flavour_ratio'
+URL = 'https://github.com/ShiveshM/GolemFlavor'
 LICENSE = 'MIT'
 
 here = os.path.abspath(os.path.dirname(__file__))

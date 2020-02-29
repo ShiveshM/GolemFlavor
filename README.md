@@ -1,5 +1,8 @@
 # GolemFlavor
 
+[![Build Status](https://api.travis-ci.org/ShiveshM/GolemFlavor.svg?branch=master)](https://travis-ci.org/ShiveshM/GolemFlavor)
+[![license](https://img.shields.io/github/license/ShiveshM/GolemFlavor 'license')](https://github.com/ShiveshM/GolemFlavor/blob/master/LICENSE)
+
 GolemFlavor is a Python package for running an analysis pipeline using
 `GolemFit`.
 

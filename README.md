@@ -3,7 +3,7 @@
 GolemFlavor is a Python package for running an analysis pipeline using
 `GolemFit`.
 
-![GolemFlavor Logo](https://shivesh.org/assets/img/GolemFlavor.png "GolemFlavor")
+![GolemFlavor Logo](logo.png)
 
 ## Installation
 GolemFlavor can be installed using `pip`

@@ -1,7 +1,7 @@
 # GolemFlavor
 
 [![Build Status](https://api.travis-ci.org/ShiveshM/GolemFlavor.svg?branch=master)](https://travis-ci.org/ShiveshM/GolemFlavor)
-![Python 2.7](https://img.shields.io/badge/python-2.7-blue.svg)
+![Python Version](https://img.shields.io/badge/python-2.7+|3.4+-blue.svg)
 [![license](https://img.shields.io/github/license/ShiveshM/GolemFlavor 'license')](https://github.com/ShiveshM/GolemFlavor/blob/master/LICENSE)
 
 GolemFlavor is a Python package for running an analysis pipeline using
@@ -26,9 +26,10 @@ is not found.
 ### Dependencies
 
 GolemFlavor has the following dependencies:
-* [`Python`](https://www.python.org/) 2.7
+* [`Python`](https://www.python.org/) >= 2.7 or >= 3.4
 * [`NumPy`](http://www.numpy.org/)
 * [`SciPy`](https://www.scipy.org/)
+* [`Six`](https://six.readthedocs.io/)
 * [`mpmath`](http://mpmath.org/)
 * [`emcee`](https://emcee.readthedocs.io/en/stable/)
 * [`PyMultiNest`](https://johannesbuchner.github.io/PyMultiNest/)

@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+from __future__ import absolute_import, division, print_function
+
 import os
 import numpy as np
 
@@ -52,7 +54,7 @@ dagfile += prefix + '.submit'
 with open(dagfile, 'w') as f:
     job_number = 1
     for inj in injected_ratios:
-        print 'inj', inj
+        print('inj', inj)
         f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))
         f.write('VARS\tjob{0}\tir0="{1}"\n'.format(job_number, inj[0]))
         f.write('VARS\tjob{0}\tir1="{1}"\n'.format(job_number, inj[1]))
@@ -63,5 +65,5 @@ with open(dagfile, 'w') as f:
         job_number += 1
         if GLOBAL_PARAMS['data'] == 'real': break
 
-print 'total jobs = {0}'.format(job_number - 1)
-print 'dag file = {0}'.format(dagfile)
+print('total jobs = {0}'.format(job_number - 1))
+print('dag file = {0}'.format(dagfile))

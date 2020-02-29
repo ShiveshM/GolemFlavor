@@ -8,6 +8,7 @@ Param class and functions for the BSM flavor ratio analysis
 """
 
 from __future__ import absolute_import, division
+from six import string_types
 
 import sys
 
@@ -121,7 +122,7 @@ class ParamSet(Sequence):
     def __getitem__(self, i):
         if isinstance(i, int):
             return self._params[i]
-        elif isinstance(i, basestring):
+        elif isinstance(i, string_types):
             return self._by_name[i]
 
     def __getattr__(self, attr):

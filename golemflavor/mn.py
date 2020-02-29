@@ -31,7 +31,7 @@ def lnProb(cube, ndim, n_params, mn_paramset, llh_paramset, asimov_paramset,
             'params\ncube={0}\nmn_paramset]{1}'.format(cube, mn_paramset)
         )
     pranges = mn_paramset.ranges
-    for i in xrange(ndim):
+    for i in range(ndim):
         mn_paramset[i].value = (pranges[i][1]-pranges[i][0])*cube[i] + pranges[i][0]
     for pm in mn_paramset.names:
         llh_paramset[pm].value = mn_paramset[pm].value

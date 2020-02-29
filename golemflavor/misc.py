@@ -16,6 +16,7 @@ from fractions import gcd
 
 import argparse
 from operator import attrgetter
+from functools import reduce
 
 import numpy as np
 

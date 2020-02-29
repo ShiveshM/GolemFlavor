@@ -1,5 +1,7 @@
 #! /usr/bin/env python
 
+from __future__ import absolute_import, division, print_function
+
 import os
 import numpy as np
 
@@ -55,9 +57,9 @@ dagfile += prefix + '.submit'
 with open(dagfile, 'w') as f:
     job_number = 1
     for src in source_ratios:
-        print 'src', src
+        print('src', src)
         for tex in textures:
-            print 'texture', tex
+            print('texture', tex)
             f.write('JOB\tjob{0}\t{1}\n'.format(job_number, condor_script))
             f.write('VARS\tjob{0}\tsr0="{1}"\n'.format(job_number, src[0]))
             f.write('VARS\tjob{0}\tsr1="{1}"\n'.format(job_number, src[1]))
@@ -68,6 +70,6 @@ with open(dagfile, 'w') as f:
             f.write('VARS\tjob{0}\tdatadir="{1}"\n'.format(job_number, datadir))
             job_number += 1
 
-print 'total jobs = {0}'.format(job_number - 1)
-print 'dag file = {0}'.format(dagfile)
+print('total jobs = {0}'.format(job_number - 1))
+print('dag file = {0}'.format(dagfile))
 

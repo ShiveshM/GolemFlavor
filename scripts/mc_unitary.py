@@ -80,7 +80,7 @@ def nuisance_argparse(parser):
 
 def process_args(args):
     """Process the input args."""
-    args.source_ratio = fr_utils.normalise_fr(args.source_ratio)
+    args.source_ratio = fr_utils.normalize_fr(args.source_ratio)
 
 
 def parse_args(args=None):
@@ -183,7 +183,6 @@ def main():
             nwalkers = args.nwalkers,
             burnin   = args.burnin,
             nsteps   = args.nsteps,
-            args     = args,
             threads  = args.threads
         )
 

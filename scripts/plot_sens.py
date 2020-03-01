@@ -33,7 +33,7 @@ MASK_X = (0.3, 0.7)
 def process_args(args):
     """Process the input args."""
     if args.data is not DataType.REAL:
-        args.injected_ratio = fr_utils.normalise_fr(args.injected_ratio)
+        args.injected_ratio = fr_utils.normalize_fr(args.injected_ratio)
 
     # Anon points
     anon = []
@@ -73,7 +73,7 @@ def process_args(args):
 
         srs = [args.source_ratios[3*x:3*x+3]
                for x in range(int(len(args.source_ratios)/3))]
-        args.source_ratios = map(fr_utils.normalise_fr, srs)
+        args.source_ratios = map(fr_utils.normalize_fr, srs)
     elif args.x_segments is not None:
         x_array = np.linspace(0, 1, args.x_segments)
         sources = []
@@ -275,7 +275,7 @@ def main():
                 outfile   = baseoutfile + '/hese_x_DIM{0}'.format(dim),
                 outformat = ['png', 'pdf'],
                 args      = argsc,
-                normalise = True
+                normalize = True
             )
 
     if args.plot_table:

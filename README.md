@@ -19,8 +19,8 @@ neutrino observatory](https://icecube.wisc.edu/), which is a cubic kilometer
 array of optical sensors embedded in the glacial ice at the South Pole. In
 particular, *astrophysical* neutrinos are ones that are very-high-energy and
 come from astrophysical origins such as [black
-holes](https://doi.org/10.1126/science.aat2890). For more on the physics behind
-neutrinos see TODO.
+holes](https://doi.org/10.1126/science.aat2890).
+<!-- For more on the physics behind neutrinos see TODO. -->
 
 ### What does the GolemFlavor package do?
 This package provides utilities for astrophysical neutrino propagation and
@@ -28,8 +28,8 @@ Bayesian statistical modeling focused on advanced Markov Chain Monte Carlo
 (MCMC) algorithms. It has been used to make constraints on New Physics models
 in the Astrophysical Flavor, as motivated by the paper [*New Physics in
 Astrophysical Neutrino
-Flavor*](https://doi.org/10.1103/PhysRevLett.115.161303). For more information
-on the statistical modeling see TODO.
+Flavor*](https://doi.org/10.1103/PhysRevLett.115.161303).
+<!-- For more information on the statistical modeling see TODO. -->
 
 ## Features
 * **Portable Flavor Functions**: A set of useful functions for calculating
@@ -50,8 +50,16 @@ on the statistical modeling see TODO.
     package and joint posterior plots for analyzing MCMC chains using the
     [getdist](https://getdist.readthedocs.io/en/latest/) package.
 
-## Getting Started
+## Examples
+You can find examples of how to use GolemFlavor in the
+[`GolemFlavor/examples`](examples) directory. For examples on how to distribute
+jobs across a CPU cluster see the [`GolemFlavor/submitter`](submitter)
+directory.
 
+<!--
+## Documentation
+The documentation for GolemFlavor can be found at TODO.
+-->
 
 ## Installation
 GolemFlavor can be installed using `pip`

@@ -99,7 +99,7 @@ def process_args(args):
     """Process the input args."""
     if args.texture is Texture.NONE:
         raise ValueError('Must assume a BSM texture')
-    args.source_ratio = fr_utils.normalise_fr(args.source_ratio)
+    args.source_ratio = fr_utils.normalize_fr(args.source_ratio)
 
     args.binning = np.logspace(
         np.log10(args.binning[0]), np.log10(args.binning[1]), args.binning[2]+1
@@ -210,7 +210,6 @@ def main():
             nwalkers = args.nwalkers,
             burnin   = args.burnin,
             nsteps   = args.nsteps,
-            args     = args,
             threads  = args.threads
         )
 

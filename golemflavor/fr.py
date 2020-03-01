@@ -19,25 +19,25 @@ from golemflavor.misc import enum_parse, parse_bool
 import mpmath as mp
 mp.mp.dps = 100 # Computation precision
 
-# DTYPE  = np.float128
-# CDTYPE = np.complex256
-# PI     = np.arccos(DTYPE(-1))
-# SQRT   = np.sqrt
-# COS    = np.cos
-# SIN    = np.sin
-# ACOS   = np.arccos
-# ASIN   = np.arcsin
-# EXP    = np.exp
+DTYPE  = np.float128
+CDTYPE = np.complex256
+PI     = np.arccos(DTYPE(-1))
+SQRT   = np.sqrt
+COS    = np.cos
+SIN    = np.sin
+ACOS   = np.arccos
+ASIN   = np.arcsin
+EXP    = np.exp
 
-DTYPE  = mp.mpf
-CDTYPE = mp.mpc
-PI     = mp.pi
-SQRT   = mp.sqrt
-COS    = mp.cos
-SIN    = mp.sin
-ACOS   = mp.acos
-ASIN   = mp.asin
-EXP    = mp.exp
+# DTYPE  = mp.mpf
+# CDTYPE = mp.mpc
+# PI     = mp.pi
+# SQRT   = mp.sqrt
+# COS    = mp.cos
+# SIN    = mp.sin
+# ACOS   = mp.acos
+# ASIN   = mp.asin
+# EXP    = mp.exp
 
 MASS_EIGENVALUES = [7.40E-23, 2.515E-21]
 """SM mass eigenvalues."""
@@ -237,8 +237,8 @@ def cardano_eqn(ham):
     return mm
 
 
-def normalise_fr(fr):
-    """Normalise an input flavor combination to a flavor ratio.
+def normalize_fr(fr):
+    """Normalize an input flavor combination to a flavor ratio.
 
     Parameters
     ----------
@@ -251,8 +251,8 @@ def normalise_fr(fr):
 
     Examples
     ----------
-    >>> from fr import normalise_fr
-    >>> print(normalise_fr((1, 2, 3)))
+    >>> from fr import normalize_fr
+    >>> print(normalize_fr((1, 2, 3)))
     array([ 0.16666667,  0.33333333,  0.5       ])
 
     """
@@ -294,7 +294,7 @@ def fr_to_angles(ratios):
     ----------
     TODO(shivesh)
     """
-    fr0, fr1, fr2 = normalise_fr(ratios)
+    fr0, fr1, fr2 = normalize_fr(ratios)
 
     cphi2 = fr2
     sphi2 = (1.0 - cphi2)
@@ -307,7 +307,7 @@ def fr_to_angles(ratios):
     sphi4 = sphi2**2
     c2psi = COS(ACOS(SQRT(cpsi2))*2)
 
-    return map(float, (sphi4, c2psi))
+    return (sphi4, c2psi)
 
 
 NUFIT_U = angles_to_u((0.307, (1-0.02195)**2, 0.565, 3.97935))

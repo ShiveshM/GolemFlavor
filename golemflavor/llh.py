@@ -23,15 +23,34 @@ from golemflavor.misc import enum_parse, gen_identifier, parse_bool
 
 
 def GaussianBoundedRV(loc=0., sigma=1., lower=-np.inf, upper=np.inf):
-    """Normalised gaussian bounded between lower and upper values"""
+    """Normalized Gaussian bounded between lower and upper values"""
     low, up = (lower - loc) / sigma, (upper - loc) / sigma
     g = scipy.stats.truncnorm(loc=loc, scale=sigma, a=low, b=up)
     return g
 
 
-def multi_gaussian(fr, fr_bf, sigma, offset=-320):
-    """Multivariate gaussian likelihood."""
-    cov_fr = np.identity(3) * sigma
+def multi_gaussian(fr, fr_bf, smearing, offset=-320):
+    """
+    Multivariate Gaussian log likelihood.
+
+    Parameters
+    ----------
+    fr : List[float], length 3
+        The flavour composition to evaluate at.
+    fr_bf : List[float], length 3
+        The bestfit / injected flavour composition.
+    smearing : float
+        The amount of smearing.
+    offset : float, optional
+        An amount to offset the magnitude of the log likelihood.
+
+    Returns
+    ----------
+    llh : float
+        The log likelihood evaluated at `fr`.
+
+    """
+    cov_fr = np.identity(3) * pow(smearing, 2)
     return np.log(multivariate_normal.pdf(fr, mean=fr_bf, cov=cov_fr)) + offset
 
 

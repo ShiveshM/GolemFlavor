@@ -10,18 +10,24 @@ Plotting functions for the BSM flavor ratio analysis
 from __future__ import absolute_import, division, print_function
 
 import os
+import sys
 import socket
 from copy import deepcopy
+
+import warnings
+warnings.filterwarnings("ignore")
 
 import numpy as np
 import numpy.ma as ma
 from scipy.interpolate import splev, splprep
 from scipy.ndimage.filters import gaussian_filter
 
+import matplotlib
 import matplotlib as mpl
 import matplotlib.patches as patches
 import matplotlib.gridspec as gridspec
-mpl.use('Agg')
+if 'submitter' in socket.gethostname() or 'cobalt' in socket.gethostname():
+    mpl.use('Agg', warn=False)
 
 from matplotlib import rc
 from matplotlib import pyplot as plt
@@ -51,6 +57,24 @@ from golemflavor.misc import get_units, make_dir, solve_ratio, interval
 from golemflavor.fr import angles_to_u, flat_angles_to_u, angles_to_fr
 from golemflavor.fr import SCALE_BOUNDARIES
 
+if os.path.isfile('./plot_llh/paper.mplstyle'):
+    plt.style.use('./plot_llh/paper.mplstyle')
+elif os.path.isfile('./paper.mplstyle'):
+    plt.style.use('./paper.mplstyle')
+elif os.environ.get('GOLEMSOURCEPATH') is not None:
+    plt.style.use(os.environ['GOLEMSOURCEPATH']+'/GolemFit/scripts/paper/paper.mplstyle')
+if 'submitter' in socket.gethostname():
+    rc('text', usetex=False)
+else:
+    rc('text', usetex=True)
+
+mpl.rcParams['text.latex.preamble'] = [
+    r'\usepackage{xcolor}',
+    r'\usepackage{amsmath}',
+    r'\usepackage{amssymb}']
+if sys.version_info < (3, 0):
+    mpl.rcParams['text.latex.unicode'] = True
+
 
 BAYES_K = 1.   # Strong degree of belief.
 # BAYES_K = 3/2. # Very strong degree of belief.
@@ -74,20 +98,6 @@ PLANCK_SCALE = {
     7: PS**3,
     8: PS**4
 }
-
-
-if os.path.isfile('./plot_llh/paper.mplstyle'):
-    plt.style.use('./plot_llh/paper.mplstyle')
-elif os.environ.get('GOLEMSOURCEPATH') is not None:
-    plt.style.use(os.environ['GOLEMSOURCEPATH']+'/GolemFit/scripts/paper/paper.mplstyle')
-if 'submitter' in socket.gethostname():
-    rc('text', usetex=False)
-
-mpl.rcParams['text.latex.preamble'] = [
-    r'\usepackage{xcolor}',
-    r'\usepackage{amsmath}',
-    r'\usepackage{amssymb}']
-mpl.rcParams['text.latex.unicode'] = True
 
 
 def gen_figtext(args):
@@ -209,11 +219,11 @@ def heatmap(data, scale, vmin=None, vmax=None, style='triangular'):
 
     vertices = []
     for v, value in vertices_values:
-        vertices.append(v)
+        vertices.append(list(v))
     return vertices
 
 
-def get_tax(ax, scale, ax_labels, rot_ax_labels=False, fontsize=23):
+def get_tax(ax, scale, ax_labels=None, rot_ax_labels=False, fontsize=23):
     ax.set_aspect('equal')
 
     # Boundary and Gridlines
@@ -227,6 +237,12 @@ def get_tax(ax, scale, ax_labels, rot_ax_labels=False, fontsize=23):
     # Set Axis labels and Title
     if rot_ax_labels: roty, rotz = (-60, 60)
     else: roty, rotz = (0, 0)
+    if ax_labels is None:
+        ax_labels = [
+            r'$\nu_e\:\:{\rm fraction}\:\left( f_{e,\oplus}\right)$',
+            r'$\nu_\mu\:\:{\rm fraction}\:\left( f_{\mu,\oplus}\right)$',
+            r'$\nu_\tau\:\:{\rm fraction}\:\left( f_{\tau,\oplus}\right)$'
+        ]
     tax.bottom_axis_label(
         ax_labels[0], fontsize=fontsize+4,
         position=(0.55, -0.10/2, 0.5), rotation=0
@@ -340,7 +356,7 @@ def flavor_contour(frs, nbins, coverage, ax=None, smoothing=0.4,
                     **kwargs):
     """Plot the flavor contour for a specified coverage."""
     # Histogram in flavor space
-    os_nbins = nbins * oversample
+    os_nbins = int(nbins * oversample)
     H, b = np.histogramdd(
         (frs[:,0], frs[:,1], frs[:,2]),
         bins=(os_nbins+1, os_nbins+1, os_nbins+1),
@@ -403,7 +419,7 @@ def flavor_contour(frs, nbins, coverage, ax=None, smoothing=0.4,
     ev_polygon = np.dstack((xi, yi))[0]
 
     # Remove points interpolated outside flavor triangle
-    f_ev_polygon = np.array(map(lambda x: project_toflavor(x, nbins), ev_polygon))
+    f_ev_polygon = np.array(list(map(lambda x: project_toflavor(x, nbins), ev_polygon)))
 
     xf, yf, zf = f_ev_polygon.T
     mask = np.array((xf < 0) | (yf < 0) | (zf < 0) | (xf > nbins) |
@@ -425,10 +441,10 @@ def flavor_contour(frs, nbins, coverage, ax=None, smoothing=0.4,
     else:
         return ev_polygon
 
-def plot_Tchain(Tchain, axes_labels, ranges):
+def plot_Tchain(Tchain, axes_labels, ranges, names=None):
     """Plot the Tchain using getdist."""
     Tsample = mcsamples.MCSamples(
-        samples=Tchain, labels=axes_labels, ranges=ranges
+        samples=Tchain, names=names, labels=axes_labels, ranges=ranges
     )
 
     Tsample.updateSettings({'contours': [0.90, 0.99]})
@@ -774,12 +790,12 @@ def plot_table_sens(data, outfile, outformat, args, show_lvatmo=True):
         fig.savefig(outfile+'.'+of, bbox_inches='tight', dpi=150)
 
 
-def plot_x(data, outfile, outformat, args, normalise=False):
+def plot_x(data, outfile, outformat, args, normalize=False):
     """Limit plot as a function of the source flavor ratio for each operator
     texture."""
     print('Making X sensitivity plot')
     dim = args.dimension
-    if dim < 5: normalise = False
+    if dim < 5: normalize = False
     srcs = args.source_ratios
     x_arr = np.array([i[0] for i in srcs])
     if args.texture is Texture.NONE:
@@ -802,7 +818,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
     ax = fig.add_subplot(111)
 
     ylims = SCALE_BOUNDARIES[dim]
-    if normalise:
+    if normalize:
         if dim == 5: ylims = (-24, -8)
         if dim == 6: ylims = (-12, 8)
         if dim == 7: ylims = (0, 20)
@@ -879,7 +895,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
             scales, statistic = ma.compress_rows(d).T
             lim = get_limit(deepcopy(scales), deepcopy(statistic), args, mask_initial=True)
             if lim is None: continue
-            if normalise:
+            if normalize:
                 lim -= np.log10(PLANCK_SCALE[dim])
             lims[isrc] = lim
 
@@ -888,7 +904,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
         if size == 0: continue
 
         print('x_arr, lims', zip(x_arr, lims))
-        if normalise:
+        if normalize:
             zeropoint = 100
         else:
             zeropoint = 0
@@ -944,7 +960,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
             )
 
     LV_lim = np.log10(LV_ATMO_90PC_LIMITS[dim])
-    if normalise:
+    if normalize:
         LV_lim -= np.log10(PLANCK_SCALE[dim])
     ax.add_patch(patches.Rectangle(
         (xlims[0], LV_lim[1]), np.diff(xlims), LV_lim[0]-LV_lim[1],
@@ -953,7 +969,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
 
     if dim in PLANCK_SCALE:
         ps = np.log10(PLANCK_SCALE[dim])
-        if normalise and dim == 6:
+        if normalize and dim == 6:
             ps -= np.log10(PLANCK_SCALE[dim])
             ax.add_patch(Arrow(
                 0.24, -0.009, 0, -5, width=0.12, capstyle='butt',
@@ -975,7 +991,7 @@ def plot_x(data, outfile, outformat, args, normalise=False):
             ax.axhline(y=ps, color='purple', alpha=1., linewidth=1.5)
 
     cpt = r'c' if dim % 2 == 0 else r'a'
-    if normalise:
+    if normalize:
         ft = r'${\rm New\:Physics\:Scale}\:[\:{\rm log}_{10} \left (\mathring{'+cpt+r'}^{(' + \
                 r'{0}'.format(args.dimension)+r')}\cdot{\rm E}_{\:\rm P}'
         if dim > 5: ft += r'^{\:'+ r'{0}'.format(args.dimension-4)+ r'}'

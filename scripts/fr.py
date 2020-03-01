@@ -115,9 +115,9 @@ def nuisance_argparse(parser):
 
 def process_args(args):
     """Process the input args."""
-    args.source_ratio = fr_utils.normalise_fr(args.source_ratio)
+    args.source_ratio = fr_utils.normalize_fr(args.source_ratio)
     if args.data is not DataType.REAL:
-        args.injected_ratio = fr_utils.normalise_fr(args.injected_ratio)
+        args.injected_ratio = fr_utils.normalize_fr(args.injected_ratio)
 
     args.binning = np.logspace(
         np.log10(args.binning[0]), np.log10(args.binning[1]), args.binning[2]+1
@@ -202,7 +202,6 @@ def main():
             nwalkers = args.nwalkers,
             burnin   = args.burnin,
             nsteps   = args.nsteps,
-            args     = args,
             threads  = args.mcmc_threads
         )
         mcmc_utils.save_chains(samples, outfile)

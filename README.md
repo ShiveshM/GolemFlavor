@@ -8,7 +8,7 @@ GolemFlavor is a Python package for running a Bayesian inference analysis
 pipeline using Astrophysical Flavor data taken at
 [IceCube](https://icecube.wisc.edu/).
 
-![GolemFlavor Logo](docs/_static/logo.png)
+![GolemFlavor Logo](docs/source/_static/logo.png)
 
 ## Overview
 

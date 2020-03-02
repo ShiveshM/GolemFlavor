@@ -1,4 +1,3 @@
+-e git+https://github.com/ShiveshM/GolemFlavor
 jupyter
-matplotlib
 nbsphinx
-numpy

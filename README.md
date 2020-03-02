@@ -2,6 +2,7 @@
 
 [![Build Status](https://api.travis-ci.org/ShiveshM/GolemFlavor.svg?branch=master)](https://travis-ci.org/ShiveshM/GolemFlavor)
 ![Python Version](https://img.shields.io/badge/python-2.7+|3.4+-blue.svg)
+[![readthedocs](https://readthedocs.org/projects/golemflavor/badge/?version=latest)](https://golemflavor.readthedocs.io/)
 [![license](https://img.shields.io/github/license/ShiveshM/GolemFlavor 'license')](https://github.com/ShiveshM/GolemFlavor/blob/master/LICENSE)
 
 GolemFlavor is a Python package for running a Bayesian inference analysis

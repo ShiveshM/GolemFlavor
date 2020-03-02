@@ -1,3 +1,3 @@
--e git+https://github.com/ShiveshM/GolemFlavor
+-e git+https://github.com/ShiveshM/GolemFlavor.git#egg=golemflavor
 jupyter
 nbsphinx

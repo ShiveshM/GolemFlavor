@@ -18,9 +18,9 @@ This is data of the *flavor* of a
 neutrino observatory](https://icecube.wisc.edu/), which is a cubic kilometer
 array of optical sensors embedded in the glacial ice at the South Pole. In
 particular, *astrophysical* neutrinos are ones that are very-high-energy and
-come from astrophysical origins such as [black
-holes](https://doi.org/10.1126/science.aat2890).
-<!-- For more on the physics behind neutrinos see TODO. -->
+come from astrophysical origins such as [active galactic
+nuclei](https://doi.org/10.1126/science.aat2890).
+<!-- For more on the physics behind neutrinos see [here](https://shivesh.org/research/). -->
 
 ### What does the GolemFlavor package do?
 This package provides utilities for astrophysical neutrino propagation and
@@ -29,7 +29,7 @@ Bayesian statistical modeling focused on advanced Markov Chain Monte Carlo
 in the Astrophysical Flavor, as motivated by the paper [*New Physics in
 Astrophysical Neutrino
 Flavor*](https://doi.org/10.1103/PhysRevLett.115.161303).
-<!-- For more information on the statistical modeling see TODO. -->
+<!-- For more information on the statistical modeling see [here](https://shivesh.org/research/#bayesian-inference). -->
 
 ## Features
 * **Portable Flavor Functions**: A set of useful functions for calculating

@@ -52,9 +52,9 @@ Flavor*](https://doi.org/10.1103/PhysRevLett.115.161303).
 
 ## Examples
 You can find examples of how to use GolemFlavor in the
-[`GolemFlavor/examples`](examples) directory. For examples on how to distribute
-jobs across a CPU cluster see the [`GolemFlavor/submitter`](submitter)
-directory.
+[`GolemFlavor/examples`](examples) directory.
+<!-- For examples on how to distribute jobs across a CPU cluster see the -->
+<!-- [`GolemFlavor/submitter`](submitter) directory. -->
 
 <!--
 ## Documentation

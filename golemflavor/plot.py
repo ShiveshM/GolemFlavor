@@ -43,6 +43,9 @@ tGreen = list(np.array([170,196,109]) / 255.)
 import getdist
 from getdist import plots, mcsamples
 
+import logging
+logging.getLogger().setLevel(logging.CRITICAL)
+
 import ternary
 from ternary.heatmapping import polygon_generator
 

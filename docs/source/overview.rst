@@ -38,4 +38,4 @@ Features
 - **MCMC Algorithms**: Affine invariant and nested sampling algorithms provided by `emcee <https://emcee.readthedocs.io/>`_ and `MultiNest <https://doi.org/10.1111/j.1365-2966.2009.14548.x>`_.
 - **Anarchic Sampling**: Sampling of the neutrino mixing matrix is done under the `*neutrino mixing anarchy* <https://doi.org/10.1016/j.physletb.2003.08.045>`_ hypothesis to ensure an unbiased prior.
 - **Distributed and parallel computing**: Scripts included to manage the workload across a CPU cluster using `HTCondor <https://research.cs.wisc.edu/htcondor/>`_.
-- **Visualization**: Produce ternary plots of the flavour composition using the `python-ternary <https://zenodo.org/badge/latestdoi/19505/marcharper/python-ternary>`_ package and joint posterior plots for analyzing MCMC chains using the `getdist <https://getdist.readthedocs.io/en/latest/>`_ package.
+- **Visualization**: Produce ternary plots of the flavor composition using the `python-ternary <https://zenodo.org/badge/latestdoi/19505/marcharper/python-ternary>`_ package and joint posterior plots for analyzing MCMC chains using the `getdist <https://getdist.readthedocs.io/en/latest/>`_ package.

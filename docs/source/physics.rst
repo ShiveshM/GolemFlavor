@@ -28,13 +28,13 @@ the neutrino it's name as a play on words of *little neutron* in Italian [4]_.
 
 It was not until some 20 years later that the discovery of the neutrino was
 realised. It was eventually understood that neutrinos came in three distinct
-*flavours* :math:`\left (\nu_e,\nu_\mu,\nu_\tau\right )` along with their
+*flavors* :math:`\left (\nu_e,\nu_\mu,\nu_\tau\right )` along with their
 associated antiparticles :math:`\left
 (\bar{\nu}_e,\bar{\nu}_\mu,\bar{\nu}_\tau\right)`.
 
 Neutrino Mixing
 ---------------
-For the three massive neutrinos, the flavour eigenstates of the neutrino
+For the three massive neutrinos, the flavor eigenstates of the neutrino
 :math:`\mid{\nu_\alpha}>`, :math:`\alpha\in\{e,\mu,\tau\}`, are related to the
 mass eigenstates :math:`\mid{\nu_i}>`, :math:`i\in\{1,2,3\}` via a unitary
 mixing matrix :math:`U_{\alpha i}` known as the PMNS matrix [5]_, [6]_:
@@ -49,12 +49,12 @@ This relationship can be seen better in this image:
   :width: 500px
   :align: center
 
-  Graphical representation of the relationship between the neutrino flavour and
+  Graphical representation of the relationship between the neutrino flavor and
   mass eigenstates. The three mass eigenstates are depicted as three boxes,
   coloured such that the relative area gives the probability of finding the
-  corresponding flavour neutrino in that given mass state.
+  corresponding flavor neutrino in that given mass state.
 
-The time evolution of the flavour eigenstate as the neutrino propagates is
+The time evolution of the flavor eigenstate as the neutrino propagates is
 given by:
 
 .. math::
@@ -63,7 +63,7 @@ given by:
   \sum^3_{i=1}U^*_{\alpha i}\mid{\nu_i\left(t\right)}>
 
 The oscillation probability gives the probability that a neutrino produced in a
-flavour state :math:`\alpha` is then detected in a flavour state :math:`\beta`
+flavor state :math:`\alpha` is then detected in a flavor state :math:`\beta`
 after a propagation distance :math:`L`:
 
 .. math::
@@ -98,7 +98,7 @@ where :math:`\Delta m_{ij}^2=m_i^2-m_j^2`. Note that for neutrino oscillations
 to occur, there must be at least one non-zero :math:`\Delta m_{ij}^2` and
 therefore there must exist at least one non-zero neutrino mass state.
 
-The mixing matrix can be parameterised using the standard factorisation [8]_:
+The mixing matrix can be parameterized using the standard factorization [8]_:
 
 .. math::
 
@@ -126,7 +126,7 @@ where :math:`s_{ij}\equiv\sin\theta_{ij}`, :math:`c_{ij}\equiv\cos\theta_{ij}`,
 violating phase. Overall phases in the mixing matrix do not affect neutrino
 oscillations, which only depend on quartic products, and so they have been
 omitted.  Therefore, this gives a total of six independent free parameters
-describing neutrino oscillations for three neutrino flavours in a vacuum. This
+describing neutrino oscillations for three neutrino flavors in a vacuum. This
 table outlines the current knowledge of these parameters determined by a fit to
 global data [9]_:
 
@@ -134,7 +134,7 @@ global data [9]_:
   :width: 500px
   :align: center
 
-  Three neutrino flavour oscillation parameters from a fit to global data
+  Three neutrino flavor oscillation parameters from a fit to global data
   [9]_.
 
 This table shows two columns of values, *normal ordering* and *inverted
@@ -205,9 +205,9 @@ coincidence with neutrinos coming from a particular source has successfully
 been able to identify for the very first time, a source of high-energy
 astrophysical neutrinos [11]_, [12]_.
 
-Of particular interest is the composition of flavours produced at the source.
-In the simple pion decay model described above, the *neutrino flavour
-composition* (sometimes referred to as the *neutrino flavour ratio*)
+Of particular interest is the composition of flavors produced at the source.
+In the simple pion decay model described above, the *neutrino flavor
+composition* (sometimes referred to as the *neutrino flavor ratio*)
 produced at the source is:
 
 .. math::
@@ -215,12 +215,12 @@ produced at the source is:
   \pi\text{ decay}\rightarrow
   \left(f_e:f_\mu:f_\tau\right)_\text{S}=\left(1:2:0\right)_\text{S}
 
-For all discussions on the astrophysical neutrino flavour composition, the
+For all discussions on the astrophysical neutrino flavor composition, the
 neutrino and antineutrino fluxes will been summed over as it is not yet
 experimentally possible to distinguish between the two. In the case that the
 muon interacts in the source before it has a chance to decay, e.g.\@ losing
 energy rapidly in strong magnetic fields or being absorbed in matter, only the
-:math:`\nu_\mu` from the initial pion decay escapes and so the source flavour
+:math:`\nu_\mu` from the initial pion decay escapes and so the source flavor
 composition is simply:
 
 .. math::
@@ -239,19 +239,19 @@ decay, :math:`n\rightarrow p+e^-+\bar{\nu}_e`, which gives rise to a purely
 Production of :math:`\nu_\tau` at the source is not expected in standard
 astrophysics models. However, even in the standard construction, the
 composition could vary between any of the three idealised models above, which
-can be represented as a source flavour composition of :math:`(x:1-x:0)`, where
+can be represented as a source flavor composition of :math:`(x:1-x:0)`, where
 :math:`x` is the fraction of :math:`\nu_e` and can vary between
 :math:`0\rightarrow1`.
 
 Once the neutrinos escape the source, they are free to propagate in the vacuum.
-As discussed above, neutrinos can transform from one flavour to another.
+As discussed above, neutrinos can transform from one flavor to another.
 Astrophysical neutrinos have :math:`\mathcal{O}(\text{Mpc})` or higher
 baselines, large enough that the mass eigenstates completely decouple. The
 astrophysical neutrinos detected on Earth are decoherent and are propagating in
 pure mass eigenstates. Taking this assumption greatly simplifies the transition
 probability as all the interference terms between the three mass eigenstates
 can be dropped, and all that is left is to convert from the propagating mass
-state to the flavour states:
+state to the flavor states:
 
 .. math::
 
@@ -259,13 +259,13 @@ state to the flavour states:
   \phi_{\alpha,\oplus}&=\sum_{i,\beta}
     \mid{U_{\alpha i}}\mid^2\mid{U_{\beta i}}\mid^2\phi_{\beta,\text{S}}
 
-where :math:`\phi_\alpha` is the flux for a neutrino flavour :math:`\nu_\alpha`
+where :math:`\phi_\alpha` is the flux for a neutrino flavor :math:`\nu_\alpha`
 and :math:`\phi_i` is the flux for a neutrino mass state :math:`\nu_i`. The
 subscript :math:`\text{S}` denotes the source and :math:`\oplus` denotes as
 measured on Earth. The same result can be obtained in the plane wave picture of
 the neutrino mixing equations above and taking the limit
 :math:`L\rightarrow\infty`, thus this type of decoherent mixing is also known
-as oscillation-averaged neutrino mixing. From this, the flavour composition on
+as oscillation-averaged neutrino mixing. From this, the flavor composition on
 Earth is defined as
 :math:`f_{\alpha,\oplus}=\phi_{\alpha,\oplus}/\sum_\alpha\phi_{\alpha,\oplus}`
 and this can be calculated using the mixing matrix parameters the table above.
@@ -281,15 +281,15 @@ For the three source models discussed above:
 
 This can be visualised in a ternary plot, which you can make yourself by
 checking out the :doc:`examples` section! The axes here are the fraction of
-each neutrino flavour as shown below. The coloured circle, square and triangle
-show the source flavour compositions. The arrows show the effect of neutrino
-mixing on the flavour composition. The unfilled circle, square and triangle
-show the corresponding measured flavour composition. Neutrino mixing during
-propagation has the effect of averaging out the flavour contributions, which is
+each neutrino flavor as shown below. The coloured circle, square and triangle
+show the source flavor compositions. The arrows show the effect of neutrino
+mixing on the flavor composition. The unfilled circle, square and triangle
+show the corresponding measured flavor composition. Neutrino mixing during
+propagation has the effect of averaging out the flavor contributions, which is
 why the arrows point towards the centre of the triangle. This effect is more
 pronounced for :math:`\nu_\mu\leftrightarrow\nu_\tau` due to the their larger
 mixings. Also shown on this figure in the hatched *Standard Model* area, is the
-region of measured flavour compositions containing all source models of
+region of measured flavor compositions containing all source models of
 :math:`\left(x:1-x:0\right)`, using Gaussian priors on the standard mixing
 angles. Therefore, this hatched area is the region in which all standard
 astrophysical models live.
@@ -298,11 +298,11 @@ astrophysical models live.
   :width: 700px
   :align: center
 
-  Astrophysical neutrino flavour composition ternary plot. Axes show the
-  fraction of each neutrino flavour. Coloured shapes show 3 models for the
-  source flavour composition. The arrows indicate the effect of neutrino mixing
+  Astrophysical neutrino flavor composition ternary plot. Axes show the
+  fraction of each neutrino flavor. Coloured shapes show 3 models for the
+  source flavor composition. The arrows indicate the effect of neutrino mixing
   during propagation and the unfilled shapes show the corresponding measured
-  flavour compositions. The hatched area shows the region in measured flavour
+  flavor compositions. The hatched area shows the region in measured flavor
   space in which all standard astrophysical models live.
 
 IceCube

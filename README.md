@@ -49,7 +49,7 @@ For more information on the statistical modeling see
 * **Distributed and parallel computing**: Scripts included to manage the
     workload across a CPU cluster using
     [HTCondor](https://research.cs.wisc.edu/htcondor/).
-* **Visualization**: Produce ternary plots of the flavour composition using the
+* **Visualization**: Produce ternary plots of the flavor composition using the
     [python-ternary](https://zenodo.org/badge/latestdoi/19505/marcharper/python-ternary)
     package and joint posterior plots for analyzing MCMC chains using the
     [getdist](https://getdist.readthedocs.io/en/latest/) package.

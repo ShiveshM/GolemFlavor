@@ -100,7 +100,7 @@ Instead, according to Wilks' theorem [3]_, for sufficiently large
 :math:`\textbf{x}` and provided certain regularity conditions are met (MLE
 exists and is unique), :math:`-2\ln\lambda\left(\textbf{x}\right)` can be
 approximated to follow a :math:`\chi^2` distribution. The :math:`\chi^2`
-distribution is parameterised by :math:`k`, the *number of degrees of
+distribution is parameterized by :math:`k`, the *number of degrees of
 freedom*, which is defined as the number of independent normally distributed
 variables that were summed together. When the profile likelihood is used to
 account for :math:`n` nuisance parameters, the effective number of degrees of
@@ -248,7 +248,7 @@ referred to as the *evidence* of a particular model:
   \pi_j\left(\mathbf{\theta}_j\right)\text{d}\mathbf{\theta}_j
 
 
-This was seen before as just a normalisation constant above; however, this
+This was seen before as just a normalization constant above; however, this
 quantity is central in Bayesian model selection, which for two models
 :math:`\mathcal{M}_0` and :math:`\mathcal{M}_1` is realised through the ratio
 of the posteriors:
@@ -354,7 +354,7 @@ mixing parameters are of concern. These parameters are defined in the
 mixing matrix :math:`U`, in such a way that any valid combination of the mixing
 angles can be mapped into a unitary matrix. The ideal and most ignorant choice
 of prior here is one in which there is no distinction among the three neutrino
-flavours, compatible with the hypothesis of *neutrino mixing anarchy*, which is
+flavors, compatible with the hypothesis of *neutrino mixing anarchy*, which is
 the hypothesis that :math:`U` can be described as a result of random draws from
 an unbiased distribution of unitary :math:`3\times3` matrices [11]_, [12]_,
 [13]_, [14]_. Simply using a flat prior on the mixing angles however, does
@@ -368,7 +368,7 @@ is the central assumption of *basis independence* and from this, distributions
 over the mixing angles are determined by the integration invariant *Haar
 measure* [13]_. For the group :math:`U(3)` the Haar measure is given by the
 volume element :math:`\text{d} U`, which can be written using the mixing angles
-parameterisation:
+parameterization:
 
 .. math::
 
@@ -385,15 +385,15 @@ chosen according to this Haar measure, i.e. in :math:`\sin^2\theta_{12}`,
 :math:`\cos^4\theta_{13}`, :math:`\sin^2\theta_{23}` and :math:`\delta`. You
 can see an example on this in action in the :doc:`examples` notebooks.
 
-This also needs to be considered in the case of a flavour composition
+This also needs to be considered in the case of a flavor composition
 measurement using sampling techniques in a Bayesian approach. In this case, the
 posterior of the measured composition :math:`f_{\alpha,\oplus}` is sampled over
 as the parameters of interest. Here, the effective number of parameters can be
 reduced from three to two due to the requirement :math:`\sum_\alpha
 f_{\alpha,\oplus}=1`. Therefore, the prior on these two parameters must be
-determined by Haar measure of the flavour composition volume element,
+determined by Haar measure of the flavor composition volume element,
 :math:`\text{d} f_{e,\oplus}\wedge\text{d} f_{\mu,\oplus}\wedge\text{d}
-f_{\tau,\oplus}`. The following *flavour angles* parameterisation is found to
+f_{\tau,\oplus}`. The following *flavor angles* parameterization is found to
 be sufficient:
 
 .. math::

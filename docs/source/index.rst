@@ -10,7 +10,7 @@ GolemFlavor
 
 GolemFlavor is a Python package for running a Bayesian inference analysis
 pipeline using Astrophysical Flavor data taken at the `IceCube Neutrino
-Obervatory <https://icecube.wisc.edu/>`_
+Obervatory <https://icecube.wisc.edu/>`_.
 
 .. toctree::
    :maxdepth: 1

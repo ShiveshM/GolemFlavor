@@ -14,14 +14,14 @@ pipeline using Astrophysical Flavor data taken at
 ## Overview
 
 ### What is Astrophysical Flavor data?
-This is data of the *flavor* of a
-[neutrino](https://icecube.wisc.edu/outreach/neutrinos) taken at the [IceCube
-neutrino observatory](https://icecube.wisc.edu/), which is a cubic kilometer
-array of optical sensors embedded in the glacial ice at the South Pole. In
-particular, *astrophysical* neutrinos are ones that are very-high-energy and
-come from astrophysical origins such as [active galactic
-nuclei](https://doi.org/10.1126/science.aat2890).
-<!-- For more on the physics behind neutrinos see [here](https://shivesh.org/research/). -->
+This is data of the *flavor* of a neutrino taken at the [IceCube neutrino
+observatory](https://icecube.wisc.edu/), which is a cubic kilometer array of
+optical sensors embedded in the glacial ice at the South Pole. In particular,
+*astrophysical* neutrinos are ones that are very-high-energy and come from
+astrophysical origins such as [active galactic
+nuclei](https://doi.org/10.1126/science.aat2890). For more on the physics
+behind neutrinos see
+[here](https://golemflavor.readthedocs.io/en/latest/physics.html).
 
 ### What does the GolemFlavor package do?
 This package provides utilities for astrophysical neutrino propagation and
@@ -29,8 +29,9 @@ Bayesian statistical modeling focused on advanced Markov Chain Monte Carlo
 (MCMC) algorithms. It has been used to make constraints on New Physics models
 in the Astrophysical Flavor, as motivated by the paper [*New Physics in
 Astrophysical Neutrino
-Flavor*](https://doi.org/10.1103/PhysRevLett.115.161303).
-<!-- For more information on the statistical modeling see [here](https://shivesh.org/research/#bayesian-inference). -->
+Flavor*](https://doi.org/10.1103/PhysRevLett.115.161303). For more information
+on the statistical modeling see
+[here](https://golemflavor.readthedocs.io/en/latest/statistics.html).
 
 ## Features
 * **Portable Flavor Functions**: A set of useful functions for calculating
@@ -54,13 +55,10 @@ Flavor*](https://doi.org/10.1103/PhysRevLett.115.161303).
 ## Examples
 You can find examples of how to use GolemFlavor in the
 [`GolemFlavor/examples`](examples) directory.
-<!-- For examples on how to distribute jobs across a CPU cluster see the -->
-<!-- [`GolemFlavor/submitter`](submitter) directory. -->
 
-<!--
 ## Documentation
-The documentation for GolemFlavor can be found at TODO.
--->
+The documentation for GolemFlavor can be found at
+[https://golemflavor.readthedocs.io/](https://golemflavor.readthedocs.io/).
 
 ## Installation
 GolemFlavor can be installed using `pip`
@@ -104,4 +102,4 @@ Additional dependencies:
 
 [MIT License](LICENSE)
 
-Copyright (c) 2020 Shivesh Mandalia
+Copyright (c) 2020 Shivesh Mandalia [https://shivesh.org][https://shivesh.org)

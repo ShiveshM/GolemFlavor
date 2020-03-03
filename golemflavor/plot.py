@@ -298,14 +298,15 @@ def tax_fill(ax, points, nbins, **kwargs):
 
 
 def alpha_shape(points, alpha):
-    """
-    Compute the alpha shape (concave hull) of a set
-    of points.
-    @param points: Iterable container of points.
-    @param alpha: alpha value to influence the
-        gooeyness of the border. Smaller numbers
-        don't fall inward as much as larger numbers.
-        Too large, and you lose everything!
+    """Compute the alpha shape (concave hull) of a set of points.
+
+    Parameters
+    ----------
+    points: Iterable container of points.
+    alpha: alpha value to influence the gooeyness of the border. Smaller
+    numbers don't fall inward as much as larger numbers.  Too large, and you
+    lose everything!
+
     """
     if len(points) < 4:
         # When you have a triangle, there is no sense

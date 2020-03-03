@@ -19,8 +19,9 @@ observatory](https://icecube.wisc.edu/), which is a cubic kilometer array of
 optical sensors embedded in the glacial ice at the South Pole. In particular,
 *astrophysical* neutrinos are ones that are very-high-energy and come from
 astrophysical origins such as [active galactic
-nuclei](https://doi.org/10.1126/science.aat2890). For more on the physics
-behind neutrinos see
+nuclei](https://doi.org/10.1126/science.aat2890).
+
+For more on the physics behind neutrinos see
 [here](https://golemflavor.readthedocs.io/en/latest/physics.html).
 
 ### What does the GolemFlavor package do?
@@ -29,8 +30,9 @@ Bayesian statistical modeling focused on advanced Markov Chain Monte Carlo
 (MCMC) algorithms. It has been used to make constraints on New Physics models
 in the Astrophysical Flavor, as motivated by the paper [*New Physics in
 Astrophysical Neutrino
-Flavor*](https://doi.org/10.1103/PhysRevLett.115.161303). For more information
-on the statistical modeling see
+Flavor*](https://doi.org/10.1103/PhysRevLett.115.161303).
+
+For more information on the statistical modeling see
 [here](https://golemflavor.readthedocs.io/en/latest/statistics.html).
 
 ## Features
@@ -102,4 +104,4 @@ Additional dependencies:
 
 [MIT License](LICENSE)
 
-Copyright (c) 2020 Shivesh Mandalia [https://shivesh.org][https://shivesh.org)
+Copyright (c) 2020 Shivesh Mandalia https://shivesh.org

@@ -135,7 +135,8 @@ def process_args(args):
     if args.stat_method is StatCateg.BAYESIAN:
         args.likelihood = Likelihood.GOLEMFIT
     elif args.stat_method is StatCateg.FREQUENTIST:
-        args.likelihood = Likelihood.GF_FREQ
+        raise NotImplementedError
+        # args.likelihood = Likelihood.GF_FREQ
 
     if args.texture is Texture.NONE:
         raise ValueError('Must assume a BSM texture')
@@ -207,9 +208,16 @@ def main():
     outfile = args.datadir + '/{0}/{1}/fr_stat'.format(
         *map(misc_utils.parse_enum, [args.stat_method, args.data])
     ) + misc_utils.gen_identifier(args)
+    outfile_llh = args.datadir + '/{0}/{1}/fr_maxllh'.format(
+        *map(misc_utils.parse_enum, [args.stat_method, args.data])
+    ) + misc_utils.gen_identifier(args)
 
     if not args.overwrite and os.path.isfile(outfile+'.npy'):
         print('FILE EXISTS {0}'.format(outfile+'.npy'))
+        print('Exiting...')
+        return
+    if not args.overwrite and os.path.isfile(outfile_llh+'.npy'):
+        print('FILE EXISTS {0}'.format(outfile_llh+'.npy'))
         print('Exiting...')
         return
 
@@ -218,18 +226,29 @@ def main():
         gf_utils.setup_fitter(args, asimov_paramset)
 
     # Initialise data structure.
-    stat_arr = np.full((eval_dim, 2), np.nan)
+    evidence_arr = np.full((eval_dim, 2), np.nan)
+    maxllh_arr = np.full((eval_dim, 2), np.nan)
 
     for idx_sc, scale in enumerate(eval_scales):
         if args.eval_segment is not None:
             if idx_sc == args.eval_segment:
                 outfile += '_scale_{0:.0E}'.format(np.power(10, scale))
+                outfile_llh += '_scale_{0:.0E}'.format(np.power(10, scale))
             else: continue
         print('|||| SCALE = {0:.0E}'.format(np.power(10, scale)))
 
         if not args.overwrite and os.path.isfile(outfile+'.npy'):
             print('FILE EXISTS {0}'.format(outfile+'.npy'))
             t = np.load(outfile+'.npy')
+            if np.any(~np.isfinite(t)):
+                print('nan found, rerunning...')
+                pass
+            else:
+                print('Exiting...')
+                return
+        if not args.overwrite and os.path.isfile(outfile_llh+'.npy'):
+            print('FILE EXISTS {0}'.format(outfile_llh+'.npy'))
+            t = np.load(outfile_llh+'.npy')
             if np.any(~np.isfinite(t)):
                 print('nan found, rerunning...')
                 pass
@@ -254,7 +273,7 @@ def main():
             args.dimension, data, llh, src_string, identifier
         )
         try:
-            stat = mn_utils.mn_evidence(
+            evidence, maxllh = mn_utils.mn_evidence(
                 mn_paramset     = base_mn_pset,
                 llh_paramset    = llh_paramset,
                 asimov_paramset = asimov_paramset,
@@ -264,12 +283,15 @@ def main():
         except:
             print('Failed run')
             raise
-        print('## Evidence = {0}'.format(stat))
+        print('## Evidence = {0}'.format(evidence))
+        print('## MaxLLH = {0}'.format(evidence))
 
         if args.eval_segment is not None:
-            stat_arr[0] = np.array([scale, stat])
+            evidence_arr[0] = np.array([scale, evidence])
+            maxllh_arr[0] = np.array([scale, maxllh])
         else:
-            stat_arr[idx_sc] = np.array([scale, stat])
+            evidence_arr[idx_sc] = np.array([scale, evidence])
+            maxllh_arr[idx_sc] = np.array([scale, maxllh])
 
         # Cleanup.
         if reset_range is not None:
@@ -285,8 +307,11 @@ def main():
                 pass
 
     misc_utils.make_dir(outfile)
+    misc_utils.make_dir(outfile_llh)
     print('Saving to {0}'.format(outfile+'.npy'))
-    np.save(outfile+'.npy', stat_arr)
+    np.save(outfile+'.npy', evidence_arr)
+    print('Saving to {0}'.format(outfile_llh+'.npy'))
+    np.save(outfile_llh+'.npy', maxllh_arr)
 
 
 main.__doc__ = __doc__

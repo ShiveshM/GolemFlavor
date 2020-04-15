@@ -103,4 +103,6 @@ def mn_evidence(mn_paramset, llh_paramset, asimov_paramset, args, prefix='mn'):
     analyser = analyse.Analyzer(
         outputfiles_basename=prefix, n_params=n_params
     )
-    return analyser.get_stats()['global evidence']
+    evidence = analyser.get_stats()['global evidence']
+    maxllh = analyser.get_best_fit()['log_likelihood']
+    return (evidence, maxllh)

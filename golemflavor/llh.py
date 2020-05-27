@@ -107,7 +107,7 @@ def triangle_llh(theta, args, asimov_paramset, llh_paramset):
     fr = fr_utils.flux_averaged_BSMu(theta, args, spectral_index, llh_paramset)
 
     flavor_angles = fr_utils.fr_to_angles(fr)
-    # print('flavor_angles', map(float, flavor_angles))
+    # print('flavor_angles', list(map(float, flavor_angles)))
     for idx, param in enumerate(hypo_paramset.from_tag(ParamTag.BESTFIT)):
         param.value = flavor_angles[idx]
 

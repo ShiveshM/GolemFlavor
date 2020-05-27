@@ -21,7 +21,7 @@ import numpy.ma as ma
 from golemflavor import fr as fr_utils
 from golemflavor import llh as llh_utils
 from golemflavor import plot as plot_utils
-from golemflavor.enums import DataType, Texture
+from golemflavor.enums import DataType, StatCateg, Texture
 from golemflavor.misc import enum_parse, parse_bool, parse_enum, print_args
 from golemflavor.misc import gen_identifier, SortingHelpFormatter
 from golemflavor.param import Param, ParamSet
@@ -37,31 +37,31 @@ def process_args(args):
 
     # Anon points
     anon = []
-    if args.dimensions[0] == 3:
-        anon.append([0.825, 0.845])
-        anon.append([0.865, 0.875])
-        anon.append([0.875, 0.885])
-        anon.append([0.905, 0.915])
-        anon.append([0.925, 0.935])
-    if args.dimensions[0] == 4:
-        anon.append([0.165, 0.175])
-        anon.append([0.805, 0.825])
-        anon.append([0.835, 0.845])
-        anon.append([0.855, 0.885])
-        anon.append([0.965, 0.975])
-    if args.dimensions[0] == 5:
-        anon.append([0.895, 0.905])
-        anon.append([0.955, 0.965])
-    if args.dimensions[0] == 6:
-        anon.append([0.115, 0.125])
-        anon.append([0.855, 0.865])
-    if args.dimensions[0] == 7:
-        # anon.append([0.815, 0.835])
-        anon.append([0.875, 0.885])
-    if args.dimensions[0] == 8:
-        anon.append([0.915, 0.935])
-        anon.append([0.875, 0.895])
-        anon.append([0.845, 0.855])
+    # if args.dimensions[0] == 3:
+    #     anon.append([0.825, 0.845])
+    #     anon.append([0.865, 0.875])
+    #     anon.append([0.875, 0.885])
+    #     anon.append([0.905, 0.915])
+    #     anon.append([0.925, 0.935])
+    # if args.dimensions[0] == 4:
+    #     anon.append([0.165, 0.175])
+    #     anon.append([0.805, 0.825])
+    #     anon.append([0.835, 0.845])
+    #     anon.append([0.855, 0.885])
+    #     anon.append([0.965, 0.975])
+    # if args.dimensions[0] == 5:
+    #     anon.append([0.895, 0.905])
+    #     anon.append([0.955, 0.965])
+    # if args.dimensions[0] == 6:
+    #     anon.append([0.115, 0.125])
+    #     anon.append([0.855, 0.865])
+    # if args.dimensions[0] == 7:
+    #     # anon.append([0.815, 0.835])
+    #     anon.append([0.875, 0.885])
+    # if args.dimensions[0] == 8:
+    #     anon.append([0.915, 0.935])
+    #     anon.append([0.875, 0.895])
+    #     anon.append([0.845, 0.855])
 
     if args.source_ratios is not None:
         if args.x_segments is not None:
@@ -190,9 +190,14 @@ def main():
             for itex, texture in enumerate(textures):
                 argsc.texture = texture
 
-                base_infile = datadir + '/{0}/{1}/'.format(
-                    *map(parse_enum, [args.stat_method, args.data])
-                ) + r'{0}/fr_stat'.format(prefix) + gen_identifier(argsc)
+                if args.stat_method is StatCateg.BAYESIAN:
+                    base_infile = datadir + '/{0}/{1}/'.format(
+                        *map(parse_enum, [args.stat_method, args.data])
+                    ) + r'{0}/fr_stat'.format(prefix) + gen_identifier(argsc)
+                else:
+                    base_infile = datadir + '/{0}/{1}/'.format(
+                        *map(parse_enum, [StatCateg.BAYESIAN, args.data])
+                    ) + r'{0}/fr_maxllh'.format(prefix) + gen_identifier(argsc)
 
                 print('== {0:<25} = {1}'.format('base_infile', base_infile))
 
@@ -243,9 +248,16 @@ def main():
                 for itex, texture in enumerate(textures):
                     argsc.texture = texture
 
-                    base_infile = args.datadir + '/DIM{0}/{1}/{2}/'.format(
-                        dim, *map(parse_enum, [args.stat_method, args.data])
-                    ) + r'{0}/fr_stat'.format(prefix) + gen_identifier(argsc)
+
+                    if args.stat_method is StatCateg.BAYESIAN:
+                        base_infile = args.datadir + '/DIM{0}/{1}/{2}/'.format(
+                            dim, *map(parse_enum, [args.stat_method, args.data])
+                        ) + r'{0}/fr_stat'.format(prefix) + gen_identifier(argsc)
+                    else:
+                        base_infile = args.datadir + '/DIM{0}/{1}/{2}/'.format(
+                            dim, *map(parse_enum, [StatCateg.BAYESIAN, args.data])
+                        ) + r'{0}/fr_maxllh'.format(prefix) + gen_identifier(argsc)
+
                     basename = os.path.dirname(base_infile)
                     outfile = basename[:5]+basename[5:].replace('data', 'plots')
                     outfile += '/' + os.path.basename(base_infile)
@@ -262,7 +274,7 @@ def main():
 
     basename = args.datadir[:5]+args.datadir[5:].replace('data', 'plots')
     baseoutfile = basename + '/{0}/{1}/'.format(
-        *map(parse_enum, [args.stat_method, args.data])
+        *map(parse_enum, [args.actual_stat_method, args.data])
     ) + r'{0}'.format(prefix)
 
     argsc = deepcopy(args)

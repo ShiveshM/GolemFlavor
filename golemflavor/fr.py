@@ -98,7 +98,7 @@ def angles_to_fr(src_angles):
     (0.38340579025361626, 0.16431676725154978, 0.45227744249483393)
 
     """
-    sphi4, c2psi = map(DTYPE, src_angles)
+    sphi4, c2psi = list(map(DTYPE, src_angles))
 
     psi = (0.5)*ACOS(c2psi)
 
@@ -135,7 +135,7 @@ def angles_to_u(bsm_angles):
            [ 0.28614067-0.42427084j, -0.64749908-0.21213542j,  0.52331757+0.j        ]])
 
     """
-    s12_2, c13_4, s23_2, dcp = map(DTYPE, bsm_angles)
+    s12_2, c13_4, s23_2, dcp = list(map(DTYPE, bsm_angles))
     dcp = CDTYPE(dcp)
 
     c12_2 = 1. - s12_2

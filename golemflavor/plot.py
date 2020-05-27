@@ -152,6 +152,8 @@ def get_limit(scales, statistic, args, mask_initial=False, return_interp=False):
     if args.stat_method is StatCateg.BAYESIAN:
         if (statistic[0] - max_st) > np.log(10**(BAYES_K)):
             raise AssertionError('Discovered LV!')
+    else:
+        raise NotImplementedError
 
     try:
         tck, u = splprep([scales, statistic], s=0)
@@ -293,7 +295,7 @@ def project_toflavor(p, nbins):
 
 
 def tax_fill(ax, points, nbins, **kwargs):
-    pol = np.array(map(project, points))
+    pol = np.array(list(map(project, points)))
     ax.fill(pol.T[0]*nbins, pol.T[1]*nbins, **kwargs)
 
 
@@ -626,8 +628,9 @@ def plot_statistic(data, outfile, outformat, args, scale_param, label=None):
     ax.scatter(scales[1:], -(statistic[1:]-null), color='r')
     ax.plot(scales_rm, reduced_ev, color='k', linewidth=1, alpha=1, ls='-')
 
-    ax.axhline(y=np.log(10**(BAYES_K)), color='red', alpha=1., linewidth=1.2, ls='--')
-    ax.axvline(x=lim, color='red', alpha=1., linewidth=1.2, ls='--')
+    if args.stat_method is StatCateg.BAYESIAN:
+        ax.axhline(y=np.log(10**(BAYES_K)), color='red', alpha=1., linewidth=1.2, ls='--')
+        ax.axvline(x=lim, color='red', alpha=1., linewidth=1.2, ls='--')
 
     at = AnchoredText(
         fig_text, prop=dict(size=10), frameon=True, loc=4
